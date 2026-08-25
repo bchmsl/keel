@@ -116,6 +116,42 @@ class TokenContractTest {
         assertTrue(offenders.isEmpty(), "literal colours outside tokens.css: $offenders")
     }
 
+    // ------------------------------------------ the list against the CSS
+
+    @Test
+    fun everyPaletteDeclaresExactlyTheContract() {
+        // Stronger than the palettes merely agreeing with each other: it holds them
+        // against the list `KeelTokens` publishes, so a colour quietly added to all
+        // twelve blocks and never declared as API still fails.
+        val expected = KeelTokens.PerPalette.toSet()
+
+        paletteBlocks().forEach { (selector, declared) ->
+            assertEquals(
+                expected,
+                declared - OPTIONAL_PER_PALETTE,
+                "$selector does not declare exactly the per-palette contract",
+            )
+        }
+    }
+
+    @Test
+    fun everyGlobalAndDerivedTokenIsDeclaredInTheContractSheet() {
+        val declared = DEFINITION.findAll(tokens).map { it.groupValues[1] }.toSet()
+
+        val missing = (KeelTokens.Global + KeelTokens.Derived).filterNot { it in declared }
+        assertTrue(missing.isEmpty(), "listed as API but not declared in tokens.css: $missing")
+    }
+
+    @Test
+    fun everyListedColourResolvesToSomething() {
+        // The gallery paints straight from this list. A name in it with no declaration
+        // anywhere paints nothing at all, and nothing else would say so.
+        val declared = DEFINITION.findAll(linked).map { it.groupValues[1] }.toSet()
+
+        val missing = KeelTokens.AllColors.filterNot { it in declared }
+        assertTrue(missing.isEmpty(), "listed but never declared: $missing")
+    }
+
     // ------------------------------------------------------------- reading
 
     /**
