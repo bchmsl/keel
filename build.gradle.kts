@@ -9,10 +9,19 @@ plugins {
     alias(libs.plugins.kover) apply false
 }
 
-group = "io.github.bchmsl"
 version = "0.1.0"
 
+// `group` is set on the subprojects and deliberately NOT on the root.
+//
+// The root is an empty container, and giving it a group would publish a coordinate
+// for it too. In a composite build that is fatal rather than untidy: the root is
+// named `keel` and so is the library subproject, so both would answer to
+// `io.github.bchmsl:keel` and a consumer's `includeBuild("keel")` would fail with
+// "Module version 'io.github.bchmsl:keel' is not unique in composite: can be
+// provided by [project ':keel', project ':keel:keel']". Leaving the root without a
+// group is what makes the coordinate unambiguous, and composite inclusion the
+// simplest way to consume this.
 subprojects {
-    group = rootProject.group
+    group = "io.github.bchmsl"
     version = rootProject.version
 }

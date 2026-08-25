@@ -11,9 +11,14 @@
  * well as `[data-theme="coral"]`. That is what makes an unknown or missing
  * `data-theme` paint a complete palette rather than an unstyled page.
  *
- * Five relationships hold across all twelve palettes, so `tokens.css` writes them
- * once rather than repeating them twelve times here. Deriving them makes a mismatch
- * impossible rather than merely unlikely:
+ * Link this AFTER tokens.css, always. `:root` and `[data-theme='...']` carry the
+ * same specificity, so a token declared in both is settled by source order and
+ * nothing else - `--secondary-foreground` is one, and the two palettes that
+ * override it would silently lose their dark ink if this sheet came first.
+ *
+ * Six tokens are derived rather than declared per palette, so `tokens.css` writes
+ * them once rather than repeating them twelve times here. Deriving them makes a
+ * mismatch impossible rather than merely unlikely:
  *   --input            is always --border
  *   --ring             is always --primary
  *   --popover          is always --card

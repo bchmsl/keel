@@ -6,10 +6,17 @@
  * page background. This file reads tokens and defines none, which is what makes
  * that split safe.
  *
- * Link order is tokens.css, a palette sheet, then this, then components.css.
- * Nothing enforces it, and the failure is quiet: an unresolved var() falls back to
- * the property's initial value, so a page linked in the wrong order renders
- * unstyled rather than erroring.
+ * Order matters in exactly one place: `tokens.css` must be linked before the palette
+ * sheet. Not because of `var()` - a custom property is substituted from the element's
+ * fully cascaded value, so this file and components.css resolve their colours
+ * whatever order they arrive in - but because `:root` and `[data-theme='...']` have
+ * the same specificity, so a token declared in both is decided by source order alone.
+ * `--secondary-foreground` is declared in both today. Reverse the two sheets and the
+ * palettes that override it silently lose their dark ink: one token in two palettes,
+ * not a broken page. `TokenContractTest` holds that pair.
+ *
+ * A sheet that is not delivered at all is the case where `var()` really does fall
+ * back to the property's initial value, and that one is silent.
  */
 
 *,
@@ -138,27 +145,39 @@ body {
 
 /* ----------------------------------------------------------- scrollbars ---- */
 /* Thin and quiet. Sized rather than hidden: a scrollbar nobody can see is a
-   scrollbar nobody can drag. */
+   scrollbar nobody can drag.
+
+   Two mechanisms, and they must not both apply to the same element. Blink and
+   WebKit ignore the legacy `::-webkit-scrollbar` pseudo-elements entirely on any
+   element that also has a non-initial `scrollbar-width` or `scrollbar-color`.
+   Measured in Chrome 148 on a scrolling div: the pseudo-elements alone give a 6px
+   gutter, the standard properties alone give 11px, and both together give 11px -
+   so an unguarded legacy block is dead code that reads as load-bearing.
+
+   The standard properties are therefore the rule, and the legacy block is kept
+   only where they are unsupported, which is Safari before 18.2. */
 
 * {
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
 }
 
-*::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
+@supports not (scrollbar-width: thin) {
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
 
-*::-webkit-scrollbar-track {
-  background: transparent;
-}
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
 
-*::-webkit-scrollbar-thumb {
-  background-color: hsl(var(--muted-foreground) / 0.25);
-  border-radius: var(--radius-pill);
-}
+  *::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted-foreground) / 0.25);
+    border-radius: var(--radius-pill);
+  }
 
-*::-webkit-scrollbar-thumb:hover {
-  background-color: hsl(var(--muted-foreground) / 0.4);
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground) / 0.4);
+  }
 }

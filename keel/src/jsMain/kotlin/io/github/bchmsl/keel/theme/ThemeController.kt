@@ -21,20 +21,15 @@ import org.w3c.dom.Storage
  * an account applies that copy afterwards, through [setTheme] and [setColorMode],
  * and it wins where the two disagree.
  *
- * [keys] default to the names Dayboard already stores under, so an existing browser
- * keeps its theme through the migration rather than reverting to the default on
- * first load. An app with no history to preserve can name them anything.
+ * [keys] must match whatever the page's inline boot script reads. Generate that
+ * script with [bootScript] and the two cannot disagree; write it by hand and nothing
+ * checks it, because HTML is not type-checked - the symptom is a palette flash on
+ * every reload, which is easy to stop noticing.
  */
 public class ThemeController(
     public val catalog: ThemeCatalog,
     private val keys: StorageKeys = StorageKeys(),
 ) {
-
-    /** The two names read and written, held together so they cannot drift apart. */
-    public data class StorageKeys(
-        val theme: String = "themeId",
-        val colorMode: String = "colorMode",
-    )
 
     private val darkQuery = window.matchMedia(DARK_MEDIA_QUERY)
 
@@ -70,17 +65,26 @@ public class ThemeController(
         applyToDocument()
     }
 
+    /**
+     * Both setters write before checking whether anything changed, and the order
+     * matters. On a first visit nothing is stored, so `theme` already equals the
+     * catalogue's default and `colorMode` already equals System - which means a user
+     * who deliberately picks either would have had their choice optimised away, and
+     * be indistinguishable from someone who never expressed one. Move the default
+     * from Coral to Ocean in a later release and every one of them silently gets
+     * Ocean. The write costs nothing when the value is unchanged.
+     */
     public fun setTheme(value: Theme) {
+        write(keys.theme, value.id)
         if (value == theme) return
         theme = value
-        write(keys.theme, value.id)
         applyToDocument()
     }
 
     public fun setColorMode(value: ColorMode) {
+        write(keys.colorMode, value.id)
         if (value == colorMode) return
         colorMode = value
-        write(keys.colorMode, value.id)
         applyToDocument()
     }
 
@@ -114,42 +118,7 @@ public class ThemeController(
 
     private fun storage(): Storage? = window.localStorage
 
-    public companion object {
-        private const val DARK_MEDIA_QUERY = "(prefers-color-scheme: dark)"
-
-        /**
-         * The script to inline in `<head>`, before the bundle, so a reload paints the
-         * stored palette on the first frame instead of flashing the default one.
-         *
-         * It has to be inline and it has to be Javascript: by the time this class
-         * exists, the browser has already painted. Anyone in dark mode would see one
-         * white frame per reload otherwise.
-         *
-         * Exposed as a string so the names in the page and the names in
-         * [StorageKeys] have one source. An app that inlines the snippet by hand
-         * instead should keep `KeelBootScriptTest` in mind, which is what catches the
-         * two drifting apart.
-         */
-        public fun bootScript(keys: StorageKeys = StorageKeys(), defaultTheme: String): String =
-            """
-            (function () {
-              try {
-                var root = document.documentElement;
-                var mode = localStorage.getItem('${keys.colorMode}') || 'system';
-                root.setAttribute(
-                  'data-theme',
-                  localStorage.getItem('${keys.theme}') || '$defaultTheme'
-                );
-                root.classList.toggle(
-                  'dark',
-                  mode === 'dark' ||
-                    (mode === 'system' &&
-                      window.matchMedia('(prefers-color-scheme: dark)').matches)
-                );
-              } catch (error) {
-                /* Private browsing can make localStorage throw; the defaults are fine. */
-              }
-            })();
-            """.trimIndent()
+    private companion object {
+        const val DARK_MEDIA_QUERY = "(prefers-color-scheme: dark)"
     }
 }

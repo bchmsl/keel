@@ -12,6 +12,7 @@ import io.github.bchmsl.keel.components.Dialog
 import io.github.bchmsl.keel.dom.classNames
 import io.github.bchmsl.keel.theme.Theme
 import io.github.bchmsl.keel.theme.ThemeController
+import io.github.bchmsl.keel.theme.bootScript
 import org.jetbrains.compose.web.dom.Div
 import org.jetbrains.compose.web.dom.H1
 import org.jetbrains.compose.web.dom.H2
@@ -45,7 +46,9 @@ fun Gallery(theme: ThemeController) {
             title = "Dialog",
             note = "A modal with a scrim. Its title and description are read by " +
                 "assistive technology and never painted, so the content can carry its " +
-                "own visible heading without saying everything twice.",
+                "own visible heading without saying everything twice. Focus moves in " +
+                "on open and returns to this button on close; Escape, the scrim and " +
+                "the close button all dismiss it.",
         ) {
             Div({ classNames("row") }) {
                 Button(label = "Open dialog", onClick = { dialogOpen = true })
@@ -72,9 +75,9 @@ private fun ExampleDialog(onDismiss: () -> Unit) {
         H2({ classNames("section__title") }) { Text("An example dialog") }
         P({ classNames("section__note") }) {
             Text(
-                "Dismissing works from the scrim and from the close button. Escape " +
-                    "belongs to whatever owns this dialog's visibility, so the caller " +
-                    "wires it up rather than the component reaching for the document.",
+                "Try Escape, and try Tab: focus started here rather than back at the " +
+                    "top of the page. A control inside a dialog can still keep Escape " +
+                    "for itself by stopping the event propagating.",
             )
         }
         Div({ classNames("row") }) {
@@ -175,7 +178,7 @@ private fun BootScriptSection(theme: ThemeController) {
             "in use, so the keys in the page and the keys in Kotlin cannot drift.",
     ) {
         Pre({ classNames("snippet") }) {
-            Text(ThemeController.bootScript(defaultTheme = theme.catalog.default.id))
+            Text(bootScript(theme.catalog))
         }
     }
 }

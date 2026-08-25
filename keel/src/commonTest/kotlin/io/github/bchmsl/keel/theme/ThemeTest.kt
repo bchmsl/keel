@@ -21,11 +21,30 @@ class ThemeTest {
     }
 
     @Test
-    fun aBlankIdIsRefused() {
-        // The id is stored and selected on. A blank one silently resolves to the
-        // fallback for ever, which looks like the theme simply not working.
-        assertFailsWith<IllegalArgumentException> { Theme("", "Nameless", "#000000") }
-        assertFailsWith<IllegalArgumentException> { Theme("   ", "Spaces", "#000000") }
+    fun anIdMustBeUsableInAllThreePlacesItGoes() {
+        // An id becomes an attribute value, part of the CSS selector
+        // [data-theme='...'], and a quoted string inside the generated boot script.
+        // Anything outside this shape is safe in some of those and not others, and
+        // the failures are silent: a palette that never applies, or a script that
+        // does not parse.
+        listOf("coral", "dark-only", "theme2", "a1-b2-c3").forEach {
+            Theme(it, "Fine", "#000000")
+        }
+
+        listOf(
+            "",             // resolves to the fallback for ever, looking like a no-op
+            "   ",
+            "Coral",        // an attribute selector is case-sensitive here
+            "my theme",
+            "it's",         // would close the quote in the boot script
+            "-leading",
+            "trailing-",
+            "double--hyphen",
+        ).forEach {
+            assertFailsWith<IllegalArgumentException>("'$it' should be refused") {
+                Theme(it, "Bad", "#000000")
+            }
+        }
     }
 
     @Test

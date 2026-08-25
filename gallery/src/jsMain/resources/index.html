@@ -32,20 +32,27 @@
 
       Without this, every reload shows one frame of the default light palette before
       Kotlin runs and applies the real one - a white flash for anyone in dark mode.
-      The keys must match `ThemeController.StorageKeys`, and the fallback must match
-      the catalogue's default. `ThemeController.bootScript` generates this exact
-      text, and the gallery prints it for whatever catalogue is in use.
+      `bootScript(catalog)` generates this exact text, and the gallery prints it for
+      whatever catalogue is in use - copy it from there rather than editing here. The
+      `forced` map is empty because all six palettes have both a light and a dark
+      form; a single-mode palette appears in it, so the first frame agrees with what
+      Kotlin decides a moment later instead of being corrected on every reload.
     -->
     <script>
       (function () {
         try {
           var root = document.documentElement;
+          var forced = {};
+          var id = localStorage.getItem('themeId') || 'coral';
           var mode = localStorage.getItem('colorMode') || 'system';
-          root.setAttribute('data-theme', localStorage.getItem('themeId') || 'coral');
+          root.setAttribute('data-theme', id);
           root.classList.toggle(
             'dark',
-            mode === 'dark' ||
-              (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+            Object.prototype.hasOwnProperty.call(forced, id)
+              ? forced[id]
+              : mode === 'dark' ||
+                  (mode === 'system' &&
+                    window.matchMedia('(prefers-color-scheme: dark)').matches)
           );
         } catch (error) {
           /* Private browsing can make localStorage throw; the defaults are fine. */

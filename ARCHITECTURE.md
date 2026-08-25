@@ -9,16 +9,19 @@ reads is a CSS custom property, and the only place a literal appears is a token
 definition. It is what lets one stylesheet serve a light six-palette dashboard and a
 single-palette dark video app without either editing the other's rules.
 
-`TokenContractTest` enforces it: a literal colour anywhere outside the token files
-fails the build. There is exactly one allowance, black at low alpha, for the modal
-scrim and the shadow values — a scrim dims whatever is behind it and a shadow is the
-absence of light, so neither is a palette's business.
+`TokenContractTest` enforces the colour half of it: a hex value, an `rgb()`/`hsl()`
+functional notation, a modern `oklch()`-family function, or one of the common CSS
+colour keywords, anywhere in `base.css` or `components.css`, fails the build. One
+allowance, black at low alpha, for the modal scrim — a scrim dims whatever is behind
+it, which is not a palette's business.
+
+Radius, duration, font and shadow are held to the same rule by review rather than by a
+test. `components.css` has no literal of any of them today; `base.css` carries a few
+animation durations, which are the animation's own timing rather than the interface's.
 
 ## The four stylesheets
 
-Link them in this order. Nothing enforces it, and the failure is quiet: an unresolved
-`var()` falls back to the property's initial value, so a page linked in the wrong
-order renders unstyled rather than erroring.
+Link them in this order.
 
 | | |
 |---|---|
@@ -26,6 +29,24 @@ order renders unstyled rather than erroring.
 | `palettes.css` | The six shipped palettes, light and dark. **Optional.** |
 | `base.css` | The reset, the document surface, the animations, the scrollbars. Reads tokens, defines none. |
 | `components.css` | The primitives. Reads tokens, defines none. |
+
+Only one of those orderings is load-bearing, and not for the reason it looks like.
+A custom property is substituted from the element's *fully cascaded* value, not from
+whatever stylesheet happens to have been parsed — so `base.css` and `components.css`
+resolve their colours whichever order they arrive in. Served fully reversed, every
+computed value is identical.
+
+What does matter is that **`tokens.css` comes before the palette sheet**. `:root` and
+`[data-theme='...']` carry the same specificity, so a token declared in both is
+settled by source order alone. `--secondary-foreground` is declared in both today, and
+reversing the two sheets would silently cost the two palettes that override it their
+dark ink — one token in two palettes, not a broken page.
+`TokenContractTest.tokensMustBeLinkedBeforeAPaletteSheet` pins exactly which tokens
+are in that overlap, so the list cannot grow unnoticed.
+
+An unresolved `var()` really does fall back to the property's initial value, and
+silently — but that is the symptom of a sheet not being *delivered*, never of one
+being misordered.
 
 ### Why the palettes are a separate file
 
@@ -73,11 +94,11 @@ gallery paints from it, `TokenContractTest` holds it against the stylesheets in 
 directions, and it is the documentation of what an app may rely on. A token in the
 CSS but not in `KeelTokens` fails the test, and so does the reverse.
 
-### Five relationships, written once
+### Six derived tokens, written once
 
 `--input` is always `--border`. `--ring` is always `--primary`. `--popover` is always
 `--card`. `--card-foreground`, `--popover-foreground` and `--accent-foreground` are
-always `--foreground`.
+always `--foreground`. Six tokens, four rules.
 
 They are declared as `var()` references on `:root`, which resolves against whichever
 palette block won — because every one of those selectors targets the same element.
@@ -92,6 +113,7 @@ corner together instead of most of them:
 
 ```css
 --radius: 0.75rem;
+--radius-xs:  calc(var(--radius) - 8px);
 --radius-sm:  calc(var(--radius) - 4px);
 --radius-md:  calc(var(--radius) - 2px);
 --radius-lg:  var(--radius);
@@ -99,23 +121,34 @@ corner together instead of most of them:
 --radius-pill: 9999px;
 ```
 
-Each step is also a token in its own right, so an app whose scale is not a ladder
-from one root overrides the steps directly and ignores `--radius`:
+Each step is also a token in its own right, so an app whose scale is not a ladder from
+one root can override the steps directly — but it has to override **all** of them.
+A step left alone keeps deriving from `--radius`, and the two that are easiest to
+forget are the two most visible surfaces: `--radius-md` is what `.btn` reads and
+`--radius-xl` is what `.card` reads.
 
 ```css
 :root {
+  --radius-xs: 0.25rem;
   --radius-sm: 0.5625rem;   /* 9px  */
+  --radius-md: var(--radius-pill);
   --radius-lg: 0.875rem;    /* 14px */
+  --radius-xl: 0.875rem;
   --radius-pill: 999px;
 }
 ```
 
 ### Motion, type and shadow
 
-`--ease`, `--duration-fast`, `--duration-slow` replace what would otherwise be
-sixty-odd `150ms ease` literals, and make a shell that needs instant transitions —
-a low-end television WebView, where a transition at D-pad frequency never finishes
-before the next press — able to say so:
+`--ease`, `--duration-fast` and `--duration-slow` replace the 63 `150ms ease` and 3
+`200ms ease-out` literals the source repeated.
+
+`--ease` is the CSS keyword `ease`, not a curve of its own, and that is the point: it
+is the value those rules already used, so tokenising them changed nothing about how
+anything moves. A house curve belongs to an app, and an app that wants one sets the
+token. It also makes a shell that needs instant transitions — a low-end television
+WebView, where a transition at D-pad frequency never finishes before the next press —
+able to say so:
 
 ```css
 :root { --duration-fast: 0ms; --duration-slow: 0ms; }
@@ -184,16 +217,19 @@ selected. `TokenContractTest` holds the two lists against each other.
 [data-theme='cinema'] {
   --background: 0 0% 0%;
   --foreground: 0 0% 100%;
-  --card: 240 4% 5%;
-  --primary: 2 66% 53%;
-  --secondary: 158 58% 53%;
-  --muted: 240 5% 9%;
-  --muted-foreground: 240 4% 56%;
-  --accent: 240 5% 9%;
-  --border: 240 5% 11%;
+  --card: 240 7.1% 5.5%;
+  --primary: 2 74.8% 53.3%;
+  --secondary: 153.1 60.2% 52.7%;
+  --muted: 240 7% 8.4%;
+  --muted-foreground: 240 4% 55.9%;
+  --accent: 240 7% 8.4%;
+  --border: 240 6.7% 11.8%;
   color-scheme: dark;
 }
 ```
+
+One decimal place, per the rule above — these are converted from hex, and at zero
+decimals the brand red would land on `#e1332d`.
 
 Declared on bare `:root` too, which for a single-palette app is the whole point:
 there is no other palette for an unknown `data-theme` to fall back to.
@@ -210,9 +246,15 @@ So every consumer needs one block, and there is no way to leave it out safely:
 
 ```kotlin
 tasks.named<Copy>("jsProcessResources") {
-    from(rootProject.layout.projectDirectory.dir("keel/src/jsMain/resources"))
+    from(rootProject.layout.projectDirectory.dir("keel/keel/src/jsMain/resources"))
 }
 ```
+
+That is the path in a consumer with the submodule at `keel/`: the repository root,
+then the library module inside it. `gallery/build.gradle.kts` writes
+`keel/src/jsMain/resources` because it already *is* inside this repository. A `Copy`
+whose `from` does not exist is not an error — the build stays green and nothing is
+copied — so the wrong one of those two fails exactly as quietly as omitting the block.
 
 It must come **after** the `kotlin { }` block, because that is what registers the
 task. Placed above it, the build fails with `Task with name 'jsProcessResources' not
@@ -232,8 +274,8 @@ this block. It is experimental, and untried here.
 
 ## Traps this library exists to have solved once
 
-Each of these was hit independently in both consuming apps, and each was fixed a
-different way in each.
+The first three were hit independently in both consuming apps, and fixed a different
+way in each. The last two are Dayboard's alone, and were not fixed there at all.
 
 **`classes()` throws, and takes the composition with it.** Compose HTML puts every
 entry through `DOMTokenList.add`, which raises `SyntaxError` on an empty token and
@@ -265,8 +307,9 @@ without clicking into it — which is every time. It has to be a window listener
 An audit of both codebases proposed a considerably larger redesign than an
 extraction. What was taken:
 
-- **`color-scheme` per palette.** Neither app declared it, so both got light native
-  scrollbars, form controls and pickers on a dark page.
+- **`color-scheme` per palette.** Dayboard declared it nowhere, so it got light native
+  scrollbars, form controls and pickers on a dark page. Dakalebi sets it once,
+  globally, which is right for a single-palette app and cannot express six.
 - **The switch knob is `--primary-foreground`, not `#fff`.** The knob sits on
   `--primary`, and `--primary-foreground` is by definition the ink that belongs
   there. Identical output in all twelve palettes, and now a palette that needs a dark
@@ -277,7 +320,19 @@ extraction. What was taken:
   every length in `rem`, and an inline `px` written at the call site is the one thing
   that cannot participate.
 - **`DismissOnEscape`, on by default.** One app had it and the other documented it
-  without listening for it.
+  without listening for it. It also guards `isComposing`, so Escape backing out of an
+  input method's candidate list does not take the dialog with it, and `repeat`, so a
+  held key dismisses one thing rather than thirty.
+- **`aria-labelledby` and `aria-describedby` on the dialog, not `aria-label`.** A label
+  plus a hidden heading holding the same words gets the title announced twice, which
+  is the failure the hidden heading exists to avoid. Focus now moves into the dialog
+  and returns to whatever opened it; Tab is still not cycled, and the KDoc says so.
+- **The `::-webkit-scrollbar` block is guarded by `@supports`.** Blink and WebKit
+  ignore those pseudo-elements entirely on an element that also has a non-initial
+  `scrollbar-width`, which `*` did. Measured in Chrome 148: the pseudo-elements alone
+  give a 6px gutter, the standard properties alone give 11px, both together give 11px.
+  Seventeen lines that read as load-bearing and never ran — inherited from the source,
+  where they still do not run.
 
 What was not taken, and why:
 
