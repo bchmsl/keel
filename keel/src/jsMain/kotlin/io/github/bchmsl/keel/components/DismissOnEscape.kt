@@ -30,7 +30,17 @@ public fun DismissOnEscape(onDismiss: () -> Unit) {
 
     DisposableEffect(Unit) {
         val listener: (Event) -> Unit = { event ->
-            if ((event as? KeyboardEvent)?.key == ESCAPE) {
+            val key = event as? KeyboardEvent
+
+            // `isComposing` is the important guard, not a nicety. Escape during an
+            // input method's composition cancels the candidate the user is choosing,
+            // and a Japanese or Chinese typist would otherwise lose the whole dialog
+            // every time they backed out of a word. The browser sends a second Escape
+            // once composition has ended, so nothing is swallowed.
+            //
+            // `repeat` covers a held key: one press should dismiss one thing, not
+            // fire thirty times into whatever the dialog uncovered.
+            if (key != null && key.key == ESCAPE && !key.isComposing && !key.repeat) {
                 // Stops a browser doing anything else with it - leaving full screen,
                 // or cancelling a native picker that is not what the user meant.
                 event.preventDefault()

@@ -6,8 +6,8 @@ package io.github.bchmsl.keel.theme
  * Each one has a matching block in `keel/palettes.css`, keyed by its [Theme.id]. The
  * two halves are a pair: a [Theme] with no CSS block paints the fallback palette
  * while claiming to be something else, and a CSS block with no [Theme] can never be
- * selected. `ThemeCssTest` holds the two lists against each other so neither half
- * can be added alone.
+ * selected. `TokenContractTest` holds the two lists against each other, so neither
+ * half can be added alone.
  *
  * An app is not limited to these. Adding a palette means a [Theme] of your own and a
  * `[data-theme='...']` block in your own stylesheet; see ARCHITECTURE.md. That is the

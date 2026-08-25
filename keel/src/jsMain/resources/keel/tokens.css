@@ -41,6 +41,7 @@
   /* One number sets the shape language. The rest are derived, so a change to
      `--radius` moves every corner together instead of most of them. */
   --radius: 0.75rem;
+  --radius-xs: calc(var(--radius) - 8px);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -49,8 +50,14 @@
 
   /* ----------------------------------------------------------- motion ---- */
   /* Named so a component states its intent rather than a number, and so a
-     consumer can retime the whole interface from one place. */
-  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+     consumer can retime the whole interface from one place.
+
+     `--ease` is the CSS keyword, not a curve of its own. That is deliberate: it
+     is the value the rules it replaced already used, so tokenising them changed
+     nothing about how anything moves. A house curve belongs to an app, and an
+     app that wants one sets this token - `cubic-bezier(0.32, 0.72, 0, 1)` is a
+     good Apple-like choice - rather than finding one imposed by a library. */
+  --ease: ease;
   --duration-fast: 150ms;
   --duration-slow: 200ms;
 

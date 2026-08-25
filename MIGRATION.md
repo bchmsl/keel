@@ -57,6 +57,10 @@ follow:
 | `@keyframes slide-in-from-right` | `keel-slide-in-from-right` |
 | `@keyframes slide-in-from-top` | `keel-slide-in-from-top` |
 
+`.dialog__title` is **gone**, not renamed: nothing in the library ever emitted it, and
+a dialog's visible heading is its caller's content. Any Dayboard rule using it keeps
+its own copy.
+
 `@keyframes task-complete` and `.task-done` are **not** in keel — a task fading when
 it is finished is Dayboard's own idea. They move out of the deleted `tokens.css` and
 into `cards.css`.
@@ -71,7 +75,7 @@ the `classNames` helper it needed to call.
 **`Icon(size)` is now `Int?`.** Every existing call still compiles. `null` means
 "sized by CSS".
 
-**`Escape now closes dialogs.** This is a bug fix, and the one change to test by hand.
+**Escape now closes dialogs.** This is a bug fix, and the one change to test by hand.
 
 `ui/components/Dialog.kt` currently states that dismissing is available three ways —
 the scrim, the close button and Escape. It is not: there is no window-level keydown
@@ -79,11 +83,12 @@ listener anywhere in `src/jsMain`, and the only `Escape` handlers are per-field
 `onKeyDown`s that cancel an inline edit. Escape has never closed a Dayboard dialog.
 The comment is wrong.
 
-keel's `Dialog` listens for it, on by default. The interaction to check is the two
-existing per-field handlers — `SettingsPanel.kt:514` and `TaskEditDialog.kt:163`
-and `:250` — which cancel an inline edit. They must call `event.stopPropagation()`,
-or one Escape inside an inline editor will cancel the edit **and** close the dialog
-around it. A handler nearer the key wins once it stops propagation.
+keel's `Dialog` listens for it, on by default. The interaction to check is the three
+existing per-field handlers that cancel an inline edit — `SettingsPanel.kt:514`,
+`TaskEditDialog.kt:163` and `TaskEditDialog.kt:250`. Each must call
+`event.stopPropagation()`, or one Escape inside an inline editor will cancel the edit
+**and** close the dialog around it. A handler nearer the key wins once it stops
+propagation.
 
 **Buttons now carry `type="button"`.** Dayboard's three real submit controls are raw
 elements with an explicit `type`, so nothing changes for them. Any future submit
@@ -93,16 +98,38 @@ button built from keel's `Button` passes `type = ButtonType.Submit`.
 follow the theme instead of always being light. An improvement, and a visible change
 worth looking at once in dark mode.
 
+**The dialog is labelled differently.** `aria-label` is gone in favour of
+`aria-labelledby` / `aria-describedby` pointing at the hidden heading and paragraph,
+and focus now moves into the dialog on open and back to the opener on close. Nothing
+visual changes; what changes is what a screen reader says and where Tab resumes.
+Worth one pass with VoiceOver.
+
+**Theme ids are now constrained** to lower-case letters, digits and single hyphens.
+All six of Dayboard's already comply, so this is only a note for a new palette.
+
+**The scrollbar rules moved behind `@supports`.** Dayboard's own
+`::-webkit-scrollbar` block never ran — the `scrollbar-width: thin` on `*` in the same
+file disables those pseudo-elements in Blink and WebKit, measured at an 11px gutter
+rather than the intended 6px. Nothing changes by adopting keel's version; the point is
+that the 6px never existed, so do not treat its absence as a regression.
+
 ## What becomes available
 
-New tokens Dayboard can adopt at its own pace, each replacing literals it repeats
-today: `--radius-sm/md/lg/xl/pill` (24 hardcoded radii, and 15 literal `9999px`),
-`--ease` and `--duration-fast/slow` (63 `150ms ease` and 3 `200ms ease-out`),
-`--font-sans` and `--font-mono` (the same stack written three times), `--shadow-sm`
-and `--shadow-lg`, and `--success`.
+New tokens Dayboard can adopt at its own pace. Counted across its seven stylesheets:
 
-`classNames(...)` replaces the `*listOfNotNull(…).toTypedArray()` shape, which
-appears about fifteen times.
+| Token | Replaces |
+|---|---|
+| `--radius-xs/sm/md/lg/xl/pill` | 42 `border-radius` declarations written as a literal, 15 of them the literal `9999px` |
+| `--duration-fast`, `--duration-slow` | 63 `150ms ease`, 3 `200ms ease-out` |
+| `--ease` | nothing yet — it *is* `ease`, so adopting it changes no timing. It exists so an app can retime everything from one line. |
+| `--font-sans`, `--font-mono` | 3 font-family literals holding 2 distinct stacks: Inter once, JetBrains Mono twice |
+| `--shadow-sm`, `--shadow-lg` | the repeated `0 1px 2px 0 rgb(0 0 0 / 0.05)` and the dialog's larger pair |
+
+`--success` is **not** in that table: Dayboard has no success colour today, so it is
+new API rather than a replacement.
+
+`classNames(...)` replaces the `*listOfNotNull(…).toTypedArray()` shape, which appears
+31 times across `src/jsMain/kotlin`.
 
 ## Order of work
 
@@ -203,13 +230,20 @@ never loads the web sheet.
 ```css
 :root {
   --font-sans: 'Noto Sans Georgian', 'BPG Arial', Sylfaen, ui-sans-serif, system-ui, sans-serif;
+  --radius-xs: 0.25rem;
   --radius-sm: 0.5625rem;   /* 9px, small chrome over media */
+  /* `.btn` reads --radius-md, and every Dakalebi button is a capsule. Leave this
+     out and the buttons quietly become 10px rounded rectangles, because the step
+     keeps deriving from keel's --radius. */
+  --radius-md: var(--radius-pill);
   --radius-lg: 0.875rem;    /* 14px, surfaces */
   --radius-xl: 0.875rem;
   --radius-pill: 999px;
   --ease: cubic-bezier(0.32, 0.72, 0, 1);
 }
 ```
+
+Every step, not a subset. A step left alone keeps deriving from keel's `--radius`.
 
 **TV only** — the reason `--duration-*` are tokens at all:
 

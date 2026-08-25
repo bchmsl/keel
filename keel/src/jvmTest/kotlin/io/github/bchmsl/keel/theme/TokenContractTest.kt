@@ -69,6 +69,26 @@ class TokenContractTest {
         )
     }
 
+    @Test
+    fun everySwatchMatchesThePaletteItSelects() {
+        // A theme picker paints `accentHex` while a *different* palette's variables
+        // are live, which is why that field is a plain hex. But it is a promise about
+        // what pressing the swatch will do, and nothing else checks it: a swatch can
+        // drift from its own `--primary` and look perfectly reasonable on its own.
+        val mismatched = KeelThemes.All
+            .filterNot { it.id in KNOWN_SWATCH_MISMATCHES }
+            .mapNotNull { theme ->
+                val primary = primaryOf(theme.id) ?: fail("no --primary for ${theme.id}")
+                val delta = channelDistance(theme.accentHex, hslToHex(primary))
+                if (delta > SWATCH_TOLERANCE) "${theme.id} off by $delta/255" else null
+            }
+
+        assertTrue(
+            mismatched.isEmpty(),
+            "swatches that do not match the palette they select: $mismatched",
+        )
+    }
+
     // --------------------------------------------------- the token contract
 
     @Test
@@ -86,23 +106,6 @@ class TokenContractTest {
             .distinct()
 
         assertTrue(missing.isEmpty(), "tokens read but never defined: $missing")
-    }
-
-    @Test
-    fun everyPaletteDefinesTheSameColours() {
-        // A palette missing one colour inherits whichever palette was declared last,
-        // which in practice means it inherits the default's - so the page paints, and
-        // one colour is quietly wrong.
-        val blocks = paletteBlocks()
-        val expected = blocks.getValue(":root, [data-theme='coral']")
-
-        blocks.forEach { (selector, declared) ->
-            assertEquals(
-                expected - OPTIONAL_PER_PALETTE,
-                declared - OPTIONAL_PER_PALETTE,
-                "$selector does not declare the same colours as the default palette",
-            )
-        }
     }
 
     @Test
@@ -143,6 +146,45 @@ class TokenContractTest {
     }
 
     @Test
+    fun theContractSheetDeclaresNoColourTheListHasMissed() {
+        // The direction that was missing. Without it a colour could be added to
+        // tokens.css and used by a component while never appearing in `KeelTokens`,
+        // so an app reading the published list would not know it existed.
+        val listed = KeelTokens.AllColors.toSet()
+
+        val undeclared = DEFINITION.findAll(tokens)
+            .map { it.groupValues[1] }
+            .filter { it !in listed && it !in NON_COLOUR_TOKENS }
+            .toList()
+
+        assertTrue(
+            undeclared.isEmpty(),
+            "declared in tokens.css but absent from KeelTokens: $undeclared. " +
+                "Add it to KeelTokens, or to NON_COLOUR_TOKENS if it is not a colour.",
+        )
+    }
+
+    @Test
+    fun tokensMustBeLinkedBeforeAPaletteSheet() {
+        // `:root` and `[data-theme='...']` carry the same specificity, so a token
+        // declared in both is settled by source order alone. That makes the link
+        // order load-bearing for exactly the tokens in this overlap, and silent when
+        // wrong - the palette simply keeps the global value.
+        val globals = DEFINITION.findAll(tokens).map { it.groupValues[1] }.toSet()
+        val overridden = paletteBlocks().values.flatten().toSet()
+
+        val collisions = (globals intersect overridden).sorted()
+
+        assertEquals(
+            listOf("--secondary-foreground"),
+            collisions,
+            "the tokens whose value depends on tokens.css being linked first. If this " +
+                "list has grown, the ordering note in base.css and ARCHITECTURE.md " +
+                "needs to name the new ones too.",
+        )
+    }
+
+    @Test
     fun everyListedColourResolvesToSomething() {
         // The gallery paints straight from this list. A name in it with no declaration
         // anywhere paints nothing at all, and nothing else would say so.
@@ -150,6 +192,52 @@ class TokenContractTest {
 
         val missing = KeelTokens.AllColors.filterNot { it in declared }
         assertTrue(missing.isEmpty(), "listed but never declared: $missing")
+    }
+
+    // ------------------------------------------------------- colour arithmetic
+
+    /** A palette's light `--primary`, as the `H S% L%` triple it is declared as. */
+    private fun primaryOf(themeId: String): String? = BLOCK.findAll(palettes)
+        .firstOrNull { match ->
+            val selector = match.groupValues[1]
+            "[data-theme='$themeId']" in selector && ".dark" !in selector
+        }
+        ?.let { Regex("--primary\\s*:\\s*([^;]+)").find(it.groupValues[2]) }
+        ?.groupValues?.get(1)?.trim()
+
+    private fun hslToHex(triple: String): String {
+        val (h, s, l) = triple.split(Regex("\\s+")).let {
+            Triple(
+                it[0].toDouble(),
+                it[1].removeSuffix("%").toDouble() / 100,
+                it[2].removeSuffix("%").toDouble() / 100,
+            )
+        }
+
+        val c = (1 - kotlin.math.abs(2 * l - 1)) * s
+        val x = c * (1 - kotlin.math.abs((h / 60) % 2 - 1))
+        val m = l - c / 2
+
+        val (r, g, b) = when {
+            h < 60 -> Triple(c, x, 0.0)
+            h < 120 -> Triple(x, c, 0.0)
+            h < 180 -> Triple(0.0, c, x)
+            h < 240 -> Triple(0.0, x, c)
+            h < 300 -> Triple(x, 0.0, c)
+            else -> Triple(c, 0.0, x)
+        }
+
+        return listOf(r, g, b)
+            .joinToString("", prefix = "#") {
+                ((it + m) * 255).toInt().coerceIn(0, 255).toString(16).padStart(2, '0')
+            }
+    }
+
+    /** The largest per-channel difference between two six-digit hex colours. */
+    private fun channelDistance(left: String, right: String): Int = (1..5 step 2).maxOf { i ->
+        kotlin.math.abs(
+            left.substring(i, i + 2).toInt(16) - right.substring(i, i + 2).toInt(16),
+        )
     }
 
     // ------------------------------------------------------------- reading
@@ -196,15 +284,73 @@ class TokenContractTest {
         val BLOCK = Regex("([^{}]+)\\{([^{}]*)}")
         val COMMENT = Regex("/\\*.*?\\*/", RegexOption.DOT_MATCHES_ALL)
 
-        /** A colour written out rather than named. */
-        val LITERAL_COLOUR = Regex("#[0-9a-fA-F]{3,8}\\b|\\brgba?\\(|\\bhsla?\\((?!var)")
+        /**
+         * How far a swatch may sit from its palette's `--primary`.
+         *
+         * Eight, because converting an HSL triple back to hex rounds: five of the six
+         * shipped palettes land within 3/255 of their swatch, which is rounding, and
+         * the sixth is 17/255 away, which is a different colour. Eight separates
+         * those two populations with room to spare.
+         */
+        const val SWATCH_TOLERANCE = 8
+
+        /**
+         * Palettes whose swatch and `--primary` disagree, and which of the two is
+         * meant to be right is a design decision rather than a bug to patch.
+         *
+         * Lavender's swatch is `#a78bfa` (about `255 92% 76%`) while its palette
+         * declares `263 70% 71%` - a different hue, a much lower saturation, and
+         * 17/255 apart at the widest channel. Both values came from Dayboard, where
+         * they disagree too, so this is inherited rather than introduced. Listing it
+         * keeps the check live for every other palette instead of deleting the check.
+         */
+        val KNOWN_SWATCH_MISMATCHES = setOf("lavender")
+
+        /**
+         * A colour written out rather than named as a token.
+         *
+         * Covers hex, the functional notations including the modern wide-gamut ones,
+         * and the CSS named colours a stylesheet actually reaches for. Not all 148
+         * names: `orange` and `tomato` would false-positive on any rule mentioning
+         * them in a comment, and comments are stripped but selectors are not.
+         *
+         * The `hsl(` case allows whitespace before `var`, or a legitimate
+         * `hsl( var(--x) )` would be reported as a literal.
+         */
+        val LITERAL_COLOUR = Regex(
+            "#[0-9a-fA-F]{3,8}\\b" +
+                "|\\brgba?\\(" +
+                "|\\bhsla?\\(\\s*(?!var)" +
+                "|\\b(?:oklch|oklab|lab|lch|color|color-mix|device-cmyk)\\(" +
+                "|(?<![-\\w])(?:white|black|red|green|blue|gray|grey|silver|navy|teal" +
+                "|olive|maroon|aqua|fuchsia|lime|purple|yellow|orange)(?![-\\w])",
+        )
+
+        /**
+         * Declared in tokens.css and deliberately not a colour.
+         *
+         * Listed rather than pattern-matched, so adding a token is a decision about
+         * which half of the contract it belongs to rather than something that slips
+         * past on a naming coincidence.
+         */
+        val NON_COLOUR_TOKENS = setOf(
+            "--radius", "--radius-xs", "--radius-sm", "--radius-md", "--radius-lg",
+            "--radius-xl", "--radius-pill",
+            "--ease", "--duration-fast", "--duration-slow",
+            "--font-sans", "--font-mono",
+            "--shadow-sm", "--shadow-lg",
+        )
 
         /**
          * Declared by some palettes and not others, legitimately.
          *
-         * `--secondary-foreground` has a global default that the two palettes with a
-         * pale secondary override, and `--primary` differs between the modes of one
-         * palette only. Both are deliberate, and both are explained in tokens.css.
+         * One entry. `--secondary-foreground` has a global default in tokens.css that
+         * the two palettes with a pale secondary override with a dark ink, so it
+         * appears in two of the twelve blocks and not the other ten.
+         *
+         * `--primary` is NOT here, and is worth the note: one palette gives it a
+         * different value in its dark block, but every block declares it, so it is
+         * part of the per-palette contract rather than an exception to it.
          */
         val OPTIONAL_PER_PALETTE = setOf("--secondary-foreground")
 

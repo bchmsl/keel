@@ -13,7 +13,7 @@ class KeelThemesTest {
 
     @Test
     fun coralIsTheDefault() {
-        // It is also the palette declared on bare `:root` in tokens.css. Changing
+        // It is also the palette declared on bare `:root` in palettes.css. Changing
         // this without moving that block would make the frame the boot script paints
         // disagree with every frame after it.
         assertEquals(KeelThemes.Coral, KeelThemes.Standard.default)
@@ -22,8 +22,9 @@ class KeelThemesTest {
 
     @Test
     fun everyShippedPaletteHasBothModes() {
-        // A dark-only palette is legal, but none of the six is one, and the stylesheet
-        // ships a `.dark` block for each. This is what would catch the two disagreeing.
+        // A dark-only palette is legal, but none of the six is one, and palettes.css
+        // ships a `.dark` block for each. This is what would catch the two
+        // disagreeing, together with TokenContractTest's own check on the blocks.
         KeelThemes.All.forEach { theme ->
             assertTrue(theme.supportsLight, "${theme.id} should have a light form")
             assertTrue(theme.supportsDark, "${theme.id} should have a dark form")

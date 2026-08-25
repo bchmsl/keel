@@ -1,13 +1,16 @@
 /*
  * The primitives.
  *
- * Every value here is a token. No literal colour, no literal radius, and no literal
- * duration - which is what lets an app change its shape language or retime its
- * interface without editing this file. The two exceptions are called out where they
- * appear, and both are white knobs on a coloured track that must stay white in
- * every palette.
+ * Every value here is a token: no literal colour, no literal radius, no literal
+ * duration. That is what lets an app change its shape language or retime its
+ * interface without editing this file.
  *
- * Reads tokens.css. Link that first.
+ * Two literals remain, both deliberate and neither a palette's business. Black at
+ * low alpha, for the modal scrim - a scrim dims whatever is behind it. And the
+ * handful of small fixed sizes that are the control itself rather than a choice
+ * about it: the 36x20 switch track and its 16px knob, the slider's 6px rail.
+ *
+ * Reads tokens.css and a palette sheet. Link those first.
  */
 
 /* ----------------------------------------------------------------- icon ---- */
@@ -26,11 +29,15 @@
 }
 
 /* What an icon falls back to when the call site passes no size and no rule sets one.
-   Without this an icon sized only by CSS would collapse: the span has no content of
-   its own, and the svg inside is 100% of it. */
+   Without it an icon sized only by CSS collapses: the span has no content of its own
+   and the svg inside is 100% of it.
+
+   `em`, not `rem`, so the fallback tracks whatever text the icon sits beside - which
+   is what an icon usually wants, and what an interface scaling itself from one root
+   font size needs. An inline size from `Icon(size = n)` still wins over this. */
 .icon {
-  width: 1rem;
-  height: 1rem;
+  width: 1em;
+  height: 1em;
 }
 
 /* --------------------------------------------------------------- button ---- */
@@ -349,7 +356,9 @@ button.card__title:hover {
 }
 
 /* Duplicated rather than combined with the WebKit selector above: a rule listing
-   both vendor pseudo-elements is dropped whole by both engines. */
+   both vendor pseudo-elements is dropped whole by both engines. Which is also why
+   the hover and the transition have to be repeated - without them Firefox gets a
+   thumb that never responds to the pointer at all. */
 .slider::-moz-range-thumb {
   height: 1rem;
   width: 1rem;
@@ -357,6 +366,11 @@ button.card__title:hover {
   border-radius: var(--radius-pill);
   background-color: hsl(var(--primary));
   box-shadow: var(--shadow-sm);
+  transition: transform var(--duration-fast) var(--ease);
+}
+
+.slider::-moz-range-thumb:hover {
+  transform: scale(1.1);
 }
 
 .slider:focus-visible {
@@ -411,14 +425,6 @@ button.card__title:hover {
   opacity: 1;
 }
 
-.dialog__title {
-  font-size: 1.125rem;
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: -0.025em;
-  margin: 0;
-}
-
 /* ------------------------------------------------------ formatted text ---- */
 
 .formatted {
@@ -446,10 +452,13 @@ button.card__title:hover {
 }
 
 .formatted__code {
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   padding: 0.125rem 0.375rem;
   background-color: hsl(var(--muted));
-  color: hsl(var(--accent-foreground));
+  /* `--foreground`, not `--accent-foreground`: this sits on `--muted`, and taking
+     the ink named for a different surface is the kind of pairing that reads
+     correctly right up until a palette overrides one of the two. */
+  color: hsl(var(--foreground));
   font-family: var(--font-mono);
   font-size: 0.85em;
 }
@@ -483,9 +492,13 @@ button.card__title:hover {
     color var(--duration-fast) var(--ease);
 }
 
+/* `--accent-foreground`, matching the two button hovers that use the same surface.
+   All three paint identically today only because the token is derived from
+   `--foreground`; a palette that overrides it would otherwise make the toolbar's
+   hover diverge from the buttons' on the very same background. */
 .toolbar__button:hover {
   background-color: hsl(var(--accent));
-  color: hsl(var(--foreground));
+  color: hsl(var(--accent-foreground));
 }
 
 /* ------------------------------------------------------------- tag pill ---- */

@@ -31,12 +31,25 @@ public data class Theme(
     val supportsDark: Boolean = true,
 ) {
     init {
-        require(id.isNotBlank()) { "a theme id is stored and selected on, so it cannot be blank" }
+        require(THEME_ID.matches(id)) {
+            "'$id' cannot be a theme id. An id is used three ways and each one " +
+                "constrains it: as an attribute value, inside the CSS selector " +
+                "[data-theme='...'], and interpolated into the boot script. " +
+                "Lower-case letters, digits and single hyphens keep all three safe."
+        }
         require(supportsLight || supportsDark) {
             "theme '$id' supports neither light nor dark, so it can never be painted"
         }
     }
 }
+
+/**
+ * What a [Theme.id] may be.
+ *
+ * File-private rather than a companion object, which for one constant would be an
+ * extra class carrying nothing.
+ */
+private val THEME_ID = Regex("^[a-z0-9]+(-[a-z0-9]+)*$")
 
 /**
  * The palettes an app offers, and which one it falls back to.
