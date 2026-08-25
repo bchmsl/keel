@@ -83,12 +83,19 @@ listener anywhere in `src/jsMain`, and the only `Escape` handlers are per-field
 `onKeyDown`s that cancel an inline edit. Escape has never closed a Dayboard dialog.
 The comment is wrong.
 
-keel's `Dialog` listens for it, on by default. The interaction to check is the three
-existing per-field handlers that cancel an inline edit — `SettingsPanel.kt:514`,
+keel's `Dialog` listens for it, on by default. The interaction to check is the two
+existing per-field handlers that cancel an inline edit inside a task's dialog —
 `TaskEditDialog.kt:163` and `TaskEditDialog.kt:250`. Each must call
 `event.stopPropagation()`, or one Escape inside an inline editor will cancel the edit
 **and** close the dialog around it. A handler nearer the key wins once it stops
 propagation.
+
+`SettingsPanel.kt` has a third `"Escape" -> onCancel()` handler, in its tag editor,
+but it needs no such fix: the settings panel is its own hand-built sliding overlay
+(`.panel`, not `.dialog__content`) and never adopts keel's `Dialog` or
+`DismissOnEscape` - it is the "side drawer" keel does not have yet, listed under
+"What is not in it yet" in keel's own README. There is nothing for that Escape to
+conflict with, so leave it alone.
 
 **Buttons now carry `type="button"`.** Dayboard's three real submit controls are raw
 elements with an explicit `type`, so nothing changes for them. Any future submit
