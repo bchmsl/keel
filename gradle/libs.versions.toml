@@ -1,0 +1,25 @@
+# One place for every version.
+#
+# A design system has to be built against the same Compose runtime its consumers
+# link, so these are not private implementation details: `compose` and `kotlin`
+# here must match the apps that depend on the published artifact. That is exactly
+# why they are declared once rather than repeated per module.
+
+[versions]
+kotlin = "2.3.20"
+compose = "1.11.1"
+coroutines = "1.11.0"
+kover = "0.9.1"
+
+[libraries]
+compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose" }
+# Compose HTML is Kotlin/JS only and has no multiplatform variant, so anything
+# depending on it cannot live in a shared source set.
+compose-html-core = { module = "org.jetbrains.compose.html:html-core", version.ref = "compose" }
+coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+
+[plugins]
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+compose = { id = "org.jetbrains.compose", version.ref = "compose" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }

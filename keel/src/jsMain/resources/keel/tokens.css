@@ -1,0 +1,106 @@
+/*
+ * The token contract: everything that is not a palette.
+ *
+ * Shape, motion, type, shadow, and the colours that do not change with a palette.
+ * A component reads only tokens, which is what lets one stylesheet serve a light
+ * six-palette dashboard and a single-palette dark video app without either editing
+ * the other's rules.
+ *
+ * ---------------------------------------------------------------- colours ----
+ *
+ * Every colour is a bare HSL triple (`H S% L%`) rather than a finished colour, so a
+ * consumer can add alpha with the slash form: `hsl(var(--primary) / 0.1)`. A hex
+ * token cannot do that, which is why the format is part of the contract rather than
+ * a preference. Converting a hex palette to triples is lossless in the direction
+ * that matters: any sRGB hex has an exact HSL representation.
+ *
+ * ------------------------------------------------------------------ using ----
+ *
+ * This file declares NO palette. On its own it paints nothing, deliberately: a
+ * palette is the one part of a design system an app should own outright.
+ *
+ *   link this, then `palettes.css`  -> the six shipped palettes
+ *   link this, then your own sheet  -> your palettes and nothing else
+ *
+ * The second form is the point of the split. A single-palette app must not have to
+ * override eleven palettes it will never paint, and must not inherit a fallback
+ * that fights its own - a video app on true black should stay on true black rather
+ * than being re-derived as somebody else's near-black.
+ *
+ * ------------------------------------------------------- adding a palette ----
+ *
+ * A palette is a `[data-theme='id']` block setting the nine per-palette colours,
+ * plus a `[data-theme='id'].dark` block if it has a dark form, plus a `Theme` in
+ * Kotlin with the same id. Neither half works alone: a `Theme` with no block paints
+ * whatever was declared last while claiming to be something else, and a block with
+ * no `Theme` can never be selected. See ARCHITECTURE.md for a worked dark-only
+ * example, and `KeelTokens` for the list of colours a palette must declare.
+ */
+:root {
+  /* ------------------------------------------------------------ shape ---- */
+  /* One number sets the shape language. The rest are derived, so a change to
+     `--radius` moves every corner together instead of most of them. */
+  --radius: 0.75rem;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-pill: 9999px;
+
+  /* ----------------------------------------------------------- motion ---- */
+  /* Named so a component states its intent rather than a number, and so a
+     consumer can retime the whole interface from one place. */
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --duration-fast: 150ms;
+  --duration-slow: 200ms;
+
+  /* ------------------------------------------------------ type stacks ---- */
+  /* Tokens rather than rules, because this is the layer a localised app has to
+     replace: a Georgian interface needs a face that covers the alphabet, and
+     changing that must not mean forking the stylesheet.
+
+     The mono stack carries digits that have to hold still - a countdown, a
+     timecode, a counter - so it is a separate token and not a fallback. */
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* ---------------------------------------------------------- shadows ---- */
+  /* Overridden under `.dark`, and they have to be: a 5% black shadow is
+     invisible against a dark surface, so a single value would silently drop
+     every elevation cue in dark mode. */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  /* -------------------------------------------- palette-independent ------ */
+  /* The same in all twelve palettes. Destructive and success are states rather
+     than accents: an app's identity should not change what "this deletes
+     something" looks like. */
+  --primary-foreground: 0 0% 100%;
+  --secondary-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --success: 158 64% 52%;
+  --success-foreground: 0 0% 100%;
+
+  /* Derived; see the note above. `var()` resolves against whichever palette block
+     won on <html>, because every one of these selectors targets that element. */
+  --input: var(--border);
+  --ring: var(--primary);
+  --popover: var(--card);
+  --card-foreground: var(--foreground);
+  --popover-foreground: var(--foreground);
+  --accent-foreground: var(--foreground);
+
+  /* Tells the browser which way to draw the things a page does not style: form
+     controls, the scrollbar gutter, a date picker. Without it a dark page gets
+     light native controls. */
+  color-scheme: light;
+}
+
+:root.dark {
+  color-scheme: dark;
+
+  /* Stronger, because the light values are invisible here. */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+}

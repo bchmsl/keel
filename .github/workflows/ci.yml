@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # 21 because that is the minimum the README claims. Pinning the minimum rather
+      # than the newest is what makes the claim true rather than hopeful.
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Lint
+        run: |
+          curl -sSLo ktlint \
+            https://github.com/pinterest/ktlint/releases/download/1.5.0/ktlint
+          chmod +x ktlint
+          ./ktlint "keel/src/**/*.kt" "gallery/src/**/*.kt" "**/*.kts"
+
+      # Runs on the JVM and on Node. Nothing in `:keel` needs a browser, so no
+      # browser is installed on the runner.
+      - name: Test
+        run: ./gradlew :keel:allTests
+
+      - name: Coverage
+        run: ./gradlew :keel:koverHtmlReport
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: keel/build/reports/kover/html
+
+      # The boot script is HTML and cannot be type-checked, so nothing but this
+      # notices when it drifts from `ThemeController.StorageKeys` and the catalogue's
+      # default. The symptom of drift is a palette flash on every reload, which is
+      # easy to stop noticing and impossible to see in a test.
+      - name: Boot script agrees with the Kotlin
+        run: |
+          html=gallery/src/jsMain/resources/index.html
+          kt=keel/src/jsMain/kotlin/io/github/bchmsl/keel/theme/ThemeController.kt
+          themes=keel/src/commonMain/kotlin/io/github/bchmsl/keel/theme/KeelThemes.kt
+
+          # The two storage keys, read out of StorageKeys' defaults.
+          keys=$(grep -oE 'val (theme|colorMode): String = "[a-zA-Z]+"' "$kt" \
+                  | grep -oE '"[a-zA-Z]+"' | tr -d '"')
+          test -n "$keys" || { echo "::error::found no storage keys in $kt"; exit 1; }
+          for key in $keys; do
+            grep -q "'$key'" "$html" \
+              || { echo "::error::index.html does not read the '$key' key"; exit 1; }
+          done
+
+          # The palette the script falls back to, read out of the catalogue.
+          default=$(grep -oE 'default = [A-Z][a-zA-Z]+' "$themes" | head -1 \
+                     | sed 's/default = //' | tr '[:upper:]' '[:lower:]')
+          test -n "$default" || { echo "::error::found no default palette"; exit 1; }
+          grep -q "'$default'" "$html" \
+            || { echo "::error::index.html does not fall back to '$default'"; exit 1; }
+
+      # The gallery is a real consumer, so building it is the check that the public
+      # API and the CSS delivery both still work.
+      - name: Build the gallery
+        run: ./gradlew :gallery:jsBrowserDistribution
+
+      # A stylesheet missing here fails silently in a browser: an unresolved var()
+      # falls back to the property's initial value, so the page renders unstyled and
+      # nothing is logged.
+      - name: Stylesheets reached the distribution
+        run: |
+          dist=gallery/build/dist/js/productionExecutable
+          for sheet in tokens palettes base components; do
+            test -f "$dist/keel/$sheet.css" || {
+              echo "::error::$sheet.css is missing from the distribution"; exit 1; }
+          done

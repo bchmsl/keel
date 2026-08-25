@@ -1,0 +1,33 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{kt,kts}]
+indent_style = space
+indent_size = 4
+# `intellij_idea`, not ktlint 1.x's own `ktlint_official`. The latter adds rules that
+# rewrite readable code: every two-parameter signature exploded onto its own lines,
+# every multiline expression forced off the assignment. This is the style the code was
+# written in, and the one the IDE formats to.
+ktlint_code_style = intellij_idea
+# 100, not ktlint's default 140. A line that fits in 100 columns survives a split
+# diff view and a side-by-side review without wrapping.
+max_line_length = 100
+ktlint_standard_filename = disabled
+# Compose composables are PascalCase by convention, which this rule reads as a
+# malformed function name.
+ktlint_standard_function-naming = disabled
+
+[*.{css,html,js,json,yml,yaml,md}]
+indent_style = space
+indent_size = 2
+
+# Generated from the lucide repository, one long line of path data per icon. Its own
+# header says not to edit it, and reformatting it would be undone by the next run of
+# tools/generate_lucide.py.
+[**/icons/LucideIcons.kt]
+ktlint = disabled

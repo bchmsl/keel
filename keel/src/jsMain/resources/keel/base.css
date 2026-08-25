@@ -1,0 +1,164 @@
+/*
+ * The page-level rules: the reset, the document surface, motion, and scrollbars.
+ *
+ * Separate from tokens.css so a second surface - a TV stylesheet, an embedded
+ * widget - can take the palette without also inheriting a phone type scale and a
+ * page background. This file reads tokens and defines none, which is what makes
+ * that split safe.
+ *
+ * Link order is tokens.css, a palette sheet, then this, then components.css.
+ * Nothing enforces it, and the failure is quiet: an unresolved var() falls back to
+ * the property's initial value, so a page linked in the wrong order renders
+ * unstyled rather than erroring.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  /* Every element's default border colour is the theme's, so a rule that adds a
+     border never has to name one. */
+  border-color: hsl(var(--border));
+}
+
+html {
+  /* Where the page disables pinch zoom, a double-tap must not be held back while
+     the browser waits to see whether it was the start of a zoom gesture. */
+  touch-action: manipulation;
+}
+
+body {
+  margin: 0;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/*
+ * Numbers that have to hold still: a countdown, a timecode, a counter.
+ *
+ * `tabular-nums` is the point of it. Without it a 1 is narrower than an 8, so a
+ * counting display shuffles sideways every second and the eye follows the movement
+ * instead of reading the number.
+ */
+.font-mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Present for assistive technology, absent for everyone else.
+ *
+ * `display: none` would remove it from the accessibility tree along with everything
+ * else, which is the opposite of what this is for.
+ */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ----------------------------------------------------------- animations ---- */
+
+/* A live indicator breathes rather than blinks: a blink reads as an error. */
+@keyframes keel-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.pulse {
+  animation: keel-pulse 2s ease-in-out infinite;
+}
+
+/* Turns any icon into a spinner. */
+@keyframes keel-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  animation: keel-spin 1s linear infinite;
+}
+
+@keyframes keel-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Dialogs enter from slightly small, which reads as arriving rather than appearing. */
+@keyframes keel-dialog-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+}
+
+/* A panel anchored to an edge comes from that edge. */
+@keyframes keel-slide-in-from-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+/* An expansion grows downward out of the row that opened it. */
+@keyframes keel-slide-in-from-top {
+  from {
+    opacity: 0;
+    transform: translateY(-0.25rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Honour the setting without disabling the interface: transitions collapse to
+     effectively instant rather than being removed, so a state change still lands
+     and nothing depends on a transition that never fires. */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ----------------------------------------------------------- scrollbars ---- */
+/* Thin and quiet. Sized rather than hidden: a scrollbar nobody can see is a
+   scrollbar nobody can drag. */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--muted-foreground) / 0.25);
+  border-radius: var(--radius-pill);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--muted-foreground) / 0.4);
+}

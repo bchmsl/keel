@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>keel</title>
+    <meta
+      name="description"
+      content="A Compose HTML design system: themeable tokens, primitives and lucide icons."
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+    />
+
+    <!--
+      Order matters: tokens declares the variables everything below reads, and a
+      palette sheet supplies the colours. `palettes.css` is the six shipped palettes;
+      an app with its own would link its own sheet here instead and inherit none of
+      these.
+    -->
+    <link rel="stylesheet" href="keel/tokens.css" />
+    <link rel="stylesheet" href="keel/palettes.css" />
+    <link rel="stylesheet" href="keel/base.css" />
+    <link rel="stylesheet" href="keel/components.css" />
+    <!-- The gallery's own page layout. Reads keel's tokens, defines none. -->
+    <link rel="stylesheet" href="gallery.css" />
+
+    <!--
+      Paint the stored palette before the bundle loads.
+
+      Without this, every reload shows one frame of the default light palette before
+      Kotlin runs and applies the real one - a white flash for anyone in dark mode.
+      The keys must match `ThemeController.StorageKeys`, and the fallback must match
+      the catalogue's default. `ThemeController.bootScript` generates this exact
+      text, and the gallery prints it for whatever catalogue is in use.
+    -->
+    <script>
+      (function () {
+        try {
+          var root = document.documentElement;
+          var mode = localStorage.getItem('colorMode') || 'system';
+          root.setAttribute('data-theme', localStorage.getItem('themeId') || 'coral');
+          root.classList.toggle(
+            'dark',
+            mode === 'dark' ||
+              (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+          );
+        } catch (error) {
+          /* Private browsing can make localStorage throw; the defaults are fine. */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script src="gallery.js"></script>
+  </body>
+</html>
