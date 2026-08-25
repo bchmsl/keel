@@ -32,11 +32,15 @@ class ThemeTest {
         }
 
         listOf(
-            "",             // resolves to the fallback for ever, looking like a no-op
+            // Blank resolves to the fallback for ever, which looks like the theme
+            // simply not working. `Coral` matches no attribute selector, since those
+            // are case-sensitive here. `it's` would close the quote in the generated
+            // boot script. The hyphen shapes are ruled out to keep ids to one form.
+            "",
             "   ",
-            "Coral",        // an attribute selector is case-sensitive here
+            "Coral",
             "my theme",
-            "it's",         // would close the quote in the boot script
+            "it's",
             "-leading",
             "trailing-",
             "double--hyphen",
