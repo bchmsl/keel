@@ -46,30 +46,38 @@ jobs:
           path: keel/build/reports/kover/html
 
       # The boot script is HTML and cannot be type-checked, so nothing but this
-      # notices when it drifts from `ThemeController.StorageKeys` and the catalogue's
-      # default. The symptom of drift is a palette flash on every reload, which is
-      # easy to stop noticing and impossible to see in a test.
+      # notices when it drifts from `StorageKeys` and the catalogue's default. The
+      # symptom of drift is a palette flash on every reload, which is easy to stop
+      # noticing and impossible to see in a unit test.
+      #
+      # Every lookup is asserted non-empty before it is used. This step has already
+      # earned that once: `StorageKeys` moved to another file and the check reported
+      # it rather than passing on an empty list.
       - name: Boot script agrees with the Kotlin
         run: |
           html=gallery/src/jsMain/resources/index.html
-          kt=keel/src/jsMain/kotlin/io/github/bchmsl/keel/theme/ThemeController.kt
+          boot=keel/src/commonMain/kotlin/io/github/bchmsl/keel/theme/BootScript.kt
           themes=keel/src/commonMain/kotlin/io/github/bchmsl/keel/theme/KeelThemes.kt
 
-          # The two storage keys, read out of StorageKeys' defaults.
-          keys=$(grep -oE 'val (theme|colorMode): String = "[a-zA-Z]+"' "$kt" \
+          keys=$(grep -oE 'val (theme|colorMode): String = "[a-zA-Z]+"' "$boot" \
                   | grep -oE '"[a-zA-Z]+"' | tr -d '"')
-          test -n "$keys" || { echo "::error::found no storage keys in $kt"; exit 1; }
+          test -n "$keys" || { echo "::error::no storage keys found in $boot"; exit 1; }
           for key in $keys; do
             grep -q "'$key'" "$html" \
               || { echo "::error::index.html does not read the '$key' key"; exit 1; }
           done
 
-          # The palette the script falls back to, read out of the catalogue.
           default=$(grep -oE 'default = [A-Z][a-zA-Z]+' "$themes" | head -1 \
                      | sed 's/default = //' | tr '[:upper:]' '[:lower:]')
-          test -n "$default" || { echo "::error::found no default palette"; exit 1; }
+          test -n "$default" || { echo "::error::no default palette found"; exit 1; }
           grep -q "'$default'" "$html" \
             || { echo "::error::index.html does not fall back to '$default'"; exit 1; }
+
+          # The forced-mode lookup, which is what makes a single-mode palette paint
+          # the right way on its first frame. A page still carrying the older script
+          # would pass every check above.
+          grep -q 'hasOwnProperty.call(forced' "$html" \
+            || { echo "::error::index.html is running an older boot script"; exit 1; }
 
       # The gallery is a real consumer, so building it is the check that the public
       # API and the CSS delivery both still work.

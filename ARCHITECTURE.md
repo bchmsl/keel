@@ -234,6 +234,14 @@ decimals the brand red would land on `#e1332d`.
 Declared on bare `:root` too, which for a single-palette app is the whole point:
 there is no other palette for an unknown `data-theme` to fall back to.
 
+A dark-only palette still gets the `dark` class on `<html>`, and needs to.
+`resolvesToDark` returns true for it whatever is stored, so both `ThemeController`
+and the boot script add the class - which is what lets `:root.dark`'s stronger
+shadows and `color-scheme: dark` apply. A palette written to select on
+`[data-theme='cinema']` alone therefore works; so does one that also qualifies with
+`.dark`. What does not work is assuming the class is absent because there is no
+light mode to contrast with.
+
 ## How the CSS gets there
 
 **A Kotlin Multiplatform library's `jsMain/resources` do not reach a consumer's

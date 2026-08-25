@@ -69,6 +69,26 @@ class TokenContractTest {
         )
     }
 
+    @Test
+    fun everySwatchMatchesThePaletteItSelects() {
+        // A theme picker paints `accentHex` while a *different* palette's variables
+        // are live, which is why that field is a plain hex. But it is a promise about
+        // what pressing the swatch will do, and nothing else checks it: a swatch can
+        // drift from its own `--primary` and look perfectly reasonable on its own.
+        val mismatched = KeelThemes.All
+            .filterNot { it.id in KNOWN_SWATCH_MISMATCHES }
+            .mapNotNull { theme ->
+                val primary = primaryOf(theme.id) ?: fail("no --primary for ${theme.id}")
+                val delta = channelDistance(theme.accentHex, hslToHex(primary))
+                if (delta > SWATCH_TOLERANCE) "${theme.id} off by $delta/255" else null
+            }
+
+        assertTrue(
+            mismatched.isEmpty(),
+            "swatches that do not match the palette they select: $mismatched",
+        )
+    }
+
     // --------------------------------------------------- the token contract
 
     @Test
@@ -174,6 +194,52 @@ class TokenContractTest {
         assertTrue(missing.isEmpty(), "listed but never declared: $missing")
     }
 
+    // ------------------------------------------------------- colour arithmetic
+
+    /** A palette's light `--primary`, as the `H S% L%` triple it is declared as. */
+    private fun primaryOf(themeId: String): String? = BLOCK.findAll(palettes)
+        .firstOrNull { match ->
+            val selector = match.groupValues[1]
+            "[data-theme='$themeId']" in selector && ".dark" !in selector
+        }
+        ?.let { Regex("--primary\\s*:\\s*([^;]+)").find(it.groupValues[2]) }
+        ?.groupValues?.get(1)?.trim()
+
+    private fun hslToHex(triple: String): String {
+        val (h, s, l) = triple.split(Regex("\\s+")).let {
+            Triple(
+                it[0].toDouble(),
+                it[1].removeSuffix("%").toDouble() / 100,
+                it[2].removeSuffix("%").toDouble() / 100,
+            )
+        }
+
+        val c = (1 - kotlin.math.abs(2 * l - 1)) * s
+        val x = c * (1 - kotlin.math.abs((h / 60) % 2 - 1))
+        val m = l - c / 2
+
+        val (r, g, b) = when {
+            h < 60 -> Triple(c, x, 0.0)
+            h < 120 -> Triple(x, c, 0.0)
+            h < 180 -> Triple(0.0, c, x)
+            h < 240 -> Triple(0.0, x, c)
+            h < 300 -> Triple(x, 0.0, c)
+            else -> Triple(c, 0.0, x)
+        }
+
+        return listOf(r, g, b)
+            .joinToString("", prefix = "#") {
+                ((it + m) * 255).toInt().coerceIn(0, 255).toString(16).padStart(2, '0')
+            }
+    }
+
+    /** The largest per-channel difference between two six-digit hex colours. */
+    private fun channelDistance(left: String, right: String): Int = (1..5 step 2).maxOf { i ->
+        kotlin.math.abs(
+            left.substring(i, i + 2).toInt(16) - right.substring(i, i + 2).toInt(16),
+        )
+    }
+
     // ------------------------------------------------------------- reading
 
     /**
@@ -217,6 +283,28 @@ class TokenContractTest {
         val USAGE = Regex("var\\((--[a-z-]+)")
         val BLOCK = Regex("([^{}]+)\\{([^{}]*)}")
         val COMMENT = Regex("/\\*.*?\\*/", RegexOption.DOT_MATCHES_ALL)
+
+        /**
+         * How far a swatch may sit from its palette's `--primary`.
+         *
+         * Eight, because converting an HSL triple back to hex rounds: five of the six
+         * shipped palettes land within 3/255 of their swatch, which is rounding, and
+         * the sixth is 17/255 away, which is a different colour. Eight separates
+         * those two populations with room to spare.
+         */
+        const val SWATCH_TOLERANCE = 8
+
+        /**
+         * Palettes whose swatch and `--primary` disagree, and which of the two is
+         * meant to be right is a design decision rather than a bug to patch.
+         *
+         * Lavender's swatch is `#a78bfa` (about `255 92% 76%`) while its palette
+         * declares `263 70% 71%` - a different hue, a much lower saturation, and
+         * 17/255 apart at the widest channel. Both values came from Dayboard, where
+         * they disagree too, so this is inherited rather than introduced. Listing it
+         * keeps the check live for every other palette instead of deleting the check.
+         */
+        val KNOWN_SWATCH_MISMATCHES = setOf("lavender")
 
         /**
          * A colour written out rather than named as a token.

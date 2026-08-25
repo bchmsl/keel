@@ -29,11 +29,15 @@
 }
 
 /* What an icon falls back to when the call site passes no size and no rule sets one.
-   Without this an icon sized only by CSS would collapse: the span has no content of
-   its own, and the svg inside is 100% of it. */
+   Without it an icon sized only by CSS collapses: the span has no content of its own
+   and the svg inside is 100% of it.
+
+   `em`, not `rem`, so the fallback tracks whatever text the icon sits beside - which
+   is what an icon usually wants, and what an interface scaling itself from one root
+   font size needs. An inline size from `Icon(size = n)` still wins over this. */
 .icon {
-  width: 1rem;
-  height: 1rem;
+  width: 1em;
+  height: 1em;
 }
 
 /* --------------------------------------------------------------- button ---- */
