@@ -834,3 +834,44 @@ would silently shadow it. Both were deleted in the same change that added this:
 
 That is the same hazard as Dayboard's local `.checkbox`, which still shadows keel's
 and is the next thing on the list.
+
+## A drawer that does not scroll
+
+Dayboard's settings panel is a drawer with a header that must not scroll away. The
+list under it is long - six sections, a slider, ten tag rows - and losing the way out
+of it halfway down is unkind.
+
+keel's `Drawer` could not do that. It is a padded flex column with `overflow-y: auto`
+on the sheet itself, which is right for the drawer it was built from: Dakalebi's menu
+sheet is a short list of links that scrolls as one piece. Put a header inside that
+drawer and three things go wrong at once. The drawer's padding insets the header, so
+the border under it stops short of both edges and reads as a floating line rather than
+a division. The drawer's `gap` floats the header above the body it is meant to divide.
+And the drawer's own scrollbar carries the header away with everything else, which is
+the whole problem restated.
+
+The obvious fix was three rules in `panel.css` setting `padding`, `gap` and
+`overflow-y` back on `.panel`. That is a consumer sheet overriding keel's own layout
+from outside, which is exactly what the standing rule forbids, and it would have been
+invisible to anyone reading `Drawer`.
+
+So the choice moved into keel as `DrawerLayout`:
+
+| | `Scrolling` | `Framed` |
+|---|---|---|
+| padding | keel's | the caller's |
+| gap between blocks | keel's | the caller's |
+| scrollbar | on the sheet | on whichever child the caller says |
+
+One name rather than three flags, because it is one decision. The three properties are
+not independently useful: a caller who wants keel's padding but its own scrollbar is
+asking for a header inset from the edges, and a caller who wants its own padding but
+keel's scrollbar is asking for the header to scroll away. Every combination other than
+these two is a mistake, so there are two.
+
+`Framed` gives the box and nothing else - the fixed edge, the width, the radius, the
+slide, the scrim, Escape, the focus return. What the caller then owns is `flex` on its
+own two children, which is the point: keel cannot know which of them is the fixed one.
+
+`Scrolling` is the default and is byte-identical to the old behaviour, so Dakalebi's
+menu sheet is untouched.

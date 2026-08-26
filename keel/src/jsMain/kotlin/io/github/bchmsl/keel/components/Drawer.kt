@@ -17,6 +17,37 @@ public enum class DrawerEdge(internal val className: String) {
 }
 
 /**
+ * Who scrolls: the drawer, or the content inside it.
+ *
+ * One decision with three consequences, which is why it is one name rather than three
+ * flags. A drawer that scrolls as a single column wants keel's padding, keel's gap
+ * between blocks, and its own scrollbar. A drawer with a header that must stay put
+ * wants none of the three: the header and the scrolling region below it carry their
+ * own padding, sit flush against each other so the divider between them reaches both
+ * edges, and only the lower one scrolls.
+ */
+public enum class DrawerLayout(internal val className: String?) {
+    /**
+     * One padded column, scrolling as a whole.
+     *
+     * Right for a sheet that is a list of blocks - a menu, a summary, a set of links.
+     */
+    Scrolling(null),
+
+    /**
+     * The box and nothing else: no padding, no gap, no scrollbar of its own.
+     *
+     * For a sheet the caller divides itself, which in practice means one with a fixed
+     * header. A long settings list is the case: losing the way out of it while
+     * scrolling is unkind, so the header stays and the body below it scrolls. Padding
+     * on the drawer would then inset that header and stop its lower border reaching
+     * the edges, and a scrollbar on the drawer would be a second one beside the
+     * body's.
+     */
+    Framed("drawer--framed"),
+}
+
+/**
  * A panel anchored to one edge, with a scrim behind it.
  *
  * A drawer rather than a [Dialog] when the content is a long list of controls rather
@@ -37,6 +68,9 @@ public enum class DrawerEdge(internal val className: String) {
  * Dismissing works two ways: the scrim and Escape. There is no close button, because
  * where it goes depends on the header the caller draws.
  *
+ * [layout] decides whether keel pads and scrolls the sheet or hands both to the
+ * caller; see [DrawerLayout].
+ *
  * [attrs] runs last; see [Button].
  */
 @Composable
@@ -44,6 +78,7 @@ public fun Drawer(
     onDismiss: () -> Unit,
     ariaLabel: String,
     edge: DrawerEdge = DrawerEdge.Right,
+    layout: DrawerLayout = DrawerLayout.Scrolling,
     blurredScrim: Boolean = true,
     dismissOnEscape: Boolean = true,
     attrs: (AttrsScope<HTMLDivElement>.() -> Unit)? = null,
@@ -56,7 +91,7 @@ public fun Drawer(
     Scrim(onDismiss = onDismiss, blurred = blurredScrim)
 
     Div({
-        classNames(drawerClasses(edge))
+        classNames(drawerClasses(edge, layout))
         attr("role", "dialog")
         attr("aria-modal", "true")
         attr("aria-label", ariaLabel)

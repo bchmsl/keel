@@ -5,6 +5,7 @@ import io.github.bchmsl.keel.components.ButtonVariant
 import io.github.bchmsl.keel.components.CalloutTone
 import io.github.bchmsl.keel.components.CheckboxSize
 import io.github.bchmsl.keel.components.DrawerEdge
+import io.github.bchmsl.keel.components.DrawerLayout
 import io.github.bchmsl.keel.components.DropdownAlign
 import io.github.bchmsl.keel.components.DropdownItemTone
 import io.github.bchmsl.keel.components.DropdownSide
@@ -232,8 +233,10 @@ public fun scrimClasses(blurred: Boolean = true): String =
     joined("scrim", "scrim--blurred".takeIf { blurred })
 
 /** The classes on a [io.github.bchmsl.keel.components.Drawer]. */
-public fun drawerClasses(edge: DrawerEdge = DrawerEdge.Right): String =
-    joined("drawer", edge.className)
+public fun drawerClasses(
+    edge: DrawerEdge = DrawerEdge.Right,
+    layout: DrawerLayout = DrawerLayout.Scrolling,
+): String = joined("drawer", edge.className, layout.className)
 
 /**
  * The class on the element a [io.github.bchmsl.keel.components.DropdownMenu] is

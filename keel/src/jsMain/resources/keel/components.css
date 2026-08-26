@@ -1712,6 +1712,23 @@ button.card__title {
   color: hsl(var(--card-foreground));
 }
 
+/* The box and nothing else. For a sheet the caller divides itself, which in practice
+   means one with a header that must not scroll away: the header and the region below
+   it carry their own padding, and only the lower one scrolls.
+
+   All three properties are the same decision rather than three. Padding here would
+   inset that header and stop its lower border reaching the sheet's edges; a gap would
+   float it above the body it divides; and `overflow-y: auto` here would be a second
+   scrollbar beside the body's, with the header scrolling out of the first one.
+
+   The caller then owns `flex` on its own two children, which is the point: keel
+   cannot know which of them is the fixed one. */
+.drawer--framed {
+  gap: 0;
+  padding: 0;
+  overflow-y: hidden;
+}
+
 /* The border and the radius are on the inner edge only - the outer one is against
    the viewport, where a line and a corner would just be a seam. */
 .drawer--left {

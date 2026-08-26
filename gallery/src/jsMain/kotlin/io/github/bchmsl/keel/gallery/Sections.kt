@@ -20,6 +20,7 @@ import io.github.bchmsl.keel.components.Checkbox
 import io.github.bchmsl.keel.components.CheckboxSize
 import io.github.bchmsl.keel.components.Drawer
 import io.github.bchmsl.keel.components.DrawerEdge
+import io.github.bchmsl.keel.components.DrawerLayout
 import io.github.bchmsl.keel.components.DropdownAlign
 import io.github.bchmsl.keel.components.DropdownItemTone
 import io.github.bchmsl.keel.components.DropdownMenu
@@ -430,6 +431,7 @@ private fun FlatSegmented(labels: List<String>, selected: String, onSelect: (Str
 @Composable
 internal fun OverlaySection() {
     var drawerEdge by remember { mutableStateOf<DrawerEdge?>(null) }
+    var framedDrawer by remember { mutableStateOf(false) }
     var menuOpen by remember { mutableStateOf(false) }
     var dropUpOpen by remember { mutableStateOf(false) }
     var quality by remember { mutableStateOf("720p") }
@@ -443,11 +445,16 @@ internal fun OverlaySection() {
             "both apps: scrim, drawer, catcher, dropdown, dialog, toast. The " +
             "dropdown's catcher is the interesting one - it is not a scrim, it " +
             "changes nothing visually, and it sits one layer below its own menu, " +
-            "which is the bug it exists to have fixed.",
+            "which is the bug it exists to have fixed. The drawer comes in two " +
+            "layouts: one padded column that scrolls as a whole, and a framed one " +
+            "that is the box and nothing else, for a sheet with a header that must " +
+            "not scroll away. Open the framed one and scroll it - one scrollbar, and " +
+            "the header stays.",
     ) {
         Div({ classNames("row") }) {
             Button(label = "Drawer from left", onClick = { drawerEdge = DrawerEdge.Left })
             Button(label = "Drawer from right", onClick = { drawerEdge = DrawerEdge.Right })
+            Button(label = "Framed drawer", onClick = { framedDrawer = true })
         }
 
         Div({ classNames("row") }) {
@@ -551,6 +558,42 @@ internal fun OverlaySection() {
                     "cancel. Escape closes it, and so does the scrim.",
             )
             Button(label = "Close", onClick = { drawerEdge = null })
+        }
+    }
+
+    // The other layout: keel gives the box and nothing else, so the caller can put a
+    // header above a region that scrolls under it. Scroll the list and watch the
+    // header stay - which is the whole reason this layout exists.
+    if (framedDrawer) {
+        Drawer(
+            onDismiss = { framedDrawer = false },
+            ariaLabel = "Example framed drawer",
+            layout = DrawerLayout.Framed,
+        ) {
+            Div({ classNames("sheet-head") }) {
+                Span({ classNames("field-label") }) { Text("A header that stays") }
+                IconButton(
+                    ariaLabel = "Close",
+                    onClick = { framedDrawer = false },
+                    variant = ButtonVariant.Quiet,
+                    size = ButtonSize.IconExtraSmall,
+                ) {
+                    Icon(LucideIcon.X)
+                }
+            }
+
+            Div({ classNames("sheet-scroll") }) {
+                repeat(FRAMED_ROWS) { index ->
+                    Div({ classNames("row") }) {
+                        Span({ classNames("field-label") }) { Text("Row ${index + 1}") }
+                        Switch(
+                            checked = index % 2 == 0,
+                            onCheckedChange = {},
+                            ariaLabel = "Row ${index + 1}",
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -1089,6 +1132,10 @@ private const val CENTERED_ICON = 32
 private const val ICON_WALL_SIZE = 20
 private const val BADGE_ICON = 10
 private const val RAIL_SEASONS = 12
+
+/** Enough rows that the framed drawer's body has to scroll under its header. */
+private const val FRAMED_ROWS = 24
+
 private const val MENU_ICON = 14
 private val WATCHED_SEASONS = setOf(1, 3, 4, 8)
 private const val PROGRESS_SAMPLE = 0.62
