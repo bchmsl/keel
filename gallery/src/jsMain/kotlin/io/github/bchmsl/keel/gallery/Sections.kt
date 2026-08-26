@@ -14,6 +14,7 @@ import io.github.bchmsl.keel.components.Card
 import io.github.bchmsl.keel.components.FormattedText
 import io.github.bchmsl.keel.components.FormattingField
 import io.github.bchmsl.keel.components.IconButton
+import io.github.bchmsl.keel.components.LinkButton
 import io.github.bchmsl.keel.components.Pill
 import io.github.bchmsl.keel.components.PillButton
 import io.github.bchmsl.keel.components.PillSize
@@ -61,7 +62,8 @@ internal fun ButtonSection() {
         title = "Buttons",
         note = "Six variants and four sizes. The focus ring is held off the control " +
             "by a background-coloured gap, so it stays visible on any surface - press " +
-            "Tab to see it.",
+            "Tab to see it. The last row is LinkButton, which is a real anchor: " +
+            "middle-click one.",
     ) {
         Div({ classNames("row") }) {
             ButtonVariant.entries.forEach { variant ->
@@ -100,6 +102,27 @@ internal fun ButtonSection() {
             )
 
             Button(label = "Disabled", onClick = {}, enabled = false)
+        }
+
+        Div({ classNames("section__note") })
+
+        Div({ classNames("row") }) {
+            LinkButton(href = "#buttons", label = "Same page")
+
+            LinkButton(
+                href = "https://github.com/bchmsl/keel",
+                label = "Leaves the app",
+                variant = ButtonVariant.Outline,
+                external = true,
+                leading = { Icon(LucideIcon.Link) },
+            )
+
+            LinkButton(
+                href = "#buttons",
+                label = "Quiet",
+                variant = ButtonVariant.Link,
+                size = ButtonSize.Small,
+            )
         }
     }
 }

@@ -311,3 +311,12 @@ Closed since:
   and slider geometry are tokens, so a shell at a different viewing distance can
   resize the set from `:root` rather than re-stating keel's rules by selector. The
   switch size variant suggested above is now a matter of setting four properties.
+- **The components were closed, so consumers spelled the classes by hand.** Every
+  primitive takes an `attrs` slot, and `dom/ComponentClasses.kt` returns the class lists
+  for markup keel does not build. `ClassNameContractTest` fails the build on a class name
+  emitted by Kotlin with no rule in keel's CSS, which is the check that was missing when
+  this went wrong the first time.
+- **An `<a>` styled as a button had no composable.** `LinkButton` is one, and it is a
+  real anchor: it can be middle-clicked, copied and opened in a new tab, none of which a
+  button with a navigating `onClick` can do. It has no `enabled` parameter, because HTML
+  gives an anchor no disabled state — a control that can be off is a `Button`.

@@ -34,6 +34,44 @@ Radius, duration and font are held to the same rule by review rather than by a t
 `components.css` has no literal of any of them today; `base.css` carries a few
 animation durations, which are the animation's own timing rather than the interface's.
 
+## When a consumer cannot call the composable
+
+Two cases, both legitimate, and each has its own hatch. Before they existed a consumer
+in either position wrote keel's class names out as string literals: four dozen
+spellings of the button classes in one app alone, checked by nothing.
+
+**The element is keel's, but the wiring is not.** Every primitive takes an `attrs`
+slot, which runs last so the caller wins on conflict. It is where a `ref`, a `data-*`
+attribute, a conditional inline `style` or a form's `name`/`autocomplete` go. Classes
+accumulate rather than replace, which is deliberate: adding a marker class is the
+common case and losing `btn` is never the intent.
+
+**The element is not the one keel builds.** `dom/ComponentClasses.kt` exposes the class
+lists as functions — `buttonClasses(variant, size)`, `switchClasses()`, and the rest. A
+ten-foot interface renders its controls as `Div role="button"` on purpose, because a
+real `<button>` brings a UA stylesheet, its own focus ring and its own activation
+behaviour, all three of which fight a surface where the focus ring *is* the cursor. It
+can consume keel's classes; it can never call `Button()`.
+
+This is what lets `ButtonVariant.className` stay `internal`. The mapping is public and
+the field is not, so a variant can be renamed in one place. The functions return a
+space-separated list, so the result goes through `classNames(...)` — `classes(...)`
+would throw on the space, which is the first trap listed below.
+
+`ClassNameContractTest` holds the two halves together: a class name keel's Kotlin emits
+with no rule in `base.css` or `components.css` fails the build. That is the alarm that
+was missing when a shared sign-in screen was changed to emit keel's classes and one of
+the two shells rendering it did not link keel's stylesheet. Nothing failed. A class name
+is a string, an undefined class selects nothing, and an element with no rules is a
+perfectly valid element, so it compiled, logged nothing, and shipped as unstyled browser
+boxes. One allowance, `card--expanded`: an expanded card fills whatever the app's board
+is, and keel owns components rather than layout, so `Card` hands the state over as a
+class and lets the app decide what it means.
+
+The reverse direction is deliberately not checked. A class keel defines but never emits
+is not necessarily dead — some exist precisely so a consumer that cannot call the
+composable can still build the markup.
+
 ## Focus and hover
 
 Two rules, both enforced by `TokenContractTest` rather than by review, and both

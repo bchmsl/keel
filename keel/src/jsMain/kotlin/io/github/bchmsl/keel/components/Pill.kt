@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import io.github.bchmsl.keel.color.SwatchShade
 import io.github.bchmsl.keel.color.swatchBackground
 import io.github.bchmsl.keel.dom.classNames
+import io.github.bchmsl.keel.dom.pillClasses
+import io.github.bchmsl.keel.dom.pillEmojiClasses
 import org.jetbrains.compose.web.attributes.ButtonType
 import org.jetbrains.compose.web.attributes.type
 import org.jetbrains.compose.web.dom.Button
@@ -48,7 +50,7 @@ public fun Pill(
     size: PillSize = PillSize.Default,
 ) {
     Span({
-        classNames("pill", size.className)
+        classNames(pillClasses(size))
         style {
             property("background-color", swatchBackground(color, shade))
             property("color", color)
@@ -80,7 +82,7 @@ public fun PillButton(
     trailing: ContentBuilder<HTMLButtonElement>? = null,
 ) {
     Button({
-        classNames("pill", "pill--button", size.className)
+        classNames(pillClasses(size, pressable = true))
         type(ButtonType.Button)
         attr("aria-label", ariaLabel)
         style {
@@ -102,6 +104,6 @@ public fun PillButton(
  */
 @Composable
 private fun PillBody(label: String, emoji: String?) {
-    emoji?.let { Span({ classNames("pill__emoji") }) { Text(it) } }
+    emoji?.let { Span({ classNames(pillEmojiClasses()) }) { Text(it) } }
     Text(label)
 }

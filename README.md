@@ -16,7 +16,8 @@ without either one having to look like the other.
 |---|---|
 | **Tokens** | Colour, shape, motion, type and shadow, as CSS custom properties. Colours are bare HSL triples, so a rule can add alpha. |
 | **Palettes** | Six, each in light and dark. Optional — an app can ship its own and inherit none of these. |
-| **Primitives** | Button, IconButton, Card, Dialog, Switch, Slider, TextField, TextAreaField, Pill, PillButton, FormattingField, FormattedText, FormattingToolbar, Icon, and `DismissOnEscape` / `classNames` as the two behaviours worth sharing. |
+| **Primitives** | Button, IconButton, LinkButton, Card, Dialog, Switch, Slider, TextField, TextAreaField, Pill, PillButton, FormattingField, FormattedText, FormattingToolbar, Icon, and `DismissOnEscape` / `classNames` as the two behaviours worth sharing. |
+| **Escape hatches** | Every primitive takes an `attrs` slot, and `buttonClasses(...)` and friends expose the class lists for markup keel does not build — a D-pad shell that must render `Div role="button"` can still be styled by keel. |
 | **Icons** | 57 lucide glyphs, generated from a pinned tag. |
 | **Theme model** | A palette is data, not an enum. Themes declare whether they support light, so a dark-only app is a first-class case. |
 | **Text** | An inline-marker parser (`**bold**`, `*italic*`, `__underline__`, `` `code` ``, bare URLs) and its renderer. |

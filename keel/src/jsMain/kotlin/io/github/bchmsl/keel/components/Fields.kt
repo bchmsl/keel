@@ -2,8 +2,16 @@ package io.github.bchmsl.keel.components
 
 import androidx.compose.runtime.Composable
 import io.github.bchmsl.keel.dom.classNames
+import io.github.bchmsl.keel.dom.inputClasses
+import io.github.bchmsl.keel.dom.sliderClasses
+import io.github.bchmsl.keel.dom.switchClasses
+import io.github.bchmsl.keel.dom.switchKnobClasses
+import io.github.bchmsl.keel.dom.textAreaClasses
+import org.jetbrains.compose.web.attributes.AttrsScope
 import org.jetbrains.compose.web.attributes.ButtonType
 import org.jetbrains.compose.web.attributes.InputType
+import org.jetbrains.compose.web.attributes.builders.InputAttrsScope
+import org.jetbrains.compose.web.attributes.builders.TextAreaAttrsScope
 import org.jetbrains.compose.web.attributes.max
 import org.jetbrains.compose.web.attributes.min
 import org.jetbrains.compose.web.attributes.placeholder
@@ -13,6 +21,7 @@ import org.jetbrains.compose.web.dom.Button
 import org.jetbrains.compose.web.dom.Input
 import org.jetbrains.compose.web.dom.Span
 import org.jetbrains.compose.web.dom.TextArea
+import org.w3c.dom.HTMLButtonElement
 
 /**
  * An on/off control.
@@ -25,18 +34,27 @@ import org.jetbrains.compose.web.dom.TextArea
  * what the visual tells everyone else, and it is also the selector the "on" colour
  * is keyed off. The two therefore cannot disagree, which is the failure a separate
  * `--on` class would eventually produce.
+ *
+ * [attrs] runs last, after everything above, so a caller can override what it needs
+ * to. See [Button] for the reasoning.
  */
 @Composable
-public fun Switch(checked: Boolean, onCheckedChange: (Boolean) -> Unit, ariaLabel: String) {
+public fun Switch(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    ariaLabel: String,
+    attrs: (AttrsScope<HTMLButtonElement>.() -> Unit)? = null,
+) {
     Button({
-        classNames("switch")
+        classNames(switchClasses())
         type(ButtonType.Button)
         attr("role", "switch")
         attr("aria-checked", checked.toString())
         attr("aria-label", ariaLabel)
         onClick { onCheckedChange(!checked) }
+        attrs?.invoke(this)
     }) {
-        Span({ classNames("switch__knob") })
+        Span({ classNames(switchKnobClasses()) })
     }
 }
 
@@ -49,6 +67,8 @@ public fun Switch(checked: Boolean, onCheckedChange: (Boolean) -> Unit, ariaLabe
  *
  * Fires on every movement rather than on release, so a number shown beside it tracks
  * the thumb instead of jumping when the finger lifts.
+ *
+ * [attrs] runs last; see [Switch].
  */
 @Composable
 public fun Slider(
@@ -57,9 +77,10 @@ public fun Slider(
     max: Int,
     onValueChange: (Int) -> Unit,
     ariaLabel: String,
+    attrs: (InputAttrsScope<Number?>.() -> Unit)? = null,
 ) {
     Input(InputType.Range) {
-        classNames("slider")
+        classNames(sliderClasses())
         min(min.toString())
         max(max.toString())
         value(value)
@@ -69,10 +90,17 @@ public fun Slider(
         // shared with inputs that can genuinely be empty; a range always has a value,
         // so ignoring the null needs no fallback guess.
         onInput { event -> event.value?.let { onValueChange(it.toInt()) } }
+        attrs?.invoke(this)
     }
 }
 
-/** A single-line text field. */
+/**
+ * A single-line text field.
+ *
+ * [attrs] runs last; see [Switch]. It is the slot for the attributes a form needs and
+ * this signature does not name - `name`, `autocomplete`, `required`, `minLength` - as
+ * well as for a `ref`.
+ */
 @Composable
 public fun TextField(
     value: String,
@@ -80,17 +108,23 @@ public fun TextField(
     placeholder: String? = null,
     ariaLabel: String? = null,
     type: InputType<String> = InputType.Text,
+    attrs: (InputAttrsScope<String>.() -> Unit)? = null,
 ) {
     Input(type) {
-        classNames("input")
+        classNames(inputClasses())
         value(value)
         placeholder?.let { placeholder(it) }
         ariaLabel?.let { attr("aria-label", it) }
         onInput { event -> onValueChange(event.value) }
+        attrs?.invoke(this)
     }
 }
 
-/** A multi-line text field, vertically resizable. */
+/**
+ * A multi-line text field, vertically resizable.
+ *
+ * [attrs] runs last; see [TextField].
+ */
 @Composable
 public fun TextAreaField(
     value: String,
@@ -98,13 +132,15 @@ public fun TextAreaField(
     rows: Int = DEFAULT_TEXTAREA_ROWS,
     placeholder: String? = null,
     ariaLabel: String? = null,
+    attrs: (TextAreaAttrsScope.() -> Unit)? = null,
 ) {
     TextArea(value = value) {
-        classNames("textarea")
+        classNames(textAreaClasses())
         rows(rows)
         placeholder?.let { placeholder(it) }
         ariaLabel?.let { attr("aria-label", it) }
         onInput { event -> onValueChange(event.value) }
+        attrs?.invoke(this)
     }
 }
 

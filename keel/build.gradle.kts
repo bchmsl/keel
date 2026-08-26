@@ -56,24 +56,40 @@ kotlin {
  * The stylesheet is data to the JVM tests, which is how the Kotlin half and the CSS
  * half are held against each other. Passed in rather than found by a relative path,
  * so the tests do not silently pass by reading nothing if a working directory moves.
+ *
+ * The Kotlin sources are data for the same reason. A JVM test cannot call into the JS
+ * target, so the one test that checks Kotlin's class names against the CSS reads them
+ * as text instead. That is a narrower guarantee than calling the functions, and it is
+ * the guarantee that catches the bug: a class name is a string on both sides.
  */
 tasks.withType<Test>().configureEach {
     val cssDir = layout.projectDirectory.dir("src/jsMain/resources/keel")
+    val jsSrcDir = layout.projectDirectory.dir("src/jsMain/kotlin")
 
     systemProperty("keel.css.dir", cssDir.asFile.absolutePath)
+    systemProperty("keel.js.src.dir", jsSrcDir.asFile.absolutePath)
 
     /*
-     * Declared as an input as well as passed as a property, and the tests are wrong
-     * without it. `systemProperty` tells the test where the stylesheets are; it tells
+     * Declared as inputs as well as passed as properties, and the tests are wrong
+     * without it. `systemProperty` tells the test where the files are; it tells
      * Gradle nothing about them. So on a CSS-only change - which is the exact change
      * this suite exists to catch - nothing in the task's fingerprint moved and the
      * whole thing stayed UP-TO-DATE, reporting a pass it had not re-checked.
      *
      * Found the honest way: a literal `height` added to components.css to prove the
      * new size guard could fail did not fail until `--rerun-tasks`.
+     *
+     * The Kotlin directory needs the same treatment for the same reason. Changing a
+     * class-name literal in jsMain does not recompile anything the JVM test depends
+     * on, so without this the class-name check would go stale in exactly the
+     * situation it exists for.
      */
     inputs.dir(cssDir)
         .withPropertyName("keelStylesheets")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+
+    inputs.dir(jsSrcDir)
+        .withPropertyName("keelJsSources")
         .withPathSensitivity(PathSensitivity.RELATIVE)
 }
 
