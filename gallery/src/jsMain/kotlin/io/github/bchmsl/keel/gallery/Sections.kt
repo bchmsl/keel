@@ -302,6 +302,7 @@ internal fun OverlaySection() {
     var drawerEdge by remember { mutableStateOf<DrawerEdge?>(null) }
     var menuOpen by remember { mutableStateOf(false) }
     var dropUpOpen by remember { mutableStateOf(false) }
+    var quality by remember { mutableStateOf("720p") }
     var toasts by remember { mutableStateOf(emptyList<Toast>()) }
     var placement by remember { mutableStateOf(ToastPlacement.Top) }
 
@@ -369,9 +370,19 @@ internal fun OverlaySection() {
                         align = DropdownAlign.Start,
                         side = DropdownSide.Above,
                     ) {
-                        DropdownMenuItem("1080p", onClick = { dropUpOpen = false })
-                        DropdownMenuItem("720p", onClick = { dropUpOpen = false })
-                        DropdownMenuItem("Auto", onClick = { dropUpOpen = false })
+                        // A real single-select, so the selected state has something
+                        // to be: `selected` draws the check and sets `aria-current`,
+                        // and the two cannot drift because one flag sets both.
+                        listOf("1080p", "720p", "Auto").forEach { label ->
+                            DropdownMenuItem(
+                                label = label,
+                                onClick = {
+                                    quality = label
+                                    dropUpOpen = false
+                                },
+                                selected = label == quality,
+                            )
+                        }
                     }
                 }
             }

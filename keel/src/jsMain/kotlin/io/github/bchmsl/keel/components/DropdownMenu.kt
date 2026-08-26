@@ -3,14 +3,18 @@ package io.github.bchmsl.keel.components
 import androidx.compose.runtime.Composable
 import io.github.bchmsl.keel.dom.classNames
 import io.github.bchmsl.keel.dom.dropdownCatchClasses
+import io.github.bchmsl.keel.dom.dropdownCheckClasses
 import io.github.bchmsl.keel.dom.dropdownClasses
 import io.github.bchmsl.keel.dom.dropdownItemClasses
+import io.github.bchmsl.keel.icons.Icon
+import io.github.bchmsl.keel.icons.LucideIcon
 import org.jetbrains.compose.web.attributes.AttrsScope
 import org.jetbrains.compose.web.attributes.ButtonType
 import org.jetbrains.compose.web.attributes.type
 import org.jetbrains.compose.web.dom.Button
 import org.jetbrains.compose.web.dom.ContentBuilder
 import org.jetbrains.compose.web.dom.Div
+import org.jetbrains.compose.web.dom.Span
 import org.jetbrains.compose.web.dom.Text
 import org.w3c.dom.HTMLButtonElement
 import org.w3c.dom.HTMLDivElement
@@ -130,6 +134,17 @@ public fun DropdownMenu(
  * Enter and Space without any of that being written here. The explicit type matters:
  * a menu inside a form would otherwise submit it.
  *
+ * [selected] marks the choice already in effect, for a menu that picks one of a set -
+ * a video quality, a sort order. It is deliberately not a [DropdownItemTone] entry:
+ * tone is how strongly an item reads and selection is whether it is the current value,
+ * so an item can be both and the enum would have made them exclusive. It sets
+ * `aria-current` as well as the class, which is what actually announces the state -
+ * the check drawn beside the label is `aria-hidden`, because hearing "1080p, check
+ * mark" adds nothing to hearing "1080p, current".
+ *
+ * There is no roving selection here and no `role="menuitemradio"`, for the reason
+ * [DropdownMenu] gives: this is a group of buttons and says so.
+ *
  * [leading] is for an icon. It is a slot rather than a [io.github.bchmsl.keel.icons.LucideIcon]
  * parameter so an app with its own glyphs can pass one.
  *
@@ -140,16 +155,27 @@ public fun DropdownMenuItem(
     label: String,
     onClick: () -> Unit,
     tone: DropdownItemTone = DropdownItemTone.Default,
+    selected: Boolean = false,
     attrs: (AttrsScope<HTMLButtonElement>.() -> Unit)? = null,
     leading: ContentBuilder<HTMLButtonElement>? = null,
 ) {
     Button({
-        classNames(dropdownItemClasses(tone))
+        classNames(dropdownItemClasses(tone, selected))
         type(ButtonType.Button)
+        if (selected) attr("aria-current", "true")
         onClick { onClick() }
         attrs?.invoke(this)
     }) {
         leading?.invoke(this)
         Text(label)
+        if (selected) {
+            Span({
+                classNames(dropdownCheckClasses())
+                attr("aria-hidden", "true")
+            }) { Icon(LucideIcon.Check, size = SELECTED_ICON) }
+        }
     }
 }
+
+/** Matches the check in a segmented control's chip, which does the same job. */
+private const val SELECTED_ICON = 11

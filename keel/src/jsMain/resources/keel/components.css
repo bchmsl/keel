@@ -1333,6 +1333,38 @@ button.card__title {
     0 0 0 calc(var(--focus-ring-offset) + var(--focus-ring-width)) hsl(var(--ring));
 }
 
+/* The item that is already the current value, for a menu that picks one of a set -
+   a video quality, a sort order, a rendition.
+
+   Not a `DropdownItemTone`. Tone says how strongly a choice reads and selection says
+   which one is in effect: they are different facts, and one menu can carry both, so
+   folding this into the enum would make "selected" and "destructive" mutually
+   exclusive for no reason. This rule comes *before* `--danger` so that if an item is
+   somehow both, the destructive colour is the one that survives - reading as
+   destructive matters more than reading as current.
+
+   The check beside it is a real element, not a `::after` with a glyph in `content`.
+   Generated content lives in this file, so a consumer that wanted a different mark
+   would have to restate the selector to change it; an element built in Kotlin is the
+   library's own `Icon`, which is where every other glyph here comes from. It is
+   `aria-hidden`, because `aria-current` on the item is what announces this - a "✓"
+   read out after the label would say the same thing twice.
+
+   `margin-left: auto` on the check rather than `justify-content: space-between` on
+   the item: that would also push a `leading` icon away from the label it belongs to. */
+.dropdown__item--selected {
+  color: hsl(var(--primary));
+}
+
+.dropdown__check {
+  margin-left: auto;
+  flex: none;
+  /* A bare `span` is an inline box, so it would sit on the text baseline and bring
+     the descender strip of whatever font is in effect - which centres the glyph
+     against the wrong box. */
+  display: inline-flex;
+}
+
 /* Destructive items are red text on the normal background rather than a red fill.
    A filled row in a list of plain ones reads as the recommended action, which is
    the opposite of what "delete everything" wants to say. */

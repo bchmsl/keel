@@ -475,3 +475,39 @@ pair, keel reproduces all six of its numbers from the eight tokens:
 | player knob, travel | 26x26, 26px | 26x26, 26px |
 
 Both sizes keep a symmetric 4px gap at whichever edge the knob is resting against.
+
+## `DropdownMenuItem(selected)`
+
+The third thing a consumer needed and could not have. Dakalebi's player has a quality
+menu, and a quality menu has a current value: its local `.q-item.sel` painted the
+chosen rendition red and bold. keel's dropdown item had `DropdownItemTone` and nothing
+else, so moving that menu onto the component would have silently dropped the one piece
+of state it carries - the migration would have looked complete and lost information.
+
+Not folded into `DropdownItemTone`. Tone is how strongly an item reads; selection is
+whether it is the value already in effect. They are different facts and one item can
+carry both, so an enum entry would have made "selected" and "destructive" mutually
+exclusive for no reason. `.dropdown__item--selected` is therefore its own class, and it
+sits *before* `--danger` in the file so that an item which is somehow both still reads
+destructive - that matters more than reading as current.
+
+One flag sets the class, `aria-current` and the check, which is the point: the previous
+implementation had a class and no announcement at all, so the state existed only for
+people who could see it. The check itself is `aria-hidden` - "1080p, check mark" says
+nothing that "1080p, current" does not - and is a real `Icon` rather than a `::after`
+glyph, because content in this stylesheet cannot be replaced by a consumer without
+restating the selector.
+
+Measured in a browser on all four combinations:
+
+| item | computed colour | `aria-current` |
+|---|---|---|
+| plain | `--foreground` | absent |
+| selected | `--primary` | `true` |
+| danger | `--destructive` | absent |
+| selected + danger | `--destructive` | `true` |
+
+`margin-left: auto` on the check resolves against the item's own width and lands it on
+the padding edge - 13px in, which is `--control-px-sm` plus the border. It is on the
+check rather than `justify-content: space-between` on the item, which would also have
+pushed a `leading` icon away from the label it belongs to.

@@ -178,9 +178,25 @@ public fun dropdownClasses(
     side: DropdownSide = DropdownSide.Below,
 ): String = joined("dropdown", align.className, side.className)
 
-/** The classes on a [io.github.bchmsl.keel.components.DropdownMenuItem]. */
-public fun dropdownItemClasses(tone: DropdownItemTone = DropdownItemTone.Default): String =
-    joined("dropdown__item", tone.className)
+/**
+ * The classes on a [io.github.bchmsl.keel.components.DropdownMenuItem].
+ *
+ * [selected] is separate from [tone] because they are different facts and an item can
+ * carry both: tone is how strongly the choice reads, selection is whether it is the
+ * value already in effect.
+ */
+public fun dropdownItemClasses(
+    tone: DropdownItemTone = DropdownItemTone.Default,
+    selected: Boolean = false,
+): String = joined("dropdown__item", "dropdown__item--selected".takeIf { selected }, tone.className)
+
+/**
+ * The class on the check marking the selected item.
+ *
+ * Decoration only: `aria-current` on the item itself is what announces the state, so a
+ * consumer building this markup should set that and mark the check `aria-hidden`.
+ */
+public fun dropdownCheckClasses(): String = joined("dropdown__check")
 
 /**
  * The class on the full-screen catcher that dismisses an open dropdown.
