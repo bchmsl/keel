@@ -71,6 +71,13 @@
   --control-px-lg: 2rem;
   --control-py-default: 0.5rem;
   --control-font-size: 0.875rem;
+  --control-font-weight: 500;
+
+  /* A field's own padding. Separate from `--control-px/py-*`, because a field is
+     not one of the button size variants: it has no height of its own and is sized
+     entirely by this padding and its type. */
+  --input-px: 0.75rem;
+  --input-py: 0.625rem;
 
   /* The switch is a knob inside a track, so these three are not independent.
      The knob's travel is *derived* from them in `components.css` rather than
@@ -99,6 +106,11 @@
      reason they are tokens. */
   --focus-ring-offset: 0.125rem;
   --focus-ring-width: 0.125rem;
+
+  /* A field gets a soft glow rather than the two-layer ring, so it needs its own
+     strength. Faint is right at arm's length and wrong across a room, and it is a
+     token so that the far case can say so without restating the rule. */
+  --focus-glow-alpha: 0.2;
 
   /* -------------------------------------------------------- layering ---- */
   /* One scale, so two overlays written months apart cannot both reach for 50

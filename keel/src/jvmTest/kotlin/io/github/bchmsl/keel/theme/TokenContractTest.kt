@@ -451,11 +451,12 @@ class TokenContractTest {
             // not enough to make these scale.
             "--control-h-xs", "--control-h-sm", "--control-h-default", "--control-h-lg",
             "--control-px-sm", "--control-px-default", "--control-px-lg",
-            "--control-py-default", "--control-font-size",
+            "--control-py-default", "--control-font-size", "--control-font-weight",
+            "--input-px", "--input-py",
             "--switch-track-w", "--switch-track-h",
             "--switch-knob-size", "--switch-knob-inset",
             "--slider-rail-h", "--slider-thumb-size",
-            "--focus-ring-offset", "--focus-ring-width",
+            "--focus-ring-offset", "--focus-ring-width", "--focus-glow-alpha",
             "--z-scrim", "--z-drawer", "--z-dropdown-catch", "--z-dropdown",
             "--z-dialog", "--z-toast",
         )
