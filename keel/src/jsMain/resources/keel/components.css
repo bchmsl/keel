@@ -304,6 +304,39 @@
   border-radius: var(--radius-sm);
 }
 
+/* Start, pause, skip - and the same control when it is the only thing on the screen.
+   Both apps had written one of these by hand and neither used the sizes above, because
+   the sizes stopped below them: 2.75rem with a 10px corner, against a 3.5rem circle in
+   one app and a 78px one in the other.
+
+   Outside the scale above rather than the top of it. A form control's size follows the
+   density of the form around it; these two follow being aimed at, with a thumb or from
+   across a room. Square only - a word in a 3.5rem box is a banner. */
+.btn--size-transport {
+  height: var(--control-h-transport);
+  width: var(--control-h-transport);
+  padding: 0;
+}
+
+.btn--size-transport-lg {
+  height: var(--control-h-transport-lg);
+  width: var(--control-h-transport-lg);
+  padding: 0;
+}
+
+/* A circle rather than a rounded box. One line, and it is the second half of what
+   four hand-written controls across the two apps were reaching for - a timer's
+   transport buttons, a player's centre play, a tile's overlay actions. Every one of
+   them was a keel size and a keel variant plus this.
+
+   Its own class rather than a radius on the icon sizes, because shape and size are
+   separate decisions: the same 2.5rem square is round in a transport row and boxed in
+   a card header, and conflating the two is what left `.btn--size-icon` carrying a
+   radius at all. */
+.btn--circle {
+  border-radius: var(--radius-pill);
+}
+
 /* No box at all, for a link button sitting inside a sentence.
 
    `ButtonVariant.Link` is documented as being for actions inside a sentence, and none

@@ -1,5 +1,6 @@
 package io.github.bchmsl.keel.dom
 
+import io.github.bchmsl.keel.components.ButtonShape
 import io.github.bchmsl.keel.components.ButtonSize
 import io.github.bchmsl.keel.components.ButtonVariant
 import io.github.bchmsl.keel.components.CalloutTone
@@ -75,7 +76,8 @@ import io.github.bchmsl.keel.components.ToastTone
 public fun buttonClasses(
     variant: ButtonVariant = ButtonVariant.Default,
     size: ButtonSize = ButtonSize.Default,
-): String = joined("btn", variant.className, size.className)
+    shape: ButtonShape = ButtonShape.Box,
+): String = joined("btn", variant.className, size.className, shape.className)
 
 /** The class on a [io.github.bchmsl.keel.components.TextField]. */
 public fun inputClasses(): String = joined("input")

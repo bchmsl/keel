@@ -875,3 +875,37 @@ own two children, which is the point: keel cannot know which of them is the fixe
 
 `Scrolling` is the default and is byte-identical to the old behaviour, so Dakalebi's
 menu sheet is untouched.
+
+## Round, and bigger than a form control
+
+Four circular buttons existed across the two apps before keel had a word for either
+half of what they are:
+
+| | | |
+|---|---|---|
+| Dayboard | `.timer__play` | 3.5rem circle, 5rem when the card is expanded |
+| Dayboard | `.timer__side-button` | 2.5rem circle, 3.5rem when the card is expanded |
+| Dakalebi | `.player-center .big` | 78px circle |
+| Dakalebi | `.tile-act`, `.tile-seen` | 30px and 22px circles |
+
+Every one of them was a keel variant and a keel size with one line of CSS added -
+`border-radius: 50%` - except that two of them were also a size keel does not have.
+The scale stopped at `--control-h-lg`, 2.75rem, and the two biggest here are above it.
+
+So two things were missing, and they are separate.
+
+**Shape.** `ButtonShape.Box` or `.Circle`, on `IconButton` only. Not a radius baked
+into the icon sizes, because the same 2.5rem square is round in a transport row and
+boxed in a card header: which one it is belongs to the call site, not to the size.
+Baking it in is how `.btn--size-icon` ended up carrying a radius at all.
+
+**Size.** `ButtonSize.Transport` at 3.5rem and `TransportLarge` at 5rem, with
+`--control-h-transport` and `--control-h-transport-lg` behind them. Named for the role
+and not for a step in the scale, because they are not one. A form control's size
+follows the density of the form around it. These two follow being aimed at - with a
+thumb, or from across a room - which is why 5rem lands within 2px of the 78px Dakalebi
+picked independently for the same button. Calling this tier `IconLarge` would have put
+two unrelated meanings on one word, given that `Large` is already 2.75rem.
+
+Square only. There is no `--control-px-transport`, because a word in a 3.5rem box is a
+banner rather than a button.

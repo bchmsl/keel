@@ -97,6 +97,31 @@ public enum class ButtonSize(internal val className: String) {
     IconExtraSmall("btn--size-icon-xs"),
 
     /**
+     * Start, pause, skip: the control that runs the thing the surface is about.
+     *
+     * Not part of the scale above, and named for the role rather than for a step in
+     * it, because it is not one. [Large] is 2.75rem and this is 3.5rem, so calling it
+     * a larger [Icon] would put two unrelated meanings on one word - a form control
+     * grows with the density of the form around it, and this grows because it is aimed
+     * at rather than read.
+     *
+     * There is no text form, deliberately: a word in a 3.5rem box is a banner.
+     *
+     * Both apps had written one of these by hand and neither used keel's sizes,
+     * because the sizes stopped below them. See [ButtonShape.Circle], which is the
+     * other half of what they were both reaching for.
+     */
+    Transport("btn--size-transport"),
+
+    /**
+     * The same control when it is the only thing on the screen.
+     *
+     * A player filling the window, or this app's timer card expanded. 5rem, which is
+     * where both apps independently put it - one at 5rem and one at 78px.
+     */
+    TransportLarge("btn--size-transport-lg"),
+
+    /**
      * No box: the text's own size, no padding, and the surrounding sentence's baseline.
      *
      * The size [ButtonVariant.Link] usually wants. Every other size here sets a control
@@ -107,6 +132,33 @@ public enum class ButtonSize(internal val className: String) {
      * size is a fill with no padding, which is not a button anyone wants.
      */
     Inline("btn--size-inline"),
+}
+
+/**
+ * Whether a button's box is a rounded rectangle or a circle.
+ *
+ * Separate from [ButtonSize] because it is a separate decision, and conflating the two
+ * is what left `.btn--size-icon` carrying a radius at all. A 2.5rem square control and
+ * a 2.5rem round one are the same control in two places.
+ *
+ * Only meaningful on the square sizes. A [Circle] on a size with horizontal padding is
+ * a pill, which is what [ButtonSize.Default] at a pill radius already looks like - and
+ * a pill that means something is a [Pill].
+ */
+public enum class ButtonShape(internal val className: String?) {
+    /** [radius-md], or [radius-sm] at the extra-small tier. keel's default box. */
+    Box(null),
+
+    /**
+     * A full circle.
+     *
+     * Four of these existed across the two apps before keel had the word for it: a
+     * timer's transport controls, a player's centre play button, a tile's overlay
+     * actions. Every one of them was a keel size and a keel variant with one line of
+     * CSS added, which is the definition of a missing axis rather than a missing
+     * component.
+     */
+    Circle("btn--circle"),
 }
 
 /**
@@ -162,6 +214,9 @@ public fun Button(
  * people who can see the icon but cannot tell what it means. Passing the label
  * twice is the common and correct case.
  *
+ * [shape] is on this function and not on [Button], because a circle is a box around a
+ * glyph: see [ButtonShape].
+ *
  * [attrs] runs last; see [Button].
  */
 @Composable
@@ -170,6 +225,7 @@ public fun IconButton(
     onClick: () -> Unit,
     variant: ButtonVariant = ButtonVariant.Ghost,
     size: ButtonSize = ButtonSize.Icon,
+    shape: ButtonShape = ButtonShape.Box,
     enabled: Boolean = true,
     title: String? = null,
     type: ButtonType = ButtonType.Button,
@@ -177,7 +233,7 @@ public fun IconButton(
     content: ContentBuilder<HTMLButtonElement>,
 ) {
     Button({
-        classNames(buttonClasses(variant, size))
+        classNames(buttonClasses(variant, size, shape))
         type(type)
         if (!enabled) disabled()
         attr("aria-label", ariaLabel)

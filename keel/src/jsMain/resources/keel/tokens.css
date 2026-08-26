@@ -66,6 +66,13 @@
   --control-h-sm: 2.25rem;
   --control-h-default: 2.5rem;
   --control-h-lg: 2.75rem;
+  /* Start, pause, skip: the control that runs the thing a surface is about, and the
+     same control when it is the only thing on the screen. Outside the scale above
+     rather than the top of it - a form control's size follows the density of the form
+     around it, and these two follow being aimed at. Square only, so there is no `px`
+     counterpart: a word in a 3.5rem box is a banner. */
+  --control-h-transport: 3.5rem;
+  --control-h-transport-lg: 5rem;
   --control-px-xs: 0.625rem;
   --control-px-sm: 0.75rem;
   --control-px-default: 1rem;

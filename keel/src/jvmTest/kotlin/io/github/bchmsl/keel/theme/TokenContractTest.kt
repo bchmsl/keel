@@ -450,6 +450,7 @@ class TokenContractTest {
             // Control geometry. See the note in tokens.css for why `rem` alone was
             // not enough to make these scale.
             "--control-h-xs", "--control-h-sm", "--control-h-default", "--control-h-lg",
+            "--control-h-transport", "--control-h-transport-lg",
             "--control-px-xs", "--control-px-sm", "--control-px-default", "--control-px-lg",
             "--control-py-default", "--control-font-size", "--control-font-size-xs",
             "--control-font-weight",

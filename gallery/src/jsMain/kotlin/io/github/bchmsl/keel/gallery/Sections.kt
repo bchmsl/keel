@@ -10,6 +10,7 @@ import io.github.bchmsl.keel.color.Swatches
 import io.github.bchmsl.keel.components.Badge
 import io.github.bchmsl.keel.components.BadgeTone
 import io.github.bchmsl.keel.components.Button
+import io.github.bchmsl.keel.components.ButtonShape
 import io.github.bchmsl.keel.components.ButtonSize
 import io.github.bchmsl.keel.components.ButtonVariant
 import io.github.bchmsl.keel.components.Callout
@@ -172,6 +173,25 @@ internal fun ButtonSection() {
                     ) {
                         Icon(LucideIcon.X)
                     }
+                    // The two transport sizes, shown as what they are for. Circular,
+                    // because that is the shape every hand-written one of them had.
+                    ButtonSize.Transport, ButtonSize.TransportLarge -> IconButton(
+                        ariaLabel = "Play (${size.name})",
+                        onClick = {},
+                        variant = ButtonVariant.Default,
+                        size = size,
+                        shape = ButtonShape.Circle,
+                        title = size.name,
+                    ) {
+                        Icon(
+                            LucideIcon.Play,
+                            size = if (size == ButtonSize.Transport) {
+                                TRANSPORT_GLYPH
+                            } else {
+                                TRANSPORT_GLYPH_LG
+                            },
+                        )
+                    }
                     // Not in this row: it has no box, so an outlined one is a border
                     // drawn tight around a word. It is shown in a sentence below,
                     // which is the only place it belongs.
@@ -193,6 +213,35 @@ internal fun ButtonSection() {
             )
 
             Button(label = "Disabled", onClick = {}, enabled = false)
+        }
+
+        Div({ classNames("section__note") }) {
+            Text(
+                "Shape is separate from size. The same square control is round in a " +
+                    "transport row and boxed in a card header, which is why it is its " +
+                    "own axis and not a radius baked into the icon sizes.",
+            )
+        }
+
+        Div({ classNames("row") }) {
+            listOf(
+                ButtonSize.IconExtraSmall,
+                ButtonSize.Icon,
+                ButtonSize.Transport,
+            ).forEach { size ->
+                ButtonShape.entries.forEach { shape ->
+                    IconButton(
+                        ariaLabel = "${size.name} ${shape.name}",
+                        onClick = {},
+                        variant = ButtonVariant.Outline,
+                        size = size,
+                        shape = shape,
+                        title = "${size.name} ${shape.name}",
+                    ) {
+                        Icon(LucideIcon.Play)
+                    }
+                }
+            }
         }
 
         Div({ classNames("section__note") })
@@ -1147,6 +1196,12 @@ private const val SCRUB_BUFFERED = 0.45
 private const val SAMPLE_DURATION = 2470.0
 private const val SECONDS_PER_MINUTE = 60
 private const val PILL_ICON = 10
+
+/* A glyph in a 3.5rem circle. `1em` would follow the button's type size, which is
+   right for every other tier and far too small for this one - the reason to go this
+   big is that the glyph is the target. */
+private const val TRANSPORT_GLYPH = 24
+private const val TRANSPORT_GLYPH_LG = 34
 private const val DEFAULT_VOLUME = 70
 private const val MAX_VOLUME = 100
 private const val SAMPLE_ROWS = 4
