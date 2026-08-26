@@ -508,8 +508,10 @@ class TokenContractTest {
          * fallback.
          */
         val ALLOWED_LITERAL_DIMENSIONS = listOf(
-            "width: 1px;", "height: 1px;",
-            "width: 6px;", "height: 6px;",
+            "width: 1px;",
+            "height: 1px;",
+            "width: 6px;",
+            "height: 6px;",
         )
 
         /**

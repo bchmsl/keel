@@ -103,10 +103,8 @@ public fun switchKnobClasses(): String = joined("switch__knob")
  * swatch, because a pill's colour is data rather than a variant - see
  * `swatchBackground`.
  */
-public fun pillClasses(
-    size: PillSize = PillSize.Default,
-    pressable: Boolean = false,
-): String = joined("pill", "pill--button".takeIf { pressable }, size.className)
+public fun pillClasses(size: PillSize = PillSize.Default, pressable: Boolean = false): String =
+    joined("pill", "pill--button".takeIf { pressable }, size.className)
 
 /** The class on the emoji span inside a pill. */
 public fun pillEmojiClasses(): String = joined("pill__emoji")
@@ -118,8 +116,7 @@ public fun pillEmojiClasses(): String = joined("pill__emoji")
  * carry a null `className`, and a naive join would emit a double space, which is a
  * token `DOMTokenList.add` rejects.
  */
-private fun joined(vararg names: String?): String =
-    names.asSequence()
-        .filterNotNull()
-        .filter { it.isNotBlank() }
-        .joinToString(" ")
+private fun joined(vararg names: String?): String = names.asSequence()
+    .filterNotNull()
+    .filter { it.isNotBlank() }
+    .joinToString(" ")

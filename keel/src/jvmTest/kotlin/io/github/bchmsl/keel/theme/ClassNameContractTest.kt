@@ -66,7 +66,10 @@ class ClassNameContractTest {
         // Without this the two checks below pass by reading nothing, which is the
         // failure mode the system properties exist to prevent in the first place.
         assertTrue(sources.isNotEmpty(), "no .kt files under ${jsSrcDir.absolutePath}")
-        assertTrue(defined.size > MIN_EXPECTED_CLASSES, "only ${defined.size} classes found in the stylesheets")
+        assertTrue(
+            defined.size > MIN_EXPECTED_CLASSES,
+            "only ${defined.size} classes found in the stylesheets",
+        )
     }
 
     @Test
@@ -92,7 +95,11 @@ class ClassNameContractTest {
         val undefined = sources.flatMap { (path, text) ->
             STRING_LITERAL.findAll(text.withoutComments())
                 .map { it.groupValues[1] }
-                .filter { MODIFIER_SHAPE.matches(it) && it !in defined && it !in CONSUMER_STYLED_HOOKS }
+                .filter {
+                    MODIFIER_SHAPE.matches(it) &&
+                        it !in defined &&
+                        it !in CONSUMER_STYLED_HOOKS
+                }
                 .map { "$path: \"$it\"" }
         }
 
