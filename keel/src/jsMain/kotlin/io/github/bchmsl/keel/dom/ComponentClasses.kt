@@ -5,6 +5,7 @@ import io.github.bchmsl.keel.components.ButtonVariant
 import io.github.bchmsl.keel.components.DrawerEdge
 import io.github.bchmsl.keel.components.DropdownAlign
 import io.github.bchmsl.keel.components.DropdownItemTone
+import io.github.bchmsl.keel.components.DropdownSide
 import io.github.bchmsl.keel.components.PillSize
 import io.github.bchmsl.keel.components.SegmentedStyle
 import io.github.bchmsl.keel.components.ToastPlacement
@@ -170,8 +171,10 @@ public fun drawerClasses(edge: DrawerEdge = DrawerEdge.Right): String =
 public fun dropdownAnchorClasses(): String = joined("dropdown-anchor")
 
 /** The classes on a [io.github.bchmsl.keel.components.DropdownMenu]. */
-public fun dropdownClasses(align: DropdownAlign = DropdownAlign.End): String =
-    joined("dropdown", align.className)
+public fun dropdownClasses(
+    align: DropdownAlign = DropdownAlign.End,
+    side: DropdownSide = DropdownSide.Below,
+): String = joined("dropdown", align.className, side.className)
 
 /** The classes on a [io.github.bchmsl.keel.components.DropdownMenuItem]. */
 public fun dropdownItemClasses(tone: DropdownItemTone = DropdownItemTone.Default): String =

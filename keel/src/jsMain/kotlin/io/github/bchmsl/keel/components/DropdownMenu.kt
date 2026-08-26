@@ -25,6 +25,27 @@ public enum class DropdownAlign(internal val className: String) {
     End("dropdown--end"),
 }
 
+/** Which way the menu opens from its trigger. */
+public enum class DropdownSide(internal val className: String?) {
+    /** Downward, below the trigger. What a menu does unless there is no room for it. */
+    Below(null),
+
+    /**
+     * Upward, above the trigger.
+     *
+     * For a trigger near the foot of the viewport - a control bar pinned to the bottom
+     * of a video, a toolbar on a page's last row - where a menu opening downward would
+     * fall off the screen.
+     *
+     * The caller decides, the same way it decides [DropdownAlign], and for the same
+     * reason: choosing automatically means measuring the trigger against the viewport
+     * on every open and then following it, which is the portalled component this one
+     * deliberately is not. A caller that knows its control bar is pinned to the bottom
+     * already knows the answer and does not need it measured.
+     */
+    Above("dropdown--above"),
+}
+
 /** How strongly an item reads. */
 public enum class DropdownItemTone(internal val className: String?) {
     Default(null),
@@ -50,6 +71,11 @@ public enum class DropdownItemTone(internal val className: String?) {
  * menu go inside one element carrying `dropdownAnchorClasses()`. That element exists
  * only to be that ancestor and sets nothing else.
  *
+ * [align] picks which corner it hangs from and [side] picks whether it opens down or
+ * up; both are the caller's because both depend on where the trigger sits, and
+ * deciding either automatically would mean measuring the trigger against the viewport
+ * on every open and following it afterwards.
+ *
  * That also means an ancestor with `overflow: hidden` clips the menu - a
  * [Surface] built with `clipped = true`, or a scrolling row. The escape is not a
  * parameter here: it is to put the trigger outside the clipped box, because the
@@ -70,6 +96,7 @@ public fun DropdownMenu(
     onDismiss: () -> Unit,
     ariaLabel: String,
     align: DropdownAlign = DropdownAlign.End,
+    side: DropdownSide = DropdownSide.Below,
     dismissOnEscape: Boolean = true,
     attrs: (AttrsScope<HTMLDivElement>.() -> Unit)? = null,
     content: ContentBuilder<HTMLDivElement>,
@@ -85,7 +112,7 @@ public fun DropdownMenu(
     })
 
     Div({
-        classNames(dropdownClasses(align))
+        classNames(dropdownClasses(align, side))
         // A group rather than a menu: it names the set without promising keyboard
         // behaviour the markup does not have. See the note above.
         attr("role", "group")

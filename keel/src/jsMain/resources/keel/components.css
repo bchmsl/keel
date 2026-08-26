@@ -1266,6 +1266,24 @@ button.card__title {
   right: 0;
 }
 
+/* Opening upward, for a trigger near the foot of the viewport - a control bar pinned
+   to the bottom of a video, a toolbar on a page's last row - where a menu hung
+   downward would fall off the screen.
+
+   `top: auto` is load-bearing rather than tidy. `.dropdown` above resolves `top`, and
+   an absolutely positioned box with *both* offsets resolved takes its height from the
+   band between them rather than from its content. Here that band is the trigger's own
+   height minus both offsets, which is negative - so the menu does not overflow, it
+   collapses. Measured on a 36px trigger: 89px tall with this rule, 14px without it.
+
+   Only the animation's name is replaced, not the whole shorthand, so the duration and
+   easing stay whatever the rule above says they are. */
+.dropdown--above {
+  top: auto;
+  bottom: calc(100% + var(--dropdown-offset));
+  animation-name: keel-slide-in-from-bottom;
+}
+
 .dropdown__item {
   display: flex;
   align-items: center;

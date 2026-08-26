@@ -145,6 +145,17 @@ body {
   }
 }
 
+/* And upward, when the row that opened it is near the foot of the screen. The
+   mirror of the rule above rather than a reuse of `keel-toast-in`, which travels
+   twice as far because a notice arrives from off-screen while this one grows out of
+   a control the user is already looking at. */
+@keyframes keel-slide-in-from-bottom {
+  from {
+    opacity: 0;
+    transform: translateY(0.25rem);
+  }
+}
+
 /* A highlight travelling left to right across a placeholder. Moves the background
    position rather than the element, so it costs no layout and a row of skeletons
    sweeps in step. The element it belongs to sets the gradient; this only slides it. */

@@ -19,6 +19,7 @@ import io.github.bchmsl.keel.components.DropdownAlign
 import io.github.bchmsl.keel.components.DropdownItemTone
 import io.github.bchmsl.keel.components.DropdownMenu
 import io.github.bchmsl.keel.components.DropdownMenuItem
+import io.github.bchmsl.keel.components.DropdownSide
 import io.github.bchmsl.keel.components.EmptyState
 import io.github.bchmsl.keel.components.FormattedText
 import io.github.bchmsl.keel.components.FormattingField
@@ -299,6 +300,7 @@ internal fun SegmentedSection() {
 internal fun OverlaySection() {
     var drawerEdge by remember { mutableStateOf<DrawerEdge?>(null) }
     var menuOpen by remember { mutableStateOf(false) }
+    var dropUpOpen by remember { mutableStateOf(false) }
     var toasts by remember { mutableStateOf(emptyList<Toast>()) }
     var placement by remember { mutableStateOf(ToastPlacement.Top) }
 
@@ -345,6 +347,30 @@ internal fun OverlaySection() {
                         ) {
                             Icon(LucideIcon.Trash2, size = MENU_ICON)
                         }
+                    }
+                }
+            }
+
+            // The same menu opening upward, which is what a trigger pinned to the
+            // foot of the viewport needs - a video's control bar is the case that
+            // asked for it.
+            Div({ classNames(dropdownAnchorClasses()) }) {
+                Button(
+                    label = "Menu, upward",
+                    onClick = { dropUpOpen = !dropUpOpen },
+                    variant = ButtonVariant.Outline,
+                )
+
+                if (dropUpOpen) {
+                    DropdownMenu(
+                        onDismiss = { dropUpOpen = false },
+                        ariaLabel = "Example actions, opening upward",
+                        align = DropdownAlign.Start,
+                        side = DropdownSide.Above,
+                    ) {
+                        DropdownMenuItem("1080p", onClick = { dropUpOpen = false })
+                        DropdownMenuItem("720p", onClick = { dropUpOpen = false })
+                        DropdownMenuItem("Auto", onClick = { dropUpOpen = false })
                     }
                 }
             }

@@ -425,3 +425,21 @@ Closed since:
   panel has a sticky header over a scrolling body, Dakalebi's sheet is one padded
   scrolling stack, and guessing which shape keel should own is the Phase 4 question
   rather than this one. `Drawer` is the sliding surface; the header is content.
+
+## `DropdownSide.Above`
+
+Added after the fact, by the first consumer that needed it. Dakalebi's player has a
+quality menu in a control bar pinned to the foot of the video: a menu hung downward
+from there opens off the bottom of the screen. `.dropdown--above` is the mirror of the
+default, and `keel-slide-in-from-bottom` mirrors `keel-slide-in-from-top` in base.css.
+
+The choice stays the caller's, like `DropdownAlign`, and for the same reason: deciding
+it automatically means measuring the trigger against the viewport on every open and
+following it afterwards, which is the portalled dropdown this component deliberately
+is not. A caller whose control bar is pinned to the bottom already knows the answer.
+
+One trap worth recording. The rule needs `top: auto`, because `.dropdown` resolves
+`top` and a box with *both* offsets resolved takes its height from the band between
+them rather than from its content. For a menu hung outside its trigger that band is
+negative, so the failure is a collapse rather than an overflow: measured on a 36px
+trigger, 89px tall with the rule and 14px without it.
