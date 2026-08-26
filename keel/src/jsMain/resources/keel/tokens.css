@@ -48,6 +48,81 @@
   --radius-xl: calc(var(--radius) + 4px);
   --radius-pill: 9999px;
 
+  /* ------------------------------------------------ control geometry ---- */
+  /* A control's box, named so an app can resize the whole set from here
+     instead of re-stating keel's rules by selector.
+
+     This exists because `rem` on its own was not enough. Every value below
+     already scaled with the root font size - but the *ratios* are a phone's.
+     A 2.5rem button is 40px, which is a thumb. A ten-foot interface needs a
+     larger control at the same root size, because its root size is already
+     spoken for by its layout, so the only way to get one used to be
+     overriding these rules from outside. That is how a consumer's stylesheet
+     turns into a fork of this one.
+
+     Every value is what the rule it replaced already stated, so at a 16px
+     root nothing here moves. */
+  --control-h-xs: 1.75rem;
+  --control-h-sm: 2.25rem;
+  --control-h-default: 2.5rem;
+  --control-h-lg: 2.75rem;
+  --control-px-sm: 0.75rem;
+  --control-px-default: 1rem;
+  --control-px-lg: 2rem;
+  --control-py-default: 0.5rem;
+  --control-font-size: 0.875rem;
+
+  /* The switch is a knob inside a track, so these three are not independent.
+     The knob's travel is *derived* from them in `components.css` rather than
+     stated as a fourth value - which is what stops a resized track from
+     leaving the knob stranded short of the end. */
+  --switch-track-w: 2.25rem;
+  --switch-track-h: 1.25rem;
+  --switch-knob-size: 1rem;
+  --switch-knob-inset: 0.125rem;
+
+  --slider-rail-h: 0.375rem;
+  --slider-thumb-size: 1rem;
+
+  /* ------------------------------------------------------ focus ring ---- */
+  /* Two layers: a gap in the page's own background colour, then the ring
+     itself. The gap is what keeps the ring readable against any surface,
+     including one the same colour as the ring.
+
+     `--focus-ring-width` is the ring's own thickness, NOT the outer radius.
+     The rules draw the outer layer as `calc(offset + width)`, so widening the
+     ring cannot silently eat the gap it needs to stay visible. The pair below
+     is 2px and 2px, which is what the rules stated as 2px and 4px.
+
+     A consumer whose focus ring *is* the cursor - a television, driven by a
+     D-pad - wants both of these several times larger. That is the whole
+     reason they are tokens. */
+  --focus-ring-offset: 0.125rem;
+  --focus-ring-width: 0.125rem;
+
+  /* -------------------------------------------------------- layering ---- */
+  /* One scale, so two overlays written months apart cannot both reach for 50
+     and leave which wins to source order.
+
+     `--z-dialog` is 50 because that is the value `.dialog__overlay` and
+     `.dialog__content` already carried, and both apps using keel have their
+     own overlays numbered around it. Moving it would silently reorder them.
+
+     The decades leave a consumer room to slot its own layer between two of
+     these without renumbering keel's. The catcher sits one below its menu
+     rather than a decade below, because that pairing is fixed: a
+     click-catcher is only ever directly beneath the thing it dismisses.
+
+     There is no single scrim value. `--z-scrim` belongs to the standalone
+     scrim that pairs with a drawer; a dialog carries its own overlay at
+     `--z-dialog` instead, so the two cannot be separated by a stray layer. */
+  --z-scrim: 20;
+  --z-drawer: 30;
+  --z-dropdown-catch: 39;
+  --z-dropdown: 40;
+  --z-dialog: 50;
+  --z-toast: 60;
+
   /* ----------------------------------------------------------- motion ---- */
   /* Named so a component states its intent rather than a number, and so a
      consumer can retime the whole interface from one place.

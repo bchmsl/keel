@@ -177,7 +177,14 @@ body {
     border-radius: var(--radius-pill);
   }
 
-  *::-webkit-scrollbar-thumb:hover {
-    background-color: hsl(var(--muted-foreground) / 0.4);
+  /* Wrapped like every other hover in the design system, for consistency rather
+     than because a stuck scrollbar hover would be a visible problem: this block
+     only exists on Safari before 18.2, where the scrollbar is an overlay with no
+     tap target to leave a hover behind on. An invariant with one quiet exception
+     is harder to keep than one with none. */
+  @media (hover: hover) {
+    *::-webkit-scrollbar-thumb:hover {
+      background-color: hsl(var(--muted-foreground) / 0.4);
+    }
   }
 }

@@ -15,9 +15,42 @@ colour keywords, anywhere in `base.css` or `components.css`, fails the build. On
 allowance, black at low alpha, for the modal scrim — a scrim dims whatever is behind
 it, which is not a palette's business.
 
-Radius, duration, font and shadow are held to the same rule by review rather than by a
-test. `components.css` has no literal of any of them today; `base.css` carries a few
+A second test enforces the size half: a `height` or `width` given a fixed length —
+`px`, `rem` or a print unit — anywhere in `base.css` or `components.css` fails the
+build. Two allowances, both idioms with an exact required value rather than a design
+choice: `.sr-only`'s 1px clip box, and the `::-webkit-scrollbar` gutter. Relative
+units are not flagged, because `%`, `em` and the viewport units already answer to
+something the consumer controls.
+
+That test exists for a failure that is easy to miss. A literal `height: 2.5rem` is
+not wrong on its own — it already scales with the root font size. It goes wrong for a
+consumer whose root size is spoken for by something else: a ten-foot interface sets
+its root from the viewport to make its layout work, and then needs a *larger* control
+at that same root. With the height written out, the only way to get one is to re-state
+the rule by selector from outside, and a stylesheet that re-states another has forked
+it — silently, and only for the app that did it.
+
+Radius, duration and font are held to the same rule by review rather than by a test.
+`components.css` has no literal of any of them today; `base.css` carries a few
 animation durations, which are the animation's own timing rather than the interface's.
+
+## Focus and hover
+
+Two rules, both enforced by `TokenContractTest` rather than by review, and both
+stated in the header of `components.css` where the next component gets written.
+
+**Every focus rule is a two-branch selector list** — `.thing:focus-visible,
+.thing[data-keel-focus]`. The second branch is for a consumer that moves focus itself
+instead of letting the browser do it. A D-pad interface is the case that forced it:
+focus there is a cursor the app owns, it lands on a `div` no browser would call
+focusable, and `:focus-visible` heuristics do not fire in a WebView the way they do on
+a desktop. Both branches are specificity (0,2,0), so adding one reorders nothing. The
+attribute is namespaced so a consumer's own unrelated `data-focus` cannot be restyled
+by accident.
+
+**Every `:hover` rule is wrapped in `@media (hover: hover)`.** Without it a tap leaves
+the hover state stuck on the control, because the pointer that would have left never
+existed. Desktop is unaffected.
 
 ## The four stylesheets
 
@@ -361,9 +394,10 @@ What was not taken, and why:
   exists only while both stylesheets are linked at once.
 - **Splitting hover into its own sheet**, for a shell with no pointer. Hover rules
   simply never match without a pointer, so the split buys little. The real issue it
-  gestures at — hover sticking after a touch — is better answered by authoring hover
-  inside `@media (hover: hover)`. Worth doing, and deliberately not done here: it
-  would change how both apps look on a phone, which an extraction should not.
+  gestures at — hover sticking after a touch — was answered instead by authoring every
+  hover inside `@media (hover: hover)`, which is now the rule and is tested. That was
+  held back from the extraction itself, on the grounds that a move should not change
+  how either app looks on a phone; it landed as a deliberate change afterwards.
 - **`--border-strong` and `--foreground-dim`.** Real needs in one app, and no
   component here reads either, so both would ship as dead API. `hsl(var(--foreground)
   / 0.15)` covers the first and `hsl(var(--foreground) / 0.72)` the second. They go in

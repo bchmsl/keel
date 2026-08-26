@@ -285,19 +285,29 @@ Two things it already has and Dayboard does not, both worth pulling up:
 - **`DismissOnEscape`** — already taken. It is in keel, on by default in `Dialog`, and
   it fixes the Dayboard defect described above.
 - **iOS switch proportions.** keel's switch is 36×20; Dakalebi's is 51×31 on the web
-  and a scaled `4.625rem` on the TV. Worth a size variant rather than a fork.
+  and a scaled `4.625rem` on the TV. Worth a size variant rather than a fork — and now
+  reachable by setting `--switch-track-w/h`, `--switch-knob-size` and
+  `--switch-knob-inset`, with the knob's travel deriving from them automatically.
 
-## Three known gaps
+## Known gaps
 
 Real constraints keel does not yet meet. Each is recorded in ARCHITECTURE.md under
 decisions not taken, with the reason it was deferred rather than done.
 
-1. **Focus is a `box-shadow`, and needs to be an `outline` for the TV.** A box-shadow
-   ring is clipped by an ancestor's `overflow`; an outline is not. Dakalebi also
-   measured that a focused element must not move, while keel scales the slider thumb
-   on hover.
-2. **Hover is folded into base rules.** Harmless without a pointer, but the honest fix
-   is to author hover inside `@media (hover: hover)`.
-3. **Icon size at the call site.** Partly solved: `Icon(size = null)` lets CSS own it,
+1. **Focus is a `box-shadow`, and may need to be an `outline` for the TV.** A
+   box-shadow ring is clipped by an ancestor's `overflow`; an outline is not. Still
+   open. The related half of this — that a focused element must not move, while keel
+   scaled the slider thumb on hover — is closed by the `@media (hover: hover)` wrapper:
+   with no pointer, the rule no longer matches at all.
+2. **Icon size at the call site.** Partly solved: `Icon(size = null)` lets CSS own it,
    which is what a `rem`-canvas layout needs. The remaining half is that keel has no
    contextual sizing rules of its own, so the TV shell writes them.
+
+Closed since:
+
+- **Hover was folded into base rules.** Every `:hover` is now authored inside
+  `@media (hover: hover)`, and a test fails the build if one is not.
+- **Control sizes were literals.** Height, padding, control font size, and the switch
+  and slider geometry are tokens, so a shell at a different viewing distance can
+  resize the set from `:root` rather than re-stating keel's rules by selector. The
+  switch size variant suggested above is now a matter of setting four properties.

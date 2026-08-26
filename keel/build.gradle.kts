@@ -58,10 +58,23 @@ kotlin {
  * so the tests do not silently pass by reading nothing if a working directory moves.
  */
 tasks.withType<Test>().configureEach {
-    systemProperty(
-        "keel.css.dir",
-        layout.projectDirectory.dir("src/jsMain/resources/keel").asFile.absolutePath,
-    )
+    val cssDir = layout.projectDirectory.dir("src/jsMain/resources/keel")
+
+    systemProperty("keel.css.dir", cssDir.asFile.absolutePath)
+
+    /*
+     * Declared as an input as well as passed as a property, and the tests are wrong
+     * without it. `systemProperty` tells the test where the stylesheets are; it tells
+     * Gradle nothing about them. So on a CSS-only change - which is the exact change
+     * this suite exists to catch - nothing in the task's fingerprint moved and the
+     * whole thing stayed UP-TO-DATE, reporting a pass it had not re-checked.
+     *
+     * Found the honest way: a literal `height` added to components.css to prove the
+     * new size guard could fail did not fail until `--rerun-tasks`.
+     */
+    inputs.dir(cssDir)
+        .withPropertyName("keelStylesheets")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
 }
 
 publishing {

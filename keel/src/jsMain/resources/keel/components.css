@@ -2,15 +2,41 @@
  * The primitives.
  *
  * Every value here is a token: no literal colour, no literal radius, no literal
- * duration. That is what lets an app change its shape language or retime its
- * interface without editing this file.
+ * duration, and no literal control size. That is what lets an app change its shape
+ * language, retime its interface, or scale its controls for a different viewing
+ * distance without editing this file.
  *
- * Two literals remain, both deliberate and neither a palette's business. Black at
- * low alpha, for the modal scrim - a scrim dims whatever is behind it. And the
- * handful of small fixed sizes that are the control itself rather than a choice
- * about it: the 36x20 switch track and its 16px knob, the slider's 6px rail.
+ * One literal remains, deliberate and not a palette's business: black at low alpha,
+ * for the modal scrim. A scrim dims whatever is behind it.
  *
  * Reads tokens.css and a palette sheet. Link those first.
+ *
+ * ------------------------------------------------------------------- focus ----
+ *
+ * Every focus rule is a two-branch selector list:
+ *
+ *   .thing:focus-visible,
+ *   .thing[data-keel-focus] { ... }
+ *
+ * The second branch is for a consumer that moves focus itself rather than letting
+ * the browser do it. A ten-foot interface driven by a D-pad is the case that forced
+ * it: there, focus is a cursor the app owns, it lands on a `div` that no browser
+ * would call focusable, and `:focus-visible` heuristics do not fire in a WebView
+ * the way they do on a desktop. Such an app sets `data-keel-focus` on the element
+ * it considers current and gets keel's own ring for free.
+ *
+ * Both branches are specificity (0,2,0), so adding one never reorders an existing
+ * cascade. The attribute is namespaced - `data-keel-focus`, not `data-focus` - so a
+ * consumer's own unrelated `data-focus` cannot be restyled by accident.
+ *
+ * ------------------------------------------------------------------- hover ----
+ *
+ * Every `:hover` rule is wrapped in `@media (hover: hover)`.
+ *
+ * Without it a tap on a touch screen leaves the hover state stuck on the control
+ * until something else is tapped, because there is no pointer to leave. Desktop is
+ * unaffected. Both apps using keel had already hand-rolled this workaround in their
+ * own stylesheets, which is the sign it belonged here.
  */
 
 /* ----------------------------------------------------------------- icon ---- */
@@ -51,7 +77,7 @@
   border: 1px solid transparent;
   border-radius: var(--radius-md);
   font-family: inherit;
-  font-size: 0.875rem;
+  font-size: var(--control-font-size);
   font-weight: 500;
   cursor: pointer;
   background: none;
@@ -63,13 +89,16 @@
     opacity var(--duration-fast) var(--ease);
 }
 
-.btn:focus-visible {
+/* A ring held off the control by a background-coloured gap, so it stays visible
+   whichever surface the button sits on. The outer layer is the gap plus the ring's
+   own thickness, derived rather than stated, so widening one cannot eat the other.
+   See the focus note in this file's header for the second branch. */
+.btn:focus-visible,
+.btn[data-keel-focus] {
   outline: none;
-  /* A ring held off the control by a background-coloured gap, so it stays visible
-     whichever surface the button sits on. */
   box-shadow:
-    0 0 0 2px hsl(var(--background)),
-    0 0 0 4px hsl(var(--ring));
+    0 0 0 var(--focus-ring-offset) hsl(var(--background)),
+    0 0 0 calc(var(--focus-ring-offset) + var(--focus-ring-width)) hsl(var(--ring));
 }
 
 .btn:disabled {
@@ -81,63 +110,73 @@
   background-color: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
 }
-.btn--default:hover {
-  background-color: hsl(var(--primary) / 0.9);
-}
 
 .btn--destructive {
   background-color: hsl(var(--destructive));
   color: hsl(var(--destructive-foreground));
-}
-.btn--destructive:hover {
-  background-color: hsl(var(--destructive) / 0.9);
 }
 
 .btn--outline {
   border-color: hsl(var(--input));
   background-color: hsl(var(--background));
 }
-.btn--outline:hover {
-  background-color: hsl(var(--accent));
-  color: hsl(var(--accent-foreground));
-}
 
 .btn--secondary {
   background-color: hsl(var(--secondary));
   color: hsl(var(--secondary-foreground));
-}
-.btn--secondary:hover {
-  background-color: hsl(var(--secondary) / 0.8);
-}
-
-.btn--ghost:hover {
-  background-color: hsl(var(--accent));
-  color: hsl(var(--accent-foreground));
 }
 
 .btn--link {
   color: hsl(var(--primary));
   text-underline-offset: 4px;
 }
-.btn--link:hover {
-  text-decoration: underline;
+
+/* The six variants' hover states, collected rather than each sitting under its own
+   variant. One `@media` wrapper for the set reads better than six, and the order
+   within it cannot matter: a button carries exactly one variant class. */
+@media (hover: hover) {
+  .btn--default:hover {
+    background-color: hsl(var(--primary) / 0.9);
+  }
+
+  .btn--destructive:hover {
+    background-color: hsl(var(--destructive) / 0.9);
+  }
+
+  .btn--outline:hover {
+    background-color: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+  }
+
+  .btn--secondary:hover {
+    background-color: hsl(var(--secondary) / 0.8);
+  }
+
+  .btn--ghost:hover {
+    background-color: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+  }
+
+  .btn--link:hover {
+    text-decoration: underline;
+  }
 }
 
 .btn--size-default {
-  height: 2.5rem;
-  padding: 0.5rem 1rem;
+  height: var(--control-h-default);
+  padding: var(--control-py-default) var(--control-px-default);
 }
 .btn--size-sm {
-  height: 2.25rem;
-  padding: 0 0.75rem;
+  height: var(--control-h-sm);
+  padding: 0 var(--control-px-sm);
 }
 .btn--size-lg {
-  height: 2.75rem;
-  padding: 0 2rem;
+  height: var(--control-h-lg);
+  padding: 0 var(--control-px-lg);
 }
 .btn--size-icon {
-  height: 2.5rem;
-  width: 2.5rem;
+  height: var(--control-h-default);
+  width: var(--control-h-default);
   padding: 0;
 }
 
@@ -187,8 +226,10 @@
 button.card__title {
   cursor: pointer;
 }
-button.card__title:hover {
-  color: hsl(var(--foreground) / 0.8);
+@media (hover: hover) {
+  button.card__title:hover {
+    color: hsl(var(--foreground) / 0.8);
+  }
 }
 
 .card__actions {
@@ -207,11 +248,13 @@ button.card__title:hover {
   cursor: grab;
   transition: color var(--duration-fast) var(--ease);
 }
-.card:hover .card__grip {
-  color: hsl(var(--muted-foreground) / 0.4);
-}
-.card__grip:hover {
-  color: hsl(var(--muted-foreground));
+@media (hover: hover) {
+  .card:hover .card__grip {
+    color: hsl(var(--muted-foreground) / 0.4);
+  }
+  .card__grip:hover {
+    color: hsl(var(--muted-foreground));
+  }
 }
 .card__grip:active {
   cursor: grabbing;
@@ -221,8 +264,8 @@ button.card__title:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 1.75rem;
-  width: 1.75rem;
+  height: var(--control-h-xs);
+  width: var(--control-h-xs);
   border: 0;
   border-radius: var(--radius-sm);
   background: none;
@@ -232,9 +275,11 @@ button.card__title:hover {
     background-color var(--duration-fast) var(--ease),
     color var(--duration-fast) var(--ease);
 }
-.card__icon-button:hover {
-  background-color: hsl(var(--muted));
-  color: hsl(var(--foreground));
+@media (hover: hover) {
+  .card__icon-button:hover {
+    background-color: hsl(var(--muted));
+    color: hsl(var(--foreground));
+  }
 }
 
 .card__content {
@@ -257,7 +302,7 @@ button.card__title:hover {
   background-color: hsl(var(--card));
   color: hsl(var(--foreground));
   padding: 0.625rem 0.75rem;
-  font-size: 0.875rem;
+  font-size: var(--control-font-size);
   font-family: inherit;
   transition: box-shadow var(--duration-fast) var(--ease);
 }
@@ -267,10 +312,14 @@ button.card__title:hover {
   color: hsl(var(--muted-foreground));
 }
 
+/* A soft single-layer glow rather than the two-layer ring the buttons get: a field is
+   already a bordered box, so it needs marking, not outlining. `--focus-ring-width` is
+   the right token even though this is not a ring - it is the same "how thick is a
+   focus mark here" decision, and a consumer that scales one wants the other. */
 .input:focus,
 .textarea:focus {
   outline: none;
-  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2);
+  box-shadow: 0 0 0 var(--focus-ring-width) hsl(var(--ring) / 0.2);
 }
 
 .textarea {
@@ -278,13 +327,14 @@ button.card__title:hover {
 }
 
 /* --------------------------------------------------------------- switch ---- */
-/* Hand-built rather than a styled checkbox: this is a 36x20 track with a 16px knob,
-   which no native control offers. */
+/* Hand-built rather than a styled checkbox: a track with a knob inside it, which no
+   native control offers. The default is 36x20 with a 16px knob; all three sizes are
+   tokens, and the knob's travel is derived from them below. */
 
 .switch {
   position: relative;
-  height: 1.25rem;
-  width: 2.25rem;
+  height: var(--switch-track-h);
+  width: var(--switch-track-w);
   flex: none;
   border: 0;
   border-radius: var(--radius-pill);
@@ -302,10 +352,10 @@ button.card__title:hover {
 
 .switch__knob {
   position: absolute;
-  top: 0.125rem;
-  left: 0.125rem;
-  height: 1rem;
-  width: 1rem;
+  top: var(--switch-knob-inset);
+  left: var(--switch-knob-inset);
+  height: var(--switch-knob-size);
+  width: var(--switch-knob-size);
   border-radius: var(--radius-pill);
   /* The knob sits on `--primary` when the switch is on, and `--primary-foreground`
      is by definition the ink that belongs on `--primary`. It is white in all twelve
@@ -316,15 +366,23 @@ button.card__title:hover {
   transition: transform var(--duration-fast) var(--ease);
 }
 
+/* Derived, not stated. The knob starts one inset in from the left, so it has to stop
+   one inset short of the right: the travel is the track minus the knob minus *both*
+   insets. Written as a literal `1rem` this was correct only for the default three
+   sizes, and a consumer that scaled the track would have got a knob stopping short
+   of the end - or running past it - with nothing to say why. */
 .switch[aria-checked='true'] .switch__knob {
-  transform: translateX(1rem);
+  transform: translateX(
+    calc(var(--switch-track-w) - var(--switch-knob-size) - 2 * var(--switch-knob-inset))
+  );
 }
 
-.switch:focus-visible {
+.switch:focus-visible,
+.switch[data-keel-focus] {
   outline: none;
   box-shadow:
-    0 0 0 2px hsl(var(--background)),
-    0 0 0 4px hsl(var(--ring));
+    0 0 0 var(--focus-ring-offset) hsl(var(--background)),
+    0 0 0 calc(var(--focus-ring-offset) + var(--focus-ring-width)) hsl(var(--ring));
 }
 
 /* --------------------------------------------------------------- slider ---- */
@@ -333,7 +391,7 @@ button.card__title:hover {
 
 .slider {
   width: 100%;
-  height: 0.375rem;
+  height: var(--slider-rail-h);
   border-radius: var(--radius-pill);
   background-color: hsl(var(--accent));
   appearance: none;
@@ -343,25 +401,26 @@ button.card__title:hover {
 
 .slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  height: 1rem;
-  width: 1rem;
+  height: var(--slider-thumb-size);
+  width: var(--slider-thumb-size);
   border-radius: var(--radius-pill);
   background-color: hsl(var(--primary));
   box-shadow: var(--shadow-sm);
   transition: transform var(--duration-fast) var(--ease);
 }
 
-.slider::-webkit-slider-thumb:hover {
-  transform: scale(1.1);
-}
-
 /* Duplicated rather than combined with the WebKit selector above: a rule listing
    both vendor pseudo-elements is dropped whole by both engines. Which is also why
    the hover and the transition have to be repeated - without them Firefox gets a
-   thumb that never responds to the pointer at all. */
+   thumb that never responds to the pointer at all.
+
+   The two hovers cannot share a `@media` block for the same reason they cannot share
+   a selector: the block would still contain one rule each engine discards, but each
+   engine discards only the rule, not the block, so grouping them is safe. They are
+   kept apart anyway to sit beside the thumb each one belongs to. */
 .slider::-moz-range-thumb {
-  height: 1rem;
-  width: 1rem;
+  height: var(--slider-thumb-size);
+  width: var(--slider-thumb-size);
   border: 0;
   border-radius: var(--radius-pill);
   background-color: hsl(var(--primary));
@@ -369,15 +428,24 @@ button.card__title:hover {
   transition: transform var(--duration-fast) var(--ease);
 }
 
-.slider::-moz-range-thumb:hover {
-  transform: scale(1.1);
+@media (hover: hover) {
+  .slider::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+  }
 }
 
-.slider:focus-visible {
+@media (hover: hover) {
+  .slider::-moz-range-thumb:hover {
+    transform: scale(1.1);
+  }
+}
+
+.slider:focus-visible,
+.slider[data-keel-focus] {
   outline: none;
   box-shadow:
-    0 0 0 2px hsl(var(--background)),
-    0 0 0 4px hsl(var(--ring));
+    0 0 0 var(--focus-ring-offset) hsl(var(--background)),
+    0 0 0 calc(var(--focus-ring-offset) + var(--focus-ring-width)) hsl(var(--ring));
 }
 
 /* --------------------------------------------------------------- dialog ---- */
@@ -385,7 +453,7 @@ button.card__title:hover {
 .dialog__overlay {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: var(--z-dialog);
   background-color: rgb(0 0 0 / 0.8);
   animation: keel-fade-in var(--duration-slow) ease-out;
 }
@@ -394,7 +462,7 @@ button.card__title:hover {
   position: fixed;
   left: 50%;
   top: 50%;
-  z-index: 50;
+  z-index: var(--z-dialog);
   transform: translate(-50%, -50%);
   width: 100%;
   max-width: 48rem;
@@ -421,8 +489,10 @@ button.card__title:hover {
   border-radius: var(--radius-sm);
   transition: opacity var(--duration-fast) var(--ease);
 }
-.dialog__close:hover {
-  opacity: 1;
+@media (hover: hover) {
+  .dialog__close:hover {
+    opacity: 1;
+  }
 }
 
 /* ------------------------------------------------------ formatted text ---- */
@@ -440,9 +510,11 @@ button.card__title:hover {
   text-underline-offset: 2px;
 }
 
-.formatted__link:hover {
-  color: hsl(var(--primary));
-  text-decoration-color: hsl(var(--primary) / 0.7);
+@media (hover: hover) {
+  .formatted__link:hover {
+    color: hsl(var(--primary));
+    text-decoration-color: hsl(var(--primary) / 0.7);
+  }
 }
 
 .formatted__underline {
@@ -480,8 +552,8 @@ button.card__title:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
+  width: var(--control-h-xs);
+  height: var(--control-h-xs);
   border: none;
   border-radius: calc(var(--radius-sm) - 2px);
   background-color: transparent;
@@ -496,9 +568,11 @@ button.card__title:hover {
    All three paint identically today only because the token is derived from
    `--foreground`; a palette that overrides it would otherwise make the toolbar's
    hover diverge from the buttons' on the very same background. */
-.toolbar__button:hover {
-  background-color: hsl(var(--accent));
-  color: hsl(var(--accent-foreground));
+@media (hover: hover) {
+  .toolbar__button:hover {
+    background-color: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+  }
 }
 
 /* ------------------------------------------------------------- tag pill ---- */
@@ -532,8 +606,10 @@ button.card__title:hover {
   transition: opacity var(--duration-fast) var(--ease);
 }
 
-.pill--button:hover {
-  opacity: 0.8;
+@media (hover: hover) {
+  .pill--button:hover {
+    opacity: 0.8;
+  }
 }
 
 .pill__emoji {
