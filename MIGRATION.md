@@ -695,3 +695,87 @@ too low. The box stays `inline-flex` rather than becoming `inline` so a leading 
 still gets the gap and the centring. Only `font-size` is inherited - the weight stays
 keel's, because a link inside a sentence reading slightly heavier than the sentence is
 what marks it as one.
+
+## And three more, from Dayboard's dialogs and panel
+
+Surveying Dayboard's four remaining sheets before migrating any of them turned up two
+gaps and one thing that only looked like a gap. Counting call sites first is what
+separated them.
+
+### `ButtonSize.ExtraSmall` and `ButtonSize.IconExtraSmall`
+
+keel's smallest button was `Small`, at `--control-h-sm` (36px) and
+`--control-font-size` (14px). Dayboard has fourteen buttons that are neither that nor
+anything else keel offered:
+
+| Dayboard class | box | type | sites |
+|---|---|---|---|
+| `.editor__ghost-button` | 0.25rem 0.5rem | 0.75rem | 6 |
+| `.editor__primary-button` | 0.375rem 0.75rem | 0.75rem | 5 |
+| `.editor__danger-button` | 0.375rem 0.75rem | 0.75rem | 2 |
+| `.panel__auto-button` | 0.375rem 0.625rem | 0.75rem | 1 |
+| `.subtask__delete` | 1.5rem square | - | 1 |
+| `.task__edit` | 1.75rem square | - | 1 |
+| `.panel__tag-action` | 1.75rem square | - | 1 |
+| `.panel__close` | 2rem square | - | 1 |
+
+Four sheets, four different squares, three different paddings, and no agreement between
+them - the signature of a tier the design system did not name.
+
+The height was not even new. `--control-h-xs` has existed since the tokens commit, and
+`.card__icon-button` and `.toolbar__button` have both been 1.75rem all along, for the
+same reason every row above is small: an action *inside* another control's box cannot be
+a 36px control without becoming the thing the row is about. What was missing was a way
+to ask for that tier from a call site, so each consumer picked its own number.
+
+Two new tokens - `--control-px-xs` and `--control-font-size-xs`. The type size is the
+one place this scale does not keep `--control-font-size`: `Small` and `Large` share it on
+purpose, because the box growing while the label does not is what a size scale means, and
+28px is where that stops working. 14px in a 28px box leaves 7px above and below, which
+is a label in a slot. The radius steps down to `--radius-sm` for the same reason, and
+again matches what keel's own two xs controls already used.
+
+### `ButtonVariant.Quiet` and `ButtonVariant.QuietDestructive`
+
+`Ghost` was the closest fit for Dayboard's quiet controls and it was wrong by one
+property. Ghost keeps the surrounding ink and only gains a fill on hover, so at rest it
+still reads as a label the eye should land on. Every one of Dayboard's quiet controls
+dims the ink too:
+
+```css
+.editor__ghost-button      { color: hsl(var(--muted-foreground)); }
+.editor__ghost-button:hover{ color: hsl(var(--foreground)); background: hsl(var(--muted) / 0.5); }
+```
+
+Twelve sites across three sheets did that, and keel had already settled the same pair
+twice internally - `.card__icon-button` and `.toolbar__button` are both
+`--muted-foreground` at rest and `--foreground` over `--muted` on hover. So the treatment
+was in keel already; it was only reachable from those two components.
+
+`QuietDestructive` is the same control for an action that deletes, and it exists because
+of a design in Dayboard's task editor worth keeping. The "Delete task" trigger is quiet
+at rest and turns red under the pointer; pressing it reveals a confirmation whose
+"Delete" is a solid `Destructive`. Two steps, two weights. Making the first step solid
+red - the only option before this - spends the warning on the press that does nothing.
+
+It is a variant rather than a modifier stacked on `.btn--quiet` because `buttonClasses`
+returns one variant class, and the alternative is a caller hand-spelling a second keel
+class. It stays a pair rather than a cross-product: there is no quiet-primary, because
+nothing has asked for one.
+
+### The one that was not a gap: a tonal fill
+
+`.editor__primary-button` fills with `hsl(var(--primary) / 0.1)` and inks with
+`hsl(var(--primary))` - a tinted primary, matching none of keel's variants. It looked
+like a third gap.
+
+Grepping every `hsl(var(--*) / 0.0x)` background in Dayboard found seven, and six of them
+are not buttons: a drop-target column tint, a selected theme tile, a static
+"notifications enabled" strip, and three hover washes. Exactly one button wanted a tonal
+fill, and its five call sites are "Add", "Create", "Save", "Edit task" and "Edit note" -
+each the one affirmative action of its block, which is what `Default` is for.
+
+So no variant. Those five become `Default` at `ExtraSmall`, which is a visible change:
+a tinted primary becomes a solid one. That is the change worth making rather than
+avoiding - the primary action reading as primary is the whole point of having the
+variant - but it is visible, so it is listed for QA rather than described as a no-op.

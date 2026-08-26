@@ -147,12 +147,48 @@
   text-underline-offset: 4px;
 }
 
+/* Dimmed at rest, lit when reached for.
+
+   The difference from `.btn--ghost` is one property, and it is the whole point:
+   ghost keeps the surrounding ink and only gains a fill on hover, so at rest it
+   reads as a full-strength label with no box. This one steps the ink back to
+   `--muted-foreground` as well, so at rest it reads as available rather than as
+   something the eye should land on.
+
+   That distinction matters wherever a row carries an action it does not want to
+   advertise - a delete on a list row, a "New tag" under a set of tags, a close on a
+   panel. Every one of those wants the ink dimmed too, and every consumer reaching
+   for `Ghost` for them was writing its own `color` rule on top.
+
+   keel had already settled this treatment twice internally, at
+   `.card__icon-button` and `.toolbar__button`, both of which are exactly this
+   colour pair at exactly `--control-h-xs`. Naming it as a variant is what makes it
+   reachable from a call site instead of only from those two components. */
+.btn--quiet {
+  color: hsl(var(--muted-foreground));
+}
+
+/* The same control, for an action that deletes.
+
+   Quiet at rest for the reason above, and `--destructive` under the pointer, so the
+   button says what it will do at the moment someone reaches for it rather than
+   colouring a whole panel red in case they might.
+
+   This is a variant rather than a modifier stacked on `.btn--quiet` because
+   `buttonClasses` returns one variant class, and the alternative is a caller
+   hand-spelling a second keel class - the exact thing that file exists to prevent.
+   It stays a pair rather than a cross-product: there is no quiet-primary and no
+   quiet-secondary, because nothing has asked for one. */
+.btn--quiet-destructive {
+  color: hsl(var(--muted-foreground));
+}
+
 /* A control sitting over picture rather than over the page.
 
-   None of the six variants above can do this job. Every one of them resolves against
-   a palette colour, and a video frame is not one: `--background` is invisible over a
-   dark scene and opaque over a bright one, `--primary` competes with whatever is
-   playing, and `--outline` is a border around nothing. What reads over unknown
+   None of the eight variants above can do this job. Every one of them resolves
+   against a palette colour, and a video frame is not one: `--background` is invisible
+   over a dark scene and opaque over a bright one, `--primary` competes with whatever
+   is playing, and `--outline` is a border around nothing. What reads over unknown
    content is a translucent wash of the palette's own ink, which is what this is.
 
    The alpha is a token because the right amount depends on the surface. A phone's
@@ -163,8 +199,8 @@
   color: hsl(var(--primary-foreground));
 }
 
-/* The six variants' hover states, collected rather than each sitting under its own
-   variant. One `@media` wrapper for the set reads better than six, and the order
+/* The variants' hover states, collected rather than each sitting under its own
+   variant. One `@media` wrapper for the set reads better than nine, and the order
    within it cannot matter: a button carries exactly one variant class. */
 @media (hover: hover) {
   .btn--default:hover {
@@ -187,6 +223,20 @@
   .btn--ghost:hover {
     background-color: hsl(var(--accent));
     color: hsl(var(--accent-foreground));
+  }
+
+  /* `--muted`, where ghost takes `--accent`. The palette orders these
+     `--background` < `--card` < `--muted` < `--accent`, so a quiet control lifting
+     only as far as `--muted` stays quieter on hover than a ghost does, which is the
+     same reasoning that set its rest colour. */
+  .btn--quiet:hover {
+    background-color: hsl(var(--muted));
+    color: hsl(var(--foreground));
+  }
+
+  .btn--quiet-destructive:hover {
+    background-color: hsl(var(--destructive) / var(--quiet-danger-tint));
+    color: hsl(var(--destructive));
   }
 
   .btn--link:hover {
@@ -216,10 +266,41 @@
   padding: 0;
 }
 
+/* The tier below Small, for a control inside another control's box.
+
+   `--control-h-xs` is not new here - `.card__icon-button` and `.toolbar__button`
+   have both been 1.75rem since they were written, because an action *inside* a card
+   header or a formatting toolbar cannot be a 2.25rem control without becoming the
+   thing the row is about. What was missing is a way to ask for that tier from a call
+   site, so a consumer wanting a 28px button wrote its own rule and picked its own
+   number - four of them, in one app, agreeing on none.
+
+   The type size steps down with the box, unlike Small and Large which share
+   `--control-font-size`; see the note on `--control-font-size-xs`.
+
+   The radius steps down too, to `--radius-sm`, which is again what keel's own two
+   xs controls already use. `--radius-md` on a 28px box is a third of its height and
+   reads as a lozenge rather than a button. */
+.btn--size-xs {
+  height: var(--control-h-xs);
+  padding: 0 var(--control-px-xs);
+  font-size: var(--control-font-size-xs);
+  border-radius: var(--radius-sm);
+}
+
+/* The square form of the tier above. Same box as `.card__icon-button`, reachable
+   for a control that is not in a card header. */
+.btn--size-icon-xs {
+  height: var(--control-h-xs);
+  width: var(--control-h-xs);
+  padding: 0;
+  border-radius: var(--radius-sm);
+}
+
 /* No box at all, for a link button sitting inside a sentence.
 
    `ButtonVariant.Link` is documented as being for actions inside a sentence, and none
-   of the four sizes above can give it one: each sets a control height, so a 2.5rem
+   of the six sizes above can give it one: each sets a control height, so a 2.5rem
    inline-flex box lands in a 0.875rem paragraph and inflates the line it sits in.
    Both consumers had noticed - one was writing `padding: 0` inline at three call
    sites, which removes the padding and leaves the height.

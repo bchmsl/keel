@@ -450,8 +450,9 @@ class TokenContractTest {
             // Control geometry. See the note in tokens.css for why `rem` alone was
             // not enough to make these scale.
             "--control-h-xs", "--control-h-sm", "--control-h-default", "--control-h-lg",
-            "--control-px-sm", "--control-px-default", "--control-px-lg",
-            "--control-py-default", "--control-font-size", "--control-font-weight",
+            "--control-px-xs", "--control-px-sm", "--control-px-default", "--control-px-lg",
+            "--control-py-default", "--control-font-size", "--control-font-size-xs",
+            "--control-font-weight",
             "--input-px", "--input-py", "--input-font-size-touch",
             "--switch-track-w", "--switch-track-h",
             "--switch-knob-size", "--switch-knob-inset",
@@ -465,7 +466,7 @@ class TokenContractTest {
             "--pill-dim", "--pill-ring-gap", "--pill-ring-width",
             "--callout-py", "--callout-px", "--callout-gap", "--callout-font-size",
             "--callout-tint", "--callout-border-alpha",
-            "--on-media-alpha", "--on-media-alpha-hover",
+            "--on-media-alpha", "--on-media-alpha-hover", "--quiet-danger-tint",
             "--loader-size-sm", "--loader-size", "--loader-size-lg",
             "--progress-h-sm", "--progress-h-default", "--progress-h-lg",
             "--scrub-h", "--scrub-rail-h", "--scrub-knob-size",

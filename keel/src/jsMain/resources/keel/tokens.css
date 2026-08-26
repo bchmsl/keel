@@ -66,12 +66,20 @@
   --control-h-sm: 2.25rem;
   --control-h-default: 2.5rem;
   --control-h-lg: 2.75rem;
+  --control-px-xs: 0.625rem;
   --control-px-sm: 0.75rem;
   --control-px-default: 1rem;
   --control-px-lg: 2rem;
   --control-py-default: 0.5rem;
   --control-font-size: 0.875rem;
   --control-font-weight: 500;
+
+  /* The xs tier's own type size. The other three sizes share `--control-font-size`,
+     because a 36px and a 44px button holding the same 14px label is on purpose - the
+     box grows, the text does not. 28px is where that stops working: 14px in a 28px
+     box leaves 7px of padding above and below, which is a label in a slot rather
+     than a button. */
+  --control-font-size-xs: 0.75rem;
 
   /* A field's own padding. Separate from `--control-px/py-*`, because a field is
      not one of the button size variants: it has no height of its own and is sized
@@ -162,6 +170,12 @@
      one could not be tuned without moving the other. */
   --on-media-alpha: 0.16;
   --on-media-alpha-hover: 0.3;
+
+  /* How much `--destructive` a quiet destructive control washes itself with when
+     reached for. A tint rather than the solid fill `.btn--destructive` takes, because
+     the point of that variant is that it is *not* shouting until the pointer is on
+     it - see `.btn--quiet-destructive`. */
+  --quiet-danger-tint: 0.1;
 
   /* The spinner's three diameters. Not a control - nothing is aimed at it - but
      the same argument applies: at ten feet a 20px ring is a dot, and the three

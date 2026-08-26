@@ -100,15 +100,20 @@ internal fun PaletteSection() {
 internal fun ButtonSection() {
     Section(
         title = "Buttons",
-        note = "Seven variants and five sizes. The focus ring is held off the control " +
+        note = "Nine variants and seven sizes. The focus ring is held off the control " +
             "by a background-coloured gap, so it stays visible on any surface - press " +
-            "Tab to see it. OnMedia has its own row because it is the one variant that " +
-            "resolves against no palette colour: it is a translucent wash for a control " +
-            "sitting over picture, and on the page background there is nothing for it " +
-            "to be translucent over. Inline is missing from the size row because it " +
-            "has no box; it is in the sentence at the foot of this section, which is " +
-            "the only place it belongs. The last row is LinkButton, which is a real " +
-            "anchor: middle-click one.",
+            "Tab to see it. Ghost and Quiet differ by one property and it only shows at " +
+            "rest: ghost keeps the surrounding ink, quiet dims it, so quiet reads as " +
+            "available rather than as somewhere to look. Hover both. QuietDestructive " +
+            "is the same control for an action that deletes, and it is what the first " +
+            "step of a delete should be - the solid Destructive is for the press that " +
+            "actually deletes. OnMedia has its own row because it is the one variant " +
+            "that resolves against no palette colour: it is a translucent wash for a " +
+            "control sitting over picture, and on the page background there is nothing " +
+            "for it to be translucent over. Inline is missing from the size row " +
+            "because it has no box; it is in the sentence at the foot of this section, " +
+            "which is the only place it belongs. The last row is LinkButton, which is " +
+            "a real anchor: middle-click one.",
     ) {
         Div({ classNames("row") }) {
             ButtonVariant.entries.filter { it != ButtonVariant.OnMedia }.forEach { variant ->
@@ -147,6 +152,20 @@ internal fun ButtonSection() {
                         title = "Settings",
                     ) {
                         Icon(LucideIcon.Settings)
+                    }
+                    // Quiet rather than Outline, which is the pairing this tier is
+                    // for: a glyph-only control inside a row, dimmed until reached
+                    // for. An outlined 28px square beside a 40px one reads as a
+                    // smaller version of the same button, which is the one thing
+                    // this size is not.
+                    ButtonSize.IconExtraSmall -> IconButton(
+                        ariaLabel = "Remove",
+                        onClick = {},
+                        variant = ButtonVariant.Quiet,
+                        size = ButtonSize.IconExtraSmall,
+                        title = "Remove",
+                    ) {
+                        Icon(LucideIcon.X)
                     }
                     // Not in this row: it has no box, so an outlined one is a border
                     // drawn tight around a word. It is shown in a sentence below,

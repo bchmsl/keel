@@ -33,6 +33,30 @@ public enum class ButtonVariant(internal val className: String) {
     /** No fill until hovered. For controls that should be quiet at rest. */
     Ghost("btn--ghost"),
 
+    /**
+     * No fill *and* dimmed ink until hovered. One property further than [Ghost].
+     *
+     * Ghost keeps the surrounding ink, so at rest it still reads as a label the eye
+     * should land on - right for a Cancel beside a Save. This one steps the ink back to
+     * `--muted-foreground` too, so at rest it reads as merely available: a delete on a
+     * list row, a close on a panel, a "New tag" under a set of tags.
+     *
+     * Pairs naturally with [ButtonSize.ExtraSmall] and [ButtonSize.IconExtraSmall],
+     * which is the tier most of those controls live at. See `.btn--quiet`.
+     */
+    Quiet("btn--quiet"),
+
+    /**
+     * [Quiet], for an action that deletes.
+     *
+     * Dimmed at rest and `--destructive` under the pointer, so the button says what it
+     * will do at the moment someone reaches for it. Prefer this over [Destructive] for
+     * the *first* step of a destructive flow - a "Delete task" that only asks for
+     * confirmation is not yet the dangerous press, and colouring it solid red spends
+     * the warning early. [Destructive] is for the press that actually deletes.
+     */
+    QuietDestructive("btn--quiet-destructive"),
+
     /** Looks like a link, behaves like a button. For actions inside a sentence. */
     Link("btn--link"),
 
@@ -40,8 +64,8 @@ public enum class ButtonVariant(internal val className: String) {
      * A translucent wash, for a control sitting over picture rather than over the page -
      * a player's transport buttons, a quality selector on a video frame.
      *
-     * None of the six above can do this job: each one resolves against a palette colour,
-     * and a video frame is not one. See `.btn--on-media`.
+     * None of the eight above can do this job: each one resolves against a palette
+     * colour, and a video frame is not one. See `.btn--on-media`.
      *
      * The wash is the palette's own ink at `--on-media-alpha`, so an app that wants its
      * player chrome heavier or lighter moves one token rather than restating the rule.
@@ -55,6 +79,22 @@ public enum class ButtonSize(internal val className: String) {
     Small("btn--size-sm"),
     Large("btn--size-lg"),
     Icon("btn--size-icon"),
+
+    /**
+     * The tier below [Small]: a control that sits *inside* another control's box.
+     *
+     * A card header's action, a row's delete, a panel's close. None of those can be a
+     * [Small] without becoming the thing the row is about. The type size steps down with
+     * the box, which is the one place this scale does not keep `--control-font-size`.
+     *
+     * Not new geometry: keel's own `Card` header action and formatting toolbar have both
+     * been `--control-h-xs` since they were written. What is new is being able to ask for
+     * that tier from a call site.
+     */
+    ExtraSmall("btn--size-xs"),
+
+    /** The square form of [ExtraSmall], for a glyph-only control inside a row. */
+    IconExtraSmall("btn--size-icon-xs"),
 
     /**
      * No box: the text's own size, no padding, and the surrounding sentence's baseline.
