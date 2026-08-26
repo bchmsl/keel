@@ -954,3 +954,184 @@ button.card__title {
 .scrub__input[data-keel-focus] ~ .scrub__knob {
   box-shadow: 0 0 0 var(--focus-ring-width) hsl(var(--ring));
 }
+
+/* ------------------------------------------------------ segmented control ---- */
+/* Pick one of a set. Two visual treatments of the same interaction, which is why
+   they are one component and not two: the difference is entirely in the container.
+
+   `Track` is the compact form - a shared background with the choices inside it,
+   all visible at once. `Rail` detaches them into pills on a horizontal scroller,
+   for a set too long to fit: twelve seasons, forty tags.
+
+   The selected look is keyed off `:checked` rather than off a class the Kotlin
+   adds. That is the same argument the switch makes: `:checked` is what the browser
+   and assistive technology report, so keying the colour off it means the two cannot
+   disagree. A class can, and the failure is silent in the direction that matters -
+   the control looks right and announces wrong.
+
+   The control is a real radio group. That is not tidiness either: a set of buttons
+   with `role="radio"` promises arrow-key navigation and a single tab stop, and
+   delivers neither unless someone reimplements roving tabindex. Native radios
+   sharing a name give both away for free, plus grouping, plus Home and End. */
+
+.segmented {
+  display: inline-flex;
+  gap: 0.125rem;
+  padding: 0.125rem;
+  border-radius: var(--radius-pill);
+  background-color: hsl(var(--muted));
+}
+
+/* Each choice takes an equal share rather than only the room its word needs. For a
+   control whose options are a closed set of similar length - a view switcher - the
+   even rhythm reads better and the widths stop moving as the labels change. */
+.segmented--fill {
+  display: flex;
+  width: 100%;
+}
+
+.segmented--fill .segmented__item {
+  flex: 1;
+}
+
+/* No shared track, and it scrolls.
+   The scrollbar is hidden because this rail is swiped or dragged: a horizontal
+   scrollbar under a row of chips reads as a second control sitting under the first.
+   `scrollbar-width` is the standard property, and the legacy pseudo-element is
+   guarded exactly as `base.css` guards its own - Blink and WebKit ignore it on any
+   element that also sets `scrollbar-width`. */
+.segmented--rail {
+  display: flex;
+  gap: 0.375rem;
+  padding: 0;
+  overflow-x: auto;
+  border-radius: 0;
+  background-color: transparent;
+  scrollbar-width: none;
+}
+
+@supports not (scrollbar-width: none) {
+  .segmented--rail::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* The label element: a wrapper, not the visible chip. The chip is the span inside
+   it, so that `:checked` on the input can reach it as a sibling.
+   Positioned, so the hidden input below is clipped where the chip actually is. */
+.segmented__item {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+
+/* Present to the keyboard and to assistive technology, absent to the eye. Not
+   `display: none`, which would take it out of the accessibility tree and out of the
+   tab order along with it - the whole point is that this is still the control.
+
+   The same trick as `.sr-only`, written out rather than reusing that class, because
+   this one has to be clipped *at its own chip*. `.sr-only` positions against
+   whatever positioned ancestor it happens to find, and on a rail that is a
+   scrolling box: a focused chip would then scroll a 1px box somewhere else into
+   view instead of itself. */
+.segmented__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.segmented__label {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  padding: var(--segmented-py) var(--control-px-sm);
+  font-family: inherit;
+  font-size: var(--segmented-font-size);
+  font-weight: var(--control-font-weight);
+  white-space: nowrap;
+  cursor: pointer;
+  color: hsl(var(--muted-foreground));
+  transition:
+    background-color var(--duration-fast) var(--ease),
+    color var(--duration-fast) var(--ease),
+    border-color var(--duration-fast) var(--ease);
+}
+
+/* A rail chip has no track behind it, so it carries its own fill and a larger tap
+   area - it is a standalone target rather than one cell of a strip. */
+.segmented--rail .segmented__label {
+  padding: var(--segmented-rail-py) var(--control-px-default);
+  font-size: var(--segmented-rail-font-size);
+  background-color: hsl(var(--accent));
+}
+
+/* The chosen one lifts out of the track: the page's own surface colour, plus the
+   smallest shadow, which is the same treatment a `Surface` gets for sitting above
+   rather than in something. */
+.segmented__input:checked ~ .segmented__label {
+  background-color: hsl(var(--card));
+  color: hsl(var(--foreground));
+  box-shadow: var(--shadow-sm);
+  /* Nothing to click: it is already selected. */
+  cursor: default;
+}
+
+/* On a rail there is no track to lift out of, so the selected chip inverts instead.
+   The shadow goes: it would be a shadow against nothing. */
+.segmented--rail .segmented__input:checked ~ .segmented__label {
+  background-color: hsl(var(--primary));
+  border-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  box-shadow: none;
+}
+
+@media (hover: hover) {
+  .segmented__input:not(:checked) ~ .segmented__label:hover {
+    color: hsl(var(--foreground));
+  }
+
+  .segmented--rail .segmented__input:not(:checked) ~ .segmented__label:hover {
+    background-color: hsl(var(--accent) / 0.7);
+  }
+}
+
+/* The input is visually hidden, so its own ring is too - the chip has to carry it.
+   See the focus note in this file's header for the second branch.
+
+   The container class is in the selector purely for specificity. Without it these
+   are (0,3,0) and lose to `.segmented--rail .segmented__input:checked ~ ...`, which
+   sets `box-shadow: none` - so the selected chip on a rail would take focus and show
+   no ring at all. With it they are (0,4,0) and, coming later, win the tie. */
+.segmented .segmented__input:focus-visible ~ .segmented__label,
+.segmented .segmented__input[data-keel-focus] ~ .segmented__label {
+  outline: none;
+  box-shadow:
+    0 0 0 var(--focus-ring-offset) hsl(var(--background)),
+    0 0 0 calc(var(--focus-ring-offset) + var(--focus-ring-width)) hsl(var(--ring));
+}
+
+/* "You have finished this one." Its own colour rather than the label's, because it
+   is a different fact from which choice is selected: an unchosen chip can carry it
+   and the chosen one can too. */
+.segmented__complete {
+  color: hsl(var(--success));
+}
+
+/* On the chosen chip it gives that up and takes the chip's colour, so it stays
+   legible against whatever that chip is filled with. `inherit` rather than a named
+   colour because the two treatments fill differently - the track's chip is --card
+   with --foreground on it, the rail's is --primary with --primary-foreground - and
+   naming either one puts a white check on a light card in half the palettes. */
+.segmented__input:checked ~ .segmented__label .segmented__complete {
+  color: inherit;
+}

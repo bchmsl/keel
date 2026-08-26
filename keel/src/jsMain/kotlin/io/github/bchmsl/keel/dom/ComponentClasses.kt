@@ -3,6 +3,7 @@ package io.github.bchmsl.keel.dom
 import io.github.bchmsl.keel.components.ButtonSize
 import io.github.bchmsl.keel.components.ButtonVariant
 import io.github.bchmsl.keel.components.PillSize
+import io.github.bchmsl.keel.components.SegmentedStyle
 
 /*
  * The class names keel's components carry, for markup keel does not build itself.
@@ -108,6 +109,36 @@ public fun pillClasses(size: PillSize = PillSize.Default, pressable: Boolean = f
 
 /** The class on the emoji span inside a pill. */
 public fun pillEmojiClasses(): String = joined("pill__emoji")
+
+/**
+ * The classes on a [io.github.bchmsl.keel.components.SegmentedControl]'s container.
+ *
+ * The inner classes are published separately below, because a consumer that cannot
+ * call the composable has to build all four levels of it: the container, one label
+ * per choice, the hidden input, and the visible chip.
+ */
+public fun segmentedClasses(
+    style: SegmentedStyle = SegmentedStyle.Track,
+    fill: Boolean = false,
+): String = joined("segmented", style.className, "segmented--fill".takeIf { fill })
+
+/** The class on the label wrapping one choice. */
+public fun segmentedItemClasses(): String = joined("segmented__item")
+
+/**
+ * The class on the radio input inside one choice.
+ *
+ * A consumer rebuilding this markup should keep the real input. The selected
+ * appearance is keyed off `:checked`, so a version that leaves the input out gets no
+ * selected state at all - and loses arrow-key navigation with it.
+ */
+public fun segmentedInputClasses(): String = joined("segmented__input")
+
+/** The class on the visible chip. Must be a *following sibling* of the input. */
+public fun segmentedLabelClasses(): String = joined("segmented__label")
+
+/** The class on the "finished this one" check beside a chip's label. */
+public fun segmentedCompleteClasses(): String = joined("segmented__complete")
 
 /**
  * Drops the absent entries and joins the rest with a single space.

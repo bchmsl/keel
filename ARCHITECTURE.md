@@ -430,6 +430,41 @@ extraction. What was taken:
   nobody knows in advance, which is the same job. `.progress--on-media` and every
   `.scrub__*` layer read it.
 
+- **A pick-one control is a radio group, not a row of buttons with `aria-pressed`.**
+  All five hand-written versions across the two apps were buttons: appearance from a
+  class, selection announced as "pressed". A toggle button says pressed; it cannot say
+  "two of five", and none of the five had arrow-key navigation, a single tab stop, or
+  Home and End, because getting those from buttons means reimplementing roving
+  tabindex. `SegmentedControl` is `label > input[type=radio] + span`, so the browser
+  supplies all of it, and the selected colour is keyed off `:checked` rather than a
+  class keel adds — the same argument as the switch's `aria-checked`. A class can
+  disagree with what is announced, and it fails in the direction that matters: looking
+  right while announcing wrong.
+
+- **The segmented focus rule carries its own container class, purely for specificity.**
+  `.segmented--rail .segmented__input:checked ~ .segmented__label` is `(0,4,0)` and
+  sets `box-shadow: none`, because the rail's selected chip is a flat primary fill with
+  no lift. Written the obvious way, the focus rule would be `(0,3,0)` and lose — so a
+  focused *selected* rail chip would have shown no ring at all, the one state a keyboard
+  user most needs to see. Both focus branches are written as
+  `.segmented .segmented__input:focus-visible ~ .segmented__label`, which reaches
+  `(0,4,0)` and then wins on source order. The redundant-looking ancestor is the whole
+  point of the rule.
+
+- **The hidden radio gets its own visually-hidden rule rather than `.sr-only`.**
+  `.sr-only` is `position: absolute`, which resolves against the nearest positioned
+  ancestor. On the rail that ancestor would be the scroller, so focusing a chip would
+  scroll a 1px box somewhere else into view instead of the chip. `.segmented__item` is
+  `position: relative` and `.segmented__input` is hidden against it, measured: the
+  input's `offsetParent` is its own item.
+
+- **The "finished this one" check takes `color: inherit` on the chosen chip.** It is
+  `--success` normally, and the first version named `--primary-foreground` for the
+  selected state, which is right for the rail's primary fill and wrong for the track's,
+  where the chip is `--card` — a white check on a light card in half the palettes.
+  `inherit` lands on whatever that chip's text colour already is, correct in both
+  treatments without naming either.
+
 What was not taken, and why:
 
 - **`overflow: hidden` on `.surface`.** It looks obviously right: an unpadded surface
@@ -440,6 +475,14 @@ What was not taken, and why:
   surface is depends on what is inside it, so it is `clipped = false` by default and
   the caller says. This is the same clipping hazard as the open focus-ring gap below,
   arriving from the other direction.
+
+- **A separate `FilterChip` beside `SegmentedControl`.** The plan called for two
+  components, on the reasoning that unifying them means one grows a slot it never uses.
+  Reading all five hand-written versions first showed that is not what separates them:
+  they differ only in the container — a shared track versus a horizontal scroller — and
+  the "finished this one" check is one optional field on a segment, not a slot. A second
+  component would have duplicated the whole radio-group mechanism to change a `display`
+  and a `background-color`. `SegmentedStyle` is that difference.
 
 - **Generating the CSS from Kotlin.** It would remove the two-source-of-truth risk,
   which `TokenContractTest` already removes for the cost of a test rather than a code

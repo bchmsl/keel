@@ -117,6 +117,19 @@
   --scrub-rail-h: 0.1875rem;
   --scrub-knob-size: 0.75rem;
 
+  /* A segmented chip is denser than a standalone control, so it takes the
+     `--control-px-*` widths but not the heights: it is sized by its padding,
+     like a field. The two treatments differ, and both differences are real -
+     a rail chip is a standalone target with no track behind it, so it gets
+     the room a button would, while a track chip is one cell of a strip.
+
+     Only the verticals and the type are here; the horizontals are
+     `--control-px-sm` and `--control-px-default`, which already mean this. */
+  --segmented-py: 0.375rem;
+  --segmented-font-size: 0.75rem;
+  --segmented-rail-py: 0.5rem;
+  --segmented-rail-font-size: 0.8125rem;
+
   /* ------------------------------------------------------ focus ring ---- */
   /* Two layers: a gap in the page's own background colour, then the ring
      itself. The gap is what keeps the ring readable against any surface,

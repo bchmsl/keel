@@ -341,3 +341,34 @@ Closed since:
   disagree. `.scrub` collides with Dakalebi's own player rules, and web.css loads later,
   so Dakalebi keeps rendering its own until those rules are deleted in the same commit
   that adopts the component.
+- **Five pick-one-of-a-set controls, none of them a radio group.** `SegmentedControl`
+  replaces `.seg`, `.tv-seg`, Dakalebi's seasons chips, Dayboard's `.panel__modes` and
+  Dayboard's tag chips. All five drove appearance from a class and announced selection
+  with `aria-pressed`, which is the wrong role: a toggle button says "pressed", not "two
+  of five", and none of the five got arrow-key navigation, a single tab stop, or Home and
+  End. The component is one real radio group per control, so the browser supplies all
+  three, and the selected colour is keyed off `:checked` rather than a class, so the paint
+  and the announcement cannot drift.
+
+  It is **one** component with two treatments rather than the two the plan named. The
+  planned split was `SegmentedControl` for the all-visible group and `FilterChip` for the
+  scrolling rail, on the reasoning that unifying them means one grows a slot it never
+  uses. Reading all five implementations first showed that is not what separates them:
+  they differ only in the container — a shared track versus a horizontal scroller — and
+  the "finished this one" check is one optional field on a segment rather than a slot. A
+  separate `FilterChip` would have duplicated the whole radio-group mechanism to change a
+  `display` and a `background-color`. `SegmentedStyle.Track` and `SegmentedStyle.Rail`
+  are that difference.
+
+  Three visible changes come with adopting it:
+
+  | Where | Today | After |
+  |---|---|---|
+  | Dakalebi's settings segmented control | selected chip inverts to white on black | selected chip lifts: `--card` fill plus `--shadow-sm` |
+  | Dakalebi's seasons rail | selected chip is white | selected chip is brand `--primary` |
+  | Dayboard's mode switcher | rounded rectangle | pill, matching every other keel track |
+
+  Dayboard's tag chips are the one case that may not want this component at all: their
+  colour comes from the tag rather than from selection, and they dim rather than fill.
+  That is a `Pill` with a selected state, and it is a Phase 4 question for Dayboard, not
+  something `SegmentedControl` should grow a parameter for.

@@ -42,6 +42,7 @@ fun Gallery(theme: ThemeController) {
         SurfaceSection()
         FieldSection()
         PillSection()
+        SegmentedSection()
         BadgeSection()
         ProgressSection()
         WaitingSection()

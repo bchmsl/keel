@@ -459,6 +459,8 @@ class TokenContractTest {
             "--loader-size-sm", "--loader-size", "--loader-size-lg",
             "--progress-h-sm", "--progress-h-default", "--progress-h-lg",
             "--scrub-h", "--scrub-rail-h", "--scrub-knob-size",
+            "--segmented-py", "--segmented-font-size",
+            "--segmented-rail-py", "--segmented-rail-font-size",
             "--focus-ring-offset", "--focus-ring-width", "--focus-glow-alpha",
             "--z-scrim", "--z-drawer", "--z-dropdown-catch", "--z-dropdown",
             "--z-dialog", "--z-toast",

@@ -16,7 +16,7 @@ without either one having to look like the other.
 |---|---|
 | **Tokens** | Colour, shape, motion, type and shadow, as CSS custom properties. Colours are bare HSL triples, so a rule can add alpha. |
 | **Palettes** | Six, each in light and dark. Optional — an app can ship its own and inherit none of these. |
-| **Primitives** | Button, IconButton, LinkButton, Surface, Card, Dialog, Switch, Slider, TextField, TextAreaField, Pill, PillButton, Badge, ProgressBar, Scrub, Skeleton, Spinner, EmptyState, FormattingField, FormattedText, FormattingToolbar, Icon, and `DismissOnEscape` / `classNames` as the two behaviours worth sharing. |
+| **Primitives** | Button, IconButton, LinkButton, Surface, Card, Dialog, Switch, Slider, TextField, TextAreaField, Pill, PillButton, SegmentedControl, Badge, ProgressBar, Scrub, Skeleton, Spinner, EmptyState, FormattingField, FormattedText, FormattingToolbar, Icon, and `DismissOnEscape` / `classNames` as the two behaviours worth sharing. |
 | **Escape hatches** | Every primitive takes an `attrs` slot, and `buttonClasses(...)` and friends expose the class lists for markup keel does not build — a D-pad shell that must render `Div role="button"` can still be styled by keel. |
 | **Icons** | 57 lucide glyphs, generated from a pinned tag. |
 | **Theme model** | A palette is data, not an enum. Themes declare whether they support light, so a dark-only app is a first-class case. |
@@ -163,7 +163,6 @@ instrument Kotlin/JS.
 Both consuming apps already hand-roll these, and each is a real candidate. The list
 is in rough order of how much duplication it would remove:
 
-- **Segmented control** — written three times today (`.seg`, `.tv-seg`, `.panel__modes`).
 - **Scrim** — five rules across the two apps carrying four different values, with no shared token. One blurs its backdrop and one deliberately does not, which a variant can express.
 - **Side drawer** — two mirrored copies, one `side` parameter apart.
 - **Dropdown menu** and its click-catcher, with a documented z-index band.

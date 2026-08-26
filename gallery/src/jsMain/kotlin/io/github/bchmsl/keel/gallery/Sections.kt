@@ -26,6 +26,9 @@ import io.github.bchmsl.keel.components.ProgressBarSize
 import io.github.bchmsl.keel.components.ProgressHandle
 import io.github.bchmsl.keel.components.Scrub
 import io.github.bchmsl.keel.components.ScrubHandle
+import io.github.bchmsl.keel.components.Segment
+import io.github.bchmsl.keel.components.SegmentedControl
+import io.github.bchmsl.keel.components.SegmentedStyle
 import io.github.bchmsl.keel.components.Skeleton
 import io.github.bchmsl.keel.components.SkeletonShape
 import io.github.bchmsl.keel.components.Slider
@@ -220,6 +223,61 @@ internal fun SurfaceSection() {
             Surface(padding = SurfacePadding.None, clipped = true) {
                 Skeleton(attrs = { style { property("aspect-ratio", "16 / 9") } })
             }
+        }
+    }
+}
+
+// ------------------------------------------------------------------- segmented
+
+private enum class DemoView { Board, List, Calendar }
+
+@Composable
+internal fun SegmentedSection() {
+    var view by remember { mutableStateOf(DemoView.Board) }
+    var language by remember { mutableStateOf("EN") }
+    var season by remember { mutableStateOf(1) }
+
+    Section(
+        title = "Segmented control",
+        note = "One component, two treatments, because the difference between them " +
+            "is entirely in the container. A real radio group underneath: tab to it " +
+            "and the arrow keys move between choices, Home and End jump to the ends, " +
+            "and the whole group is one tab stop - none of which a row of buttons " +
+            "with role=radio gets without reimplementing roving tabindex. The " +
+            "selected colour is keyed off :checked rather than a class, so what you " +
+            "see and what is announced cannot drift apart.",
+    ) {
+        Div({ classNames("stack") }) {
+            SegmentedControl(
+                segments = DemoView.entries.map { Segment(it, it.name) },
+                selected = view,
+                onSelect = { view = it },
+                ariaLabel = "View",
+                fill = true,
+            )
+
+            SegmentedControl(
+                segments = listOf(Segment("EN", "English"), Segment("KA", "ქართული")),
+                selected = language,
+                onSelect = { language = it },
+                ariaLabel = "Language",
+            )
+
+            Span({ classNames("readout") }) { Text("$view / $language / season $season") }
+
+            // The rail: more choices than fit, so it scrolls, and each carries
+            // whether it has been finished. Which ones are finished is unrelated to
+            // which one is open, so season 1 below is both - and its check takes the
+            // chip's own colour rather than staying green on a red fill.
+            SegmentedControl(
+                segments = (1..RAIL_SEASONS).map {
+                    Segment(it, "Season $it", complete = it in WATCHED_SEASONS)
+                },
+                selected = season,
+                onSelect = { season = it },
+                ariaLabel = "Season",
+                style = SegmentedStyle.Rail,
+            )
         }
     }
 }
@@ -588,6 +646,8 @@ internal fun IconSection() {
 private const val CENTERED_ICON = 32
 private const val ICON_WALL_SIZE = 20
 private const val BADGE_ICON = 10
+private const val RAIL_SEASONS = 12
+private val WATCHED_SEASONS = setOf(1, 3, 4, 8)
 private const val PROGRESS_SAMPLE = 0.62
 private const val PROGRESS_LOW = 0.3
 private const val PROGRESS_HIGH = 0.8
