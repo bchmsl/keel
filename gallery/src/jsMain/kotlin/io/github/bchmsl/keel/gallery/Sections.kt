@@ -13,6 +13,12 @@ import io.github.bchmsl.keel.components.Button
 import io.github.bchmsl.keel.components.ButtonSize
 import io.github.bchmsl.keel.components.ButtonVariant
 import io.github.bchmsl.keel.components.Card
+import io.github.bchmsl.keel.components.Drawer
+import io.github.bchmsl.keel.components.DrawerEdge
+import io.github.bchmsl.keel.components.DropdownAlign
+import io.github.bchmsl.keel.components.DropdownItemTone
+import io.github.bchmsl.keel.components.DropdownMenu
+import io.github.bchmsl.keel.components.DropdownMenuItem
 import io.github.bchmsl.keel.components.EmptyState
 import io.github.bchmsl.keel.components.FormattedText
 import io.github.bchmsl.keel.components.FormattingField
@@ -39,7 +45,12 @@ import io.github.bchmsl.keel.components.SurfacePadding
 import io.github.bchmsl.keel.components.Switch
 import io.github.bchmsl.keel.components.TextAreaField
 import io.github.bchmsl.keel.components.TextField
+import io.github.bchmsl.keel.components.Toast
+import io.github.bchmsl.keel.components.ToastHost
+import io.github.bchmsl.keel.components.ToastPlacement
+import io.github.bchmsl.keel.components.ToastTone
 import io.github.bchmsl.keel.dom.classNames
+import io.github.bchmsl.keel.dom.dropdownAnchorClasses
 import io.github.bchmsl.keel.icons.Icon
 import io.github.bchmsl.keel.icons.LucideIcon
 import io.github.bchmsl.keel.theme.KeelTokens
@@ -280,6 +291,112 @@ internal fun SegmentedSection() {
             )
         }
     }
+}
+
+// -------------------------------------------------------------------- overlays
+
+@Composable
+internal fun OverlaySection() {
+    var drawerEdge by remember { mutableStateOf<DrawerEdge?>(null) }
+    var menuOpen by remember { mutableStateOf(false) }
+    var toasts by remember { mutableStateOf(emptyList<Toast>()) }
+    var placement by remember { mutableStateOf(ToastPlacement.Top) }
+
+    Section(
+        title = "Overlays",
+        note = "A scrim, a drawer on either edge, a dropdown and the toast host. " +
+            "The four of them settle a z-index band that was renumbered by hand in " +
+            "both apps: scrim, drawer, catcher, dropdown, dialog, toast. The " +
+            "dropdown's catcher is the interesting one - it is not a scrim, it " +
+            "changes nothing visually, and it sits one layer below its own menu, " +
+            "which is the bug it exists to have fixed.",
+    ) {
+        Div({ classNames("row") }) {
+            Button(label = "Drawer from left", onClick = { drawerEdge = DrawerEdge.Left })
+            Button(label = "Drawer from right", onClick = { drawerEdge = DrawerEdge.Right })
+        }
+
+        Div({ classNames("row") }) {
+            // The anchor: the trigger and the menu share it, and the menu is
+            // positioned against it rather than against the page.
+            Div({ classNames(dropdownAnchorClasses()) }) {
+                Button(
+                    label = "Menu",
+                    onClick = { menuOpen = !menuOpen },
+                    variant = ButtonVariant.Outline,
+                )
+
+                if (menuOpen) {
+                    DropdownMenu(
+                        onDismiss = { menuOpen = false },
+                        ariaLabel = "Example actions",
+                        align = DropdownAlign.Start,
+                    ) {
+                        DropdownMenuItem("Rename", onClick = { menuOpen = false }) {
+                            Icon(LucideIcon.Pencil, size = MENU_ICON)
+                        }
+                        DropdownMenuItem("Copy link", onClick = { menuOpen = false }) {
+                            Icon(LucideIcon.Link, size = MENU_ICON)
+                        }
+                        DropdownMenuItem(
+                            "Delete",
+                            onClick = { menuOpen = false },
+                            tone = DropdownItemTone.Danger,
+                        ) {
+                            Icon(LucideIcon.Trash2, size = MENU_ICON)
+                        }
+                    }
+                }
+            }
+
+            Button(
+                label = "Add a notice",
+                onClick = { toasts = toasts + sampleToast(toasts.size) },
+                variant = ButtonVariant.Secondary,
+            )
+
+            Button(
+                label = "Clear",
+                onClick = { toasts = emptyList() },
+                variant = ButtonVariant.Ghost,
+            )
+        }
+
+        SegmentedControl(
+            segments = ToastPlacement.entries.map { Segment(it, it.name) },
+            selected = placement,
+            onSelect = { placement = it },
+            ariaLabel = "Notice placement",
+        )
+    }
+
+    drawerEdge?.let { edge ->
+        Drawer(
+            onDismiss = { drawerEdge = null },
+            ariaLabel = "Example drawer",
+            edge = edge,
+        ) {
+            Span({ classNames("readout") }) { Text("edge = ${edge.name}") }
+            Text(
+                "A drawer rather than a dialog: a list of settings that each apply " +
+                    "as they are changed has nothing to confirm and nothing to " +
+                    "cancel. Escape closes it, and so does the scrim.",
+            )
+            Button(label = "Close", onClick = { drawerEdge = null })
+        }
+    }
+
+    ToastHost(toasts, placement)
+}
+
+/** Cycles the three tones, so all three can be seen without a control for it. */
+private fun sampleToast(index: Int): Toast {
+    val tone = ToastTone.entries[index % ToastTone.entries.size]
+    return Toast(
+        id = "toast-$index",
+        message = "${tone.name}: notice number ${index + 1}",
+        tone = tone,
+    )
 }
 
 // -------------------------------------------------------------------- progress
@@ -647,6 +764,7 @@ private const val CENTERED_ICON = 32
 private const val ICON_WALL_SIZE = 20
 private const val BADGE_ICON = 10
 private const val RAIL_SEASONS = 12
+private const val MENU_ICON = 14
 private val WATCHED_SEASONS = setOf(1, 3, 4, 8)
 private const val PROGRESS_SAMPLE = 0.62
 private const val PROGRESS_LOW = 0.3

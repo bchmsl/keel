@@ -2,8 +2,13 @@ package io.github.bchmsl.keel.dom
 
 import io.github.bchmsl.keel.components.ButtonSize
 import io.github.bchmsl.keel.components.ButtonVariant
+import io.github.bchmsl.keel.components.DrawerEdge
+import io.github.bchmsl.keel.components.DropdownAlign
+import io.github.bchmsl.keel.components.DropdownItemTone
 import io.github.bchmsl.keel.components.PillSize
 import io.github.bchmsl.keel.components.SegmentedStyle
+import io.github.bchmsl.keel.components.ToastPlacement
+import io.github.bchmsl.keel.components.ToastTone
 
 /*
  * The class names keel's components carry, for markup keel does not build itself.
@@ -139,6 +144,54 @@ public fun segmentedLabelClasses(): String = joined("segmented__label")
 
 /** The class on the "finished this one" check beside a chip's label. */
 public fun segmentedCompleteClasses(): String = joined("segmented__complete")
+
+/**
+ * The classes on a [io.github.bchmsl.keel.components.Scrim].
+ *
+ * [blurred] matches the composable's default. A shell with no pointer usually wants
+ * it off: nothing behind the scrim was clickable to begin with, and the blur is a
+ * full-screen composite on every frame.
+ */
+public fun scrimClasses(blurred: Boolean = true): String =
+    joined("scrim", "scrim--blurred".takeIf { blurred })
+
+/** The classes on a [io.github.bchmsl.keel.components.Drawer]. */
+public fun drawerClasses(edge: DrawerEdge = DrawerEdge.Right): String =
+    joined("drawer", edge.className)
+
+/**
+ * The class on the element a [io.github.bchmsl.keel.components.DropdownMenu] is
+ * positioned against.
+ *
+ * The trigger and the menu go inside it. It sets `position: relative` and nothing
+ * else, and without it the menu resolves against whatever positioned ancestor it
+ * happens to find - usually the page.
+ */
+public fun dropdownAnchorClasses(): String = joined("dropdown-anchor")
+
+/** The classes on a [io.github.bchmsl.keel.components.DropdownMenu]. */
+public fun dropdownClasses(align: DropdownAlign = DropdownAlign.End): String =
+    joined("dropdown", align.className)
+
+/** The classes on a [io.github.bchmsl.keel.components.DropdownMenuItem]. */
+public fun dropdownItemClasses(tone: DropdownItemTone = DropdownItemTone.Default): String =
+    joined("dropdown__item", tone.className)
+
+/**
+ * The class on the full-screen catcher that dismisses an open dropdown.
+ *
+ * Not a scrim: it changes nothing visually and sits one layer *below* its menu. Both
+ * of those are load-bearing - see the CSS.
+ */
+public fun dropdownCatchClasses(): String = joined("dropdown__catch")
+
+/** The classes on a [io.github.bchmsl.keel.components.ToastHost]. */
+public fun toastHostClasses(placement: ToastPlacement = ToastPlacement.Top): String =
+    joined("toast-host", placement.className)
+
+/** The classes on one notice inside the host. */
+public fun toastClasses(tone: ToastTone = ToastTone.Neutral): String =
+    joined("toast", tone.className)
 
 /**
  * Drops the absent entries and joins the rest with a single space.

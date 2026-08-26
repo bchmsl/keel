@@ -130,6 +130,31 @@
   --segmented-rail-py: 0.5rem;
   --segmented-rail-font-size: 0.8125rem;
 
+  /* ---------------------------------------------------- overlay layers ---- */
+  /* The dim behind anything modal. One alpha for the scrim and the dialog's own
+     overlay, because there is no argument for dimming a drawer's page less than
+     a dialog's - both mean "nothing behind this is available".
+
+     The blur is the one length here in `px` rather than `rem`, deliberately: it
+     is a screen-space effect and not layout, so it should not grow when a
+     ten-foot shell scales its root. A 4px blur is 4px on every surface. */
+  --scrim-alpha: 0.7;
+  --scrim-blur: 4px;
+
+  --drawer-w: 24rem;
+  --drawer-pad: 1.25rem;
+  --drawer-gap: 1rem;
+
+  --dropdown-min-w: 13.75rem;
+  --dropdown-offset: 0.375rem;
+  --dropdown-item-py: 0.625rem;
+
+  --toast-w: 25rem;
+  --toast-inset: 1rem;
+  --toast-py: 0.75rem;
+  --toast-accent-w: 0.1875rem;
+  --toast-font-size: 0.8125rem;
+
   /* ------------------------------------------------------ focus ring ---- */
   /* Two layers: a gap in the page's own background colour, then the ring
      itself. The gap is what keeps the ring readable against any surface,

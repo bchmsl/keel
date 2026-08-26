@@ -497,11 +497,18 @@ button.card__title {
 
 /* --------------------------------------------------------------- dialog ---- */
 
+/* Its own class and its own z-index rather than `.scrim`, and the tokens file says
+   why: a dialog's overlay has to be inseparable from the dialog, so it sits in the
+   `--z-dialog` layer with it rather than in the standalone scrim's. The dim and the
+   blur are shared, because nothing argues for dimming a dialog's page differently
+   from a drawer's - both mean "nothing behind this is available". */
 .dialog__overlay {
   position: fixed;
   inset: 0;
   z-index: var(--z-dialog);
-  background-color: rgb(0 0 0 / 0.8);
+  background-color: rgb(0 0 0 / var(--scrim-alpha));
+  backdrop-filter: blur(var(--scrim-blur));
+  -webkit-backdrop-filter: blur(var(--scrim-blur));
   animation: keel-fade-in var(--duration-slow) ease-out;
 }
 
@@ -1134,4 +1141,200 @@ button.card__title {
    naming either one puts a white check on a light card in half the palettes. */
 .segmented__input:checked ~ .segmented__label .segmented__complete {
   color: inherit;
+}
+
+/* ------------------------------------------------------------------ scrim ---- */
+/* The dim behind a drawer. Five rules across the two apps carried four different
+   values between them - two dim colours, three alphas and two blur radii, none of
+   which was a decision - plus one that was a click-catcher wearing a scrim's class
+   and had to cancel both of the scrim's own properties inline to work.
+
+   Black rather than `--background` at low alpha, which is what one app used: on a
+   light palette a 0.6 wash of near-white over a near-white page dims nothing at
+   all. Black separates on all twelve. */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-scrim);
+  background-color: rgb(0 0 0 / var(--scrim-alpha));
+  animation: keel-fade-in var(--duration-slow) ease-out;
+}
+
+/* Some scrims exist to dim and some exist only to catch the click outside. A
+   ten-foot shell wants the dim without the blur, because a remote cannot click the
+   page behind anything and the blur is a full-screen composite every frame. */
+.scrim--blurred {
+  backdrop-filter: blur(var(--scrim-blur));
+  -webkit-backdrop-filter: blur(var(--scrim-blur));
+}
+
+/* ----------------------------------------------------------------- drawer ---- */
+/* A panel anchored to one edge, for a long list of controls rather than one
+   decision - which is what makes it a drawer and not a dialog. Both apps had one
+   and they were mirror images: same flex column, same slide, opposite edges.
+
+   `min()` rather than a media query: below the token width the drawer is the
+   viewport less a margin, which is the behaviour a breakpoint would have had to
+   spell out at whatever width happened to be chosen. */
+.drawer {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  z-index: var(--z-drawer);
+  display: flex;
+  flex-direction: column;
+  gap: var(--drawer-gap);
+  width: min(var(--drawer-w), 88vw);
+  padding: var(--drawer-pad);
+  overflow-y: auto;
+  background-color: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+}
+
+/* The border and the radius are on the inner edge only - the outer one is against
+   the viewport, where a line and a corner would just be a seam. */
+.drawer--left {
+  left: 0;
+  border-right: 1px solid hsl(var(--border));
+  border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
+  animation: keel-slide-in-from-left var(--duration-slow) var(--ease) both;
+}
+
+.drawer--right {
+  right: 0;
+  border-left: 1px solid hsl(var(--border));
+  border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+  animation: keel-slide-in-from-right var(--duration-slow) var(--ease) both;
+}
+
+/* --------------------------------------------------------------- dropdown ---- */
+/* A menu hung off the control that opened it. Positioned against the nearest
+   positioned ancestor, so the trigger and the menu go in one element the consumer
+   marks `position: relative` - `.dropdown-anchor` below, which exists only for
+   that and sets nothing else. */
+.dropdown-anchor {
+  position: relative;
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + var(--dropdown-offset));
+  z-index: var(--z-dropdown);
+  min-width: var(--dropdown-min-w);
+  padding: var(--dropdown-offset);
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-lg);
+  background-color: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  box-shadow: var(--shadow-lg);
+  animation: keel-slide-in-from-top var(--duration-fast) var(--ease) both;
+}
+
+/* Which corner it hangs from is the caller's, because it depends on where the
+   trigger sits: a menu on a right-aligned button must not run off the page. */
+.dropdown--start {
+  left: 0;
+}
+
+.dropdown--end {
+  right: 0;
+}
+
+.dropdown__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: var(--dropdown-item-py) var(--control-px-sm);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  font-family: inherit;
+  font-size: var(--segmented-rail-font-size);
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+
+@media (hover: hover) {
+  .dropdown__item:hover {
+    background-color: hsl(var(--accent));
+  }
+}
+
+.dropdown__item:focus-visible,
+.dropdown__item[data-keel-focus] {
+  outline: none;
+  box-shadow:
+    0 0 0 var(--focus-ring-offset) hsl(var(--background)),
+    0 0 0 calc(var(--focus-ring-offset) + var(--focus-ring-width)) hsl(var(--ring));
+}
+
+/* Destructive items are red text on the normal background rather than a red fill.
+   A filled row in a list of plain ones reads as the recommended action, which is
+   the opposite of what "delete everything" wants to say. */
+.dropdown__item--danger {
+  color: hsl(var(--destructive));
+}
+
+/* The click-catcher. One layer below its menu, because that pairing is fixed, and
+   deliberately not a `.scrim`: it must change nothing visually and must not cover
+   the menu it was opened for. One app tried it with `.scrim` plus an inline
+   `background: transparent`, which cleared the dim but not the blur - so the whole
+   page blurred - and at the scrim's z-index it covered its own menu, so neither
+   item could be clicked. */
+.dropdown__catch {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-dropdown-catch);
+  background: none;
+  backdrop-filter: none;
+}
+
+/* ------------------------------------------------------------- toast host ---- */
+/* Transient notices. The host is a fixed strip; `pointer-events: none` on it and
+   nothing turned back on inside, because these are notices and not controls -
+   without it an invisible full-width strip sits over whatever is underneath and
+   swallows clicks. */
+.toast-host {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: min(var(--toast-w), calc(100vw - 2 * var(--toast-inset)));
+  pointer-events: none;
+}
+
+.toast-host--top {
+  top: var(--toast-inset);
+}
+
+.toast-host--bottom {
+  bottom: var(--toast-inset);
+}
+
+.toast {
+  border: 1px solid hsl(var(--border));
+  border-left: var(--toast-accent-w) solid hsl(var(--foreground));
+  border-radius: var(--radius-lg);
+  padding: var(--toast-py) var(--control-px-default);
+  background-color: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  box-shadow: var(--shadow-lg);
+  font-size: var(--toast-font-size);
+  animation: keel-toast-in var(--duration-slow) var(--ease) both;
+}
+
+/* The tone is carried by the left edge alone. Recolouring the whole toast would
+   make an error the loudest thing on screen at the moment the user is already
+   dealing with one. */
+.toast--success {
+  border-left-color: hsl(var(--success));
+}
+
+.toast--error {
+  border-left-color: hsl(var(--destructive));
 }

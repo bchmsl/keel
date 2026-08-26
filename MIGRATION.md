@@ -206,11 +206,21 @@ colour — `.btn-danger` derives from `--red` at alpha — and inheriting a sepa
 `--destructive: 0 84% 60%` would give one brand two reds a few degrees apart. Override
 it: `--destructive: var(--primary)`.
 
-## The three collisions
+## The collisions
 
 `btn`, `spinner` and `switch` exist in both. That is not a defect — they are exactly
 the three components that should unify — but both stylesheets must not be linked at
 once, or keel's rules will quietly restyle Dakalebi's existing controls.
+
+Three more arrived with Phase 3, and they behave differently: `scrub`, `scrim` and
+`toast` are names keel now owns that Dakalebi also defines, and `web.css` and `tv.css`
+both load *after* keel's sheet. So Dakalebi keeps its own rendering for all three
+until its rules are deleted, in the same commit that adopts each component. That is
+the safe direction — nothing changes until it is meant to — but it also means the
+adoption is not finished when the composable is called. Checked once per name: keel's
+other Phase 3 classes (`surface`, `badge`, `skeleton`, `loader`, `empty-state`,
+`progress`, `segmented`, `drawer`, `dropdown`, `toast-host`) collide with nothing in
+either app.
 
 Delete Dakalebi's own rules for all three **in the same commit** that links keel's
 sheet:
@@ -372,3 +382,38 @@ Closed since:
   colour comes from the tag rather than from selection, and they dim rather than fill.
   That is a `Pill` with a selected state, and it is a Phase 4 question for Dayboard, not
   something `SegmentedControl` should grow a parameter for.
+- **The overlay layers were renumbered by hand in both apps, and one of them had a bug
+  in it.** `Scrim`, `Drawer`, `DropdownMenu` and `ToastHost` now settle the whole band
+  against the `--z-*` tokens: scrim 20, drawer 30, catcher 39, dropdown 40, dialog 50,
+  toast 60, measured strictly ascending.
+
+  The bug is worth recording because it is the clearest case in either app of a
+  component being borrowed rather than shared. Dakalebi's season menu needed a
+  click-catcher, took `.scrim`, and cancelled it inline with `background:
+  transparent`. That cleared the dim but not `backdrop-filter`, so opening the menu
+  blurred the entire page; and at the scrim's z-index of 60 against `.menu`'s 50 the
+  catcher covered the very menu it was opened for, so neither item could be clicked.
+  The app later wrote `.popover-catch` to fix it, which is now `.dropdown__catch` -
+  a separate class, one layer below its menu, with no dim and no blur.
+
+  `DropdownMenu` deliberately does **not** claim `role="menu"`. See ARCHITECTURE.md.
+
+  Five hand-written scrims carried two dim colours, three alphas and two blur radii.
+  One dim now, `rgb(0 0 0 / var(--scrim-alpha))`, and `.dialog__overlay` reads the same
+  token rather than keeping its own. Two visible changes come out of that:
+
+  | Where | Today | After |
+  |---|---|---|
+  | keel's own `Dialog`, in both apps | 0.8 black, no blur | 0.7 black with a 4px blur |
+  | Dayboard's panel scrim | `--background` at 0.6 | 0.7 black |
+
+  The second is a fix, not a preference: `--background` at 0.6 is a wash of near-white
+  over a near-white page on any light palette, which dims nothing at all.
+
+  Two things the plan named and this does not build. `DrawerEdge` has no `Bottom`,
+  because nothing wants one - the plan described Dakalebi's menu sheet as a bottom
+  sheet and it is a left-anchored drawer (`.sheet`, `left: 0; top: 0; bottom: 0`), so
+  a `Bottom` variant would ship as dead API. And `Drawer` has no header: Dayboard's
+  panel has a sticky header over a scrolling body, Dakalebi's sheet is one padded
+  scrolling stack, and guessing which shape keel should own is the Phase 4 question
+  rather than this one. `Drawer` is the sliding surface; the header is content.

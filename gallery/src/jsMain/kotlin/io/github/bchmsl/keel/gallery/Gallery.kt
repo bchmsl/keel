@@ -46,6 +46,7 @@ fun Gallery(theme: ThemeController) {
         BadgeSection()
         ProgressSection()
         WaitingSection()
+        OverlaySection()
 
         Section(
             title = "Dialog",

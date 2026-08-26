@@ -122,6 +122,21 @@ body {
   }
 }
 
+@keyframes keel-slide-in-from-left {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+/* A transient notice rises into place. Both apps wrote this animation; one called
+   it `rise` and moved 8px, the other did not animate its toasts at all. */
+@keyframes keel-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+}
+
 /* An expansion grows downward out of the row that opened it. */
 @keyframes keel-slide-in-from-top {
   from {

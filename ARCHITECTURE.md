@@ -465,6 +465,26 @@ extraction. What was taken:
   `inherit` lands on whatever that chip's text colour already is, correct in both
   treatments without naming either.
 
+- **One dim for the scrim and the dialog's overlay, but still two classes.** The
+  values are shared through `--scrim-alpha` and `--scrim-blur`, because nothing argues
+  for dimming a drawer's page differently from a dialog's - both mean "nothing behind
+  this is available", and the five hand-written versions disagreed by accident rather
+  than on purpose. The *classes* stay separate, and the tokens file already said why
+  before either existed: a dialog's overlay has to be inseparable from its dialog, so
+  it sits in the `--z-dialog` layer with it rather than in the standalone scrim's,
+  where a stray layer could come between them.
+
+- **The dropdown's click-catcher is not a scrim, and that is the whole point.** This
+  is the clearest case in either app of a component being borrowed instead of shared.
+  Dakalebi's season menu needed a catcher, took `.scrim`, and cancelled it with an
+  inline `background: transparent` - which cleared the dim but not `backdrop-filter`,
+  so opening the menu blurred the whole page, and at the scrim's z-index it covered
+  the very menu it was opened for. A catcher wants the opposite of a scrim on both
+  counts: change nothing visually, and sit *below* the thing it dismisses.
+  `.dropdown__catch` is its own class at `--z-dropdown-catch`, one below
+  `--z-dropdown`, because that pairing is fixed - a catcher is only ever directly
+  beneath what it dismisses.
+
 What was not taken, and why:
 
 - **`overflow: hidden` on `.surface`.** It looks obviously right: an unpadded surface
@@ -483,6 +503,32 @@ What was not taken, and why:
   the "finished this one" check is one optional field on a segment, not a slot. A second
   component would have duplicated the whole radio-group mechanism to change a `display`
   and a `background-color`. `SegmentedStyle` is that difference.
+
+- **`role="menu"` on the dropdown.** It is the role the markup looks like it wants,
+  and it promises arrow-key navigation, a single tab stop and typeahead. Claiming it
+  without building roving tabindex is the same failure as the `aria-pressed`
+  segmented controls above, in the same direction: correct-looking markup announcing a
+  behaviour it does not have. What the component renders is what it is - a small group
+  of buttons, `role="group"` with a label, where Tab reaches each item and Enter and
+  Space activate it, all of it the browser's. A real menu can be layered on later; a
+  claimed one cannot be un-promised.
+
+- **Rendering the dropdown at the document root.** It would survive an ancestor with
+  `overflow: hidden`, which is the one real limitation of positioning against the
+  trigger. The cost is tracking the trigger's position on every scroll, resize and
+  layout change for the life of the menu, which is a different component with a
+  different failure mode - a menu that drifts away from its button. The KDoc names the
+  clipping case and the way out of it, which is to put the trigger outside the clipped
+  box.
+
+- **A `Bottom` drawer, and a header slot on `Drawer`.** The plan called for `Bottom`
+  on the strength of Dakalebi's "menu sheet", which turned out to be a left-anchored
+  drawer rather than a bottom sheet - so the variant would have shipped as dead API,
+  the same argument that keeps `--border-strong` out. The header is left out for the
+  opposite reason: both apps have one and they are different shapes, a sticky header
+  over a scrolling body in one and a padded scrolling stack in the other. Owning the
+  wrong one is worse than owning neither, and the drawer is still the part that was
+  written twice.
 
 - **Generating the CSS from Kotlin.** It would remove the two-source-of-truth risk,
   which `TokenContractTest` already removes for the cost of a test rather than a code
