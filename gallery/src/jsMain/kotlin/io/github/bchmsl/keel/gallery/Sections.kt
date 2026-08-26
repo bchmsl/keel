@@ -12,7 +12,12 @@ import io.github.bchmsl.keel.components.BadgeTone
 import io.github.bchmsl.keel.components.Button
 import io.github.bchmsl.keel.components.ButtonSize
 import io.github.bchmsl.keel.components.ButtonVariant
+import io.github.bchmsl.keel.components.Callout
+import io.github.bchmsl.keel.components.CalloutBody
+import io.github.bchmsl.keel.components.CalloutTone
 import io.github.bchmsl.keel.components.Card
+import io.github.bchmsl.keel.components.Checkbox
+import io.github.bchmsl.keel.components.CheckboxSize
 import io.github.bchmsl.keel.components.Drawer
 import io.github.bchmsl.keel.components.DrawerEdge
 import io.github.bchmsl.keel.components.DropdownAlign
@@ -43,6 +48,7 @@ import io.github.bchmsl.keel.components.Spinner
 import io.github.bchmsl.keel.components.SpinnerSize
 import io.github.bchmsl.keel.components.Surface
 import io.github.bchmsl.keel.components.SurfacePadding
+import io.github.bchmsl.keel.components.SurfaceRadius
 import io.github.bchmsl.keel.components.Switch
 import io.github.bchmsl.keel.components.SwitchSize
 import io.github.bchmsl.keel.components.TextAreaField
@@ -53,6 +59,9 @@ import io.github.bchmsl.keel.components.ToastPlacement
 import io.github.bchmsl.keel.components.ToastTone
 import io.github.bchmsl.keel.dom.classNames
 import io.github.bchmsl.keel.dom.dropdownAnchorClasses
+import io.github.bchmsl.keel.dom.segmentedClasses
+import io.github.bchmsl.keel.dom.segmentedItemClasses
+import io.github.bchmsl.keel.dom.segmentedLabelClasses
 import io.github.bchmsl.keel.icons.Icon
 import io.github.bchmsl.keel.icons.LucideIcon
 import io.github.bchmsl.keel.theme.KeelTokens
@@ -90,14 +99,36 @@ internal fun PaletteSection() {
 internal fun ButtonSection() {
     Section(
         title = "Buttons",
-        note = "Six variants and four sizes. The focus ring is held off the control " +
+        note = "Seven variants and four sizes. The focus ring is held off the control " +
             "by a background-coloured gap, so it stays visible on any surface - press " +
-            "Tab to see it. The last row is LinkButton, which is a real anchor: " +
-            "middle-click one.",
+            "Tab to see it. OnMedia has its own row because it is the one variant that " +
+            "resolves against no palette colour: it is a translucent wash for a control " +
+            "sitting over picture, and on the page background there is nothing for it " +
+            "to be translucent over. The last row is LinkButton, which is a real " +
+            "anchor: middle-click one.",
     ) {
         Div({ classNames("row") }) {
-            ButtonVariant.entries.forEach { variant ->
+            ButtonVariant.entries.filter { it != ButtonVariant.OnMedia }.forEach { variant ->
                 Button(label = variant.name, onClick = {}, variant = variant)
+            }
+        }
+
+        Div({ classNames("media-strip") }) {
+            Div({ classNames("row") }) {
+                Button(label = "OnMedia", onClick = {}, variant = ButtonVariant.OnMedia)
+                Button(
+                    label = "1080p",
+                    onClick = {},
+                    variant = ButtonVariant.OnMedia,
+                    size = ButtonSize.Small,
+                )
+                IconButton(
+                    ariaLabel = "Play",
+                    onClick = {},
+                    variant = ButtonVariant.OnMedia,
+                ) {
+                    Icon(LucideIcon.Play)
+                }
             }
         }
 
@@ -214,7 +245,9 @@ internal fun SurfaceSection() {
             "reaches its own border. Elevation is off by default: a shadow inside " +
             "another shadowed panel reads as a mistake. The last one is unpadded and " +
             "clipped, which is what a poster needs and what a card must not have - " +
-            "clipping would cut the focus ring off the button in a card's header.",
+            "clipping would cut the focus ring off the button in a card's header. The " +
+            "radius is a two-entry variant for the same reason the padding is: a tile " +
+            "the size of a stat takes the panel radius as a third of its own box.",
     ) {
         Div({ classNames("grid") }) {
             Surface(padding = SurfacePadding.Small) {
@@ -236,6 +269,10 @@ internal fun SurfaceSection() {
             Surface(padding = SurfacePadding.None, clipped = true) {
                 Skeleton(attrs = { style { property("aspect-ratio", "16 / 9") } })
             }
+
+            Surface(padding = SurfacePadding.Small, radius = SurfaceRadius.Small) {
+                Span({ classNames("readout") }) { Text("radius = Small") }
+            }
         }
     }
 }
@@ -249,6 +286,7 @@ internal fun SegmentedSection() {
     var view by remember { mutableStateOf(DemoView.Board) }
     var language by remember { mutableStateOf("EN") }
     var season by remember { mutableStateOf(1) }
+    var flat by remember { mutableStateOf("On") }
 
     Section(
         title = "Segmented control",
@@ -258,7 +296,13 @@ internal fun SegmentedSection() {
             "and the whole group is one tab stop - none of which a row of buttons " +
             "with role=radio gets without reimplementing roving tabindex. The " +
             "selected colour is keyed off :checked rather than a class, so what you " +
-            "see and what is announced cannot drift apart.",
+            "see and what is announced cannot drift apart. The last row is the same " +
+            "control built by hand from the published class names and aria-checked, " +
+            "which is the escape hatch for a shell that cannot use a native input at " +
+            "all - a D-pad interface, where a real radio brings activation behaviour " +
+            "that fights a focus ring the app owns. It gets the look and the " +
+            "announcement; it does not get the arrow keys, which is why it is not the " +
+            "default.",
     ) {
         Div({ classNames("stack") }) {
             SegmentedControl(
@@ -291,6 +335,40 @@ internal fun SegmentedSection() {
                 ariaLabel = "Season",
                 style = SegmentedStyle.Rail,
             )
+
+            FlatSegmented(
+                labels = listOf("Off", "On", "Auto"),
+                selected = flat,
+                onSelect = { flat = it },
+            )
+        }
+    }
+}
+
+/**
+ * A segmented control with no native input, built the way a ten-foot shell has to.
+ *
+ * One flat `Div role="radio" aria-checked` per choice, carrying the published chip
+ * class. Here it is a demonstration that the second CSS branch actually paints; in the
+ * shell it exists because focus there is a cursor the app draws itself.
+ */
+@Composable
+private fun FlatSegmented(labels: List<String>, selected: String, onSelect: (String) -> Unit) {
+    Div({
+        classNames(segmentedClasses())
+        attr("role", "radiogroup")
+        attr("aria-label", "Built by hand")
+    }) {
+        labels.forEach { label ->
+            Div({ classNames(segmentedItemClasses()) }) {
+                Div({
+                    classNames(segmentedLabelClasses())
+                    attr("role", "radio")
+                    attr("aria-checked", (label == selected).toString())
+                    attr("tabindex", if (label == selected) "0" else "-1")
+                    onClick { onSelect(label) }
+                }) { Text(label) }
+            }
         }
     }
 }
@@ -637,6 +715,45 @@ internal fun WaitingSection() {
     }
 }
 
+// --------------------------------------------------------------------- callouts
+
+@Composable
+internal fun CalloutSection() {
+    Section(
+        title = "Callout",
+        note = "A bordered strip about the screen it is on, which is what separates it " +
+            "from the other two boxes that look like it: a toast arrives, is about an " +
+            "action just taken and leaves on a timer, and an empty state replaces " +
+            "content rather than sitting beside it. The tone tints the box and never " +
+            "recolours the text: the destructive ink on its own tint measures 3.0:1 on " +
+            "the light palettes, where 13px text needs 4.5:1, while the plain " +
+            "foreground is 12:1 or better in all twelve. Switch the theme above and " +
+            "read all three.",
+    ) {
+        Div({ classNames("stack") }) {
+            Callout {
+                Text("Timers keep running when this tab is in the background.")
+            }
+
+            Callout(tone = CalloutTone.Destructive, announce = true) {
+                Text("That stream stopped responding. Try a lower quality.")
+            }
+
+            Callout(tone = CalloutTone.Primary) {
+                CalloutBody {
+                    Text("You have reached the end of this series.")
+                }
+                Button(
+                    label = "Watch it again",
+                    onClick = {},
+                    variant = ButtonVariant.Outline,
+                    size = ButtonSize.Small,
+                )
+            }
+        }
+    }
+}
+
 // ---------------------------------------------------------------------- fields
 
 @Composable
@@ -644,13 +761,19 @@ internal fun FieldSection() {
     var text by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
     var on by remember { mutableStateOf(true) }
+    var done by remember { mutableStateOf(false) }
+    var subDone by remember { mutableStateOf(true) }
     var volume by remember { mutableStateOf(DEFAULT_VOLUME) }
 
     Section(
         title = "Fields",
         note = "The switch is a button with role=switch, and its \"on\" colour is keyed " +
             "off the same aria-checked that assistive technology reads - so the two " +
-            "cannot disagree. The slider is a native range input with its appearance " +
+            "cannot disagree. The checkbox is the same construction, and the choice " +
+            "between them is not style: a switch takes effect the moment it moves, a " +
+            "checkbox states a value something else commits. Hover an unticked box - " +
+            "the tick is always there and hidden by colour, so previewing it cannot " +
+            "resize the row. The slider is a native range input with its appearance " +
             "replaced, which keeps keyboard stepping and touch dragging for free.",
     ) {
         Div({ classNames("stack") }) {
@@ -686,6 +809,31 @@ internal fun FieldSection() {
             }
 
             Div({ classNames("row") }) {
+                Checkbox(
+                    checked = done,
+                    onCheckedChange = { done = it },
+                    ariaLabel = "Example checkbox",
+                )
+                Span({ classNames("field-label") }) { Text(if (done) "Done" else "Not done") }
+
+                Checkbox(
+                    checked = subDone,
+                    onCheckedChange = { subDone = it },
+                    ariaLabel = "Example checkbox, small",
+                    size = CheckboxSize.Small,
+                )
+                Span({ classNames("field-label") }) { Text("Small") }
+
+                Checkbox(
+                    checked = false,
+                    onCheckedChange = {},
+                    ariaLabel = "Example checkbox, disabled",
+                    enabled = false,
+                )
+                Span({ classNames("field-label") }) { Text("Disabled") }
+            }
+
+            Div({ classNames("row") }) {
                 Slider(
                     value = volume,
                     min = 0,
@@ -703,14 +851,18 @@ internal fun FieldSection() {
 
 @Composable
 internal fun PillSection() {
-    var selected by remember { mutableStateOf(Swatches.Default) }
+    var selected by remember { mutableStateOf<String?>(Swatches.Default) }
 
     Section(
         title = "Pills",
         note = "For labels the user colours themselves. This is the one colour that " +
             "deliberately escapes the theme: someone picked it to tell two of their own " +
             "things apart, so a palette change must not make them the same colour. Ten " +
-            "fixed swatches, each at four strengths.",
+            "fixed swatches, each at four strengths. The filter row is the exception " +
+            "that proves it: an unselected pill dims rather than turning grey, because " +
+            "its colour is the tag it stands for and a \"not selected\" grey would hide " +
+            "which tag that is. \"All\" is the one pill with no swatch, so it is the one " +
+            "that takes the theme's own ink.",
     ) {
         Div({ classNames("stack") }) {
             SwatchShade.entries.forEach { shade ->
@@ -726,15 +878,24 @@ internal fun PillSection() {
         Div({ classNames("section__note") })
 
         Div({ classNames("row") }) {
+            PillButton(
+                label = "All",
+                color = null,
+                ariaLabel = "Clear the filter",
+                onClick = { selected = null },
+                selected = selected == null,
+                size = PillSize.Small,
+            )
+
             Swatches.All.forEach { color ->
                 PillButton(
                     label = "Filter",
                     color = color,
                     ariaLabel = "Filter by this label",
                     onClick = { selected = color },
-                    shade = if (color == selected) SwatchShade.Selected else SwatchShade.Faint,
                     emoji = "⭐",
                     size = PillSize.Small,
+                    selected = color == selected,
                 )
             }
         }
@@ -753,6 +914,7 @@ internal fun PillSection() {
                 onClick = {},
                 trailing = { Icon(LucideIcon.X, size = PILL_ICON) },
             )
+            Pill(label = "No swatch", color = null)
         }
     }
 }

@@ -1,17 +1,21 @@
 package io.github.bchmsl.keel.components
 
 import androidx.compose.runtime.Composable
+import io.github.bchmsl.keel.dom.checkboxClasses
 import io.github.bchmsl.keel.dom.classNames
 import io.github.bchmsl.keel.dom.inputClasses
 import io.github.bchmsl.keel.dom.sliderClasses
 import io.github.bchmsl.keel.dom.switchClasses
 import io.github.bchmsl.keel.dom.switchKnobClasses
 import io.github.bchmsl.keel.dom.textAreaClasses
+import io.github.bchmsl.keel.icons.Icon
+import io.github.bchmsl.keel.icons.LucideIcon
 import org.jetbrains.compose.web.attributes.AttrsScope
 import org.jetbrains.compose.web.attributes.ButtonType
 import org.jetbrains.compose.web.attributes.InputType
 import org.jetbrains.compose.web.attributes.builders.InputAttrsScope
 import org.jetbrains.compose.web.attributes.builders.TextAreaAttrsScope
+import org.jetbrains.compose.web.attributes.disabled
 import org.jetbrains.compose.web.attributes.max
 import org.jetbrains.compose.web.attributes.min
 import org.jetbrains.compose.web.attributes.placeholder
@@ -74,6 +78,72 @@ public fun Switch(
         Span({ classNames(switchKnobClasses()) })
     }
 }
+
+/** The box sizes. */
+public enum class CheckboxSize(internal val className: String?, internal val tickSize: Int) {
+    /** A checkbox at the head of its own row. */
+    Default(null, TICK_DEFAULT),
+
+    /**
+     * A smaller box, for a nested row - a subtask under its task - where the full size
+     * would compete with the parent's.
+     *
+     * Geometry only, the same way [SwitchSize.Small] is: the colours and the
+     * `aria-checked` state stay one definition. It also gives up the hover growth, for
+     * the reason `.checkbox--small` gives - at this size the scale reads as a jitter.
+     */
+    Small("checkbox--small", TICK_SMALL),
+}
+
+/**
+ * One yes-or-no, drawn as a box with a tick in it.
+ *
+ * The same construction as [Switch] and for the same reason: a button carrying
+ * `role="checkbox"` and `aria-checked`, so the state the eye reads and the state
+ * assistive technology reports are one attribute rather than two things that can drift.
+ *
+ * The choice between this and a [Switch] is not style. A switch takes effect the moment
+ * it moves - a setting, a preference - and a checkbox states a value that something else
+ * later commits, or marks one item in a list. A task's "done" box is the second kind.
+ *
+ * The tick is always rendered and hidden by colour, never by presence, so hovering the
+ * box can preview it without resizing the row underneath. See `.checkbox`.
+ *
+ * [ariaLabel] is required: the box has no text of its own, and "checked" alone does not
+ * say checked *what*. The visible label beside it usually belongs to a sibling element,
+ * so pass the same words.
+ *
+ * [attrs] runs last; see [Switch].
+ */
+@Composable
+public fun Checkbox(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    ariaLabel: String,
+    size: CheckboxSize = CheckboxSize.Default,
+    enabled: Boolean = true,
+    attrs: (AttrsScope<HTMLButtonElement>.() -> Unit)? = null,
+) {
+    Button({
+        classNames(checkboxClasses(size))
+        type(ButtonType.Button)
+        attr("role", "checkbox")
+        attr("aria-checked", checked.toString())
+        attr("aria-label", ariaLabel)
+        if (!enabled) disabled()
+        onClick { onCheckedChange(!checked) }
+        attrs?.invoke(this)
+    }) {
+        Icon(LucideIcon.Check, size = size.tickSize)
+    }
+}
+
+/* The tick, sized against its box rather than against the text beside it: an icon left
+   to its `1em` default would follow whatever font-size the row has, and the box's size
+   is set in rem. Two literals, because they are the two sizes - a ratio applied to
+   `--checkbox-size` in CSS would land on fractional pixels at one of them. */
+private const val TICK_DEFAULT = 12
+private const val TICK_SMALL = 10
 
 /**
  * A value slider.

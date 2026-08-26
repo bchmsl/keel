@@ -511,3 +511,155 @@ Measured in a browser on all four combinations:
 the padding edge - 13px in, which is `--control-px-sm` plus the border. It is on the
 check rather than `justify-content: space-between` on the item, which would also have
 pushed a `leading` icon away from the label it belongs to.
+
+## Six more, from the two apps' remaining local CSS
+
+These six close the last of what a consumer built by hand because keel had no answer.
+All six are additive: no existing rule changed, no default moved, and every number
+below is the one the app being replaced already used.
+
+### `ButtonVariant.OnMedia`
+
+A control over picture rather than over the page. Four call sites wanted it - Dakalebi's
+web quality button, and the TV shell's autoplay pill, transport buttons and large
+transport button - and each had written its own `rgba(255, 255, 255, 0.16)` with a `0.3`
+hover.
+
+None of the six existing variants can do this job, and that is the argument for a
+seventh rather than for reusing one. Every one of them resolves against a palette
+colour, and a video frame is not a palette colour: `--background` is invisible over a
+dark scene and opaque over a bright one, `--primary` competes with whatever is playing,
+and `--outline` is a border around nothing. What reads over unknown content is a
+translucent wash of the palette's own ink, which is what `--primary-foreground` is
+defined to be - the same argument `.progress--on-media` already made for its track.
+
+The two alphas are tokens because the right amount depends on the surface: a phone's
+controls sit directly on a scene, a ten-foot shell's sit in a wide dark bar already.
+
+### `SurfaceRadius.Small`
+
+Dakalebi's `.stat` is a 12px-padded box with a border and `--radius-sm`. `Surface` could
+give it everything except the radius, and at `--radius-xl` on a box that small the
+corner is a third of the box.
+
+Two entries and not a length. The point of a shape language is that boxes agree, and a
+radius parameter accepting any value is exactly how they stop agreeing.
+
+There is deliberately no `Stat` component. The value-and-label type treatment above the
+box is one app's, Dayboard has no equivalent, and a design system that ships one app's
+composition has stopped being a design system.
+
+### `Callout`
+
+Two boxes in Dakalebi - `.notice` for a playback failure and `.ended` for the end of a
+series - and five more classes in Dayboard that looked like callouts and turned out not
+to be. Those five are plain coloured type with no box at all, so they stay as type; the
+component is for the two that are boxes.
+
+The tone tints the box and its border and never recolours the text. That is measured
+rather than preferred: the `--destructive` ink on its own 9% tint lands at 3.0-3.1:1
+across the six light palettes and 4.38-4.47:1 across the six dark ones, and at 13px the
+bar is 4.5:1 rather than 3:1. `--foreground` on the same box is 12.1-14.0:1 in all
+twelve. Dakalebi's `#ff9d99` is therefore dropped on purpose, not overlooked.
+
+| | Dakalebi stated | keel |
+|---|---|---|
+| padding | `.notice` 12px 16px, `.ended` 16px 18px | 12px 16px |
+| radius | `--radius` both | `--radius-lg`, the same token |
+| type | 13px | 13px |
+| destructive border | `rgba(225,53,47,.4)` | `hsl(--destructive / .4)` |
+| destructive fill | `rgba(225,53,47,.08)` | `hsl(--destructive / .09)` |
+| primary fill | left-to-right gradient | flat 9% tint |
+
+**One visible change:** `.ended`'s left-to-right fade becomes a flat tint. A gradient
+for one tone and a flat wash for the other is not a difference a tone should encode, and
+the flat form is the one that holds at any width.
+
+`announce = true` adds `role="alert"`, off by default: a caveat that was on the page from
+the start would otherwise interrupt whatever a screen reader was already saying.
+
+### `PillButton(selected)`
+
+Dayboard's tag filter row. `.chip` was byte-identical to keel's `.pill` plus
+`opacity: 0.6`, with `.chip--on` restoring full strength and adding a two-layer ring.
+
+Three states and not a boolean. `null` is a pill that does something else when pressed -
+attaches a tag, removes it, opens it - and carries no selection semantics at all; `true`
+and `false` are a filter that is on or off and set `aria-pressed`. A boolean would have
+made every pill announce a pressed state it does not have.
+
+Off dims rather than turning grey, which is the whole design and worth stating: this
+pill's fill *is* its data - the tag it stands for - so a "not selected" neutral would
+hide which tag the pill is, at exactly the moment the user is choosing from the row.
+
+`.pill--selectable:hover` returns to full strength and must stay below
+`.pill--button:hover`, which dims to 0.8. Equal specificity, so order is the only thing
+separating them.
+
+### `Pill(color = null)`
+
+The pill at the head of that row: "All". Dayboard's `.chip--all` gave it a distinct
+`--foreground`-tinted fill; here it takes the same 10% tint and the same ring as the
+rest, so it reads as one of the pills rather than as a different control.
+
+It is `null` rather than a caller-supplied neutral hex because a hex cannot follow a
+theme - the pill would stay dark on a dark palette and dark on a light one. This is the
+one pill whose colour comes from the theme instead of from data, which is why it needs a
+class at all.
+
+### `Checkbox`
+
+Dayboard's task and subtask boxes, and the one component keel's own README listed as
+missing that both apps turned out to need.
+
+Same construction as `Switch`: a `<button role="checkbox">` with `aria-checked`, so the
+state the eye reads and the state assistive technology reports are one attribute. A
+native `<input type="checkbox">` was the alternative and loses - the appearance is a full
+repaint either way, and `appearance: none` on a checkbox is still uneven across engines
+in a way it is not on a range input.
+
+The choice between this and a `Switch` is not style. A switch takes effect the moment it
+moves; a checkbox states a value that something else commits, or marks an item in a list.
+
+| | Dayboard stated | keel measured |
+|---|---|---|
+| box | 20px, radius 6px, border 2px | 20px, 6px, 2px |
+| small box | 16px, radius 4px | 16px, 4px |
+| tick | 12px / 10px | 12px / 10px |
+| unchecked | transparent fill, `--muted-foreground / .3` border | same |
+| checked | `--primary` fill and border, `--primary-foreground` tick | same |
+| hover | primary border and ink, `scale(1.1)` | same |
+| small hover | no growth | no growth |
+
+The tick is always in the DOM and hidden by `color: transparent`, never by `display`.
+Hover previews it, and a box that added a child instead would resize its own content
+under the pointer - the row of tasks would twitch.
+
+### `.segmented__label[aria-checked]`
+
+Not a component: a second branch on every selected-state rule the segmented control
+already had, so a consumer that cannot use a native radio can still have the control.
+
+The TV shell is that consumer. It renders each choice as one flat
+`Div role="radio" aria-checked` - `TvSettingsScreen.kt` and `TvPieces.kt` both already
+do - because focus there is a cursor the app draws and a real input brings activation
+behaviour that fights it. With no input there is no sibling for `:checked` to reach.
+
+This does not contradict the argument the section header already makes for `:checked`
+over a class. `aria-checked` *is* the state assistive technology reports for
+`role="radio"`, the same fact `:checked` reports for a native one, so the look and the
+announcement stay tied together. A `.is-selected` class would break exactly that link.
+
+Measured in a browser, the hand-built form is pixel-identical to the native one in both
+treatments:
+
+| | native chip | flat `aria-checked` chip |
+|---|---|---|
+| track, selected | `--card` fill, `--foreground` ink, `--shadow-sm` | identical |
+| rail, selected | `--primary` fill and border, `--primary-foreground` ink, no shadow | identical |
+| rail, unselected | `--accent` fill, `--muted-foreground` ink | identical |
+| padding | 8px 16px | 8px 16px |
+
+It gets the look and the announcement. It does not get arrow-key navigation, Home, End
+or the single tab stop, which are the native input's - which is why the native form
+stays the default and this is the escape hatch.

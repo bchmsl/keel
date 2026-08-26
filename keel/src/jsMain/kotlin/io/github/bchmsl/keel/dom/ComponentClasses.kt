@@ -2,12 +2,16 @@ package io.github.bchmsl.keel.dom
 
 import io.github.bchmsl.keel.components.ButtonSize
 import io.github.bchmsl.keel.components.ButtonVariant
+import io.github.bchmsl.keel.components.CalloutTone
+import io.github.bchmsl.keel.components.CheckboxSize
 import io.github.bchmsl.keel.components.DrawerEdge
 import io.github.bchmsl.keel.components.DropdownAlign
 import io.github.bchmsl.keel.components.DropdownItemTone
 import io.github.bchmsl.keel.components.DropdownSide
 import io.github.bchmsl.keel.components.PillSize
 import io.github.bchmsl.keel.components.SegmentedStyle
+import io.github.bchmsl.keel.components.SurfacePadding
+import io.github.bchmsl.keel.components.SurfaceRadius
 import io.github.bchmsl.keel.components.SwitchSize
 import io.github.bchmsl.keel.components.ToastPlacement
 import io.github.bchmsl.keel.components.ToastTone
@@ -108,15 +112,62 @@ public fun switchKnobClasses(): String = joined("switch__knob")
  * [PillSize] entry because it is orthogonal: any of the three densities can be
  * pressable.
  *
- * The fill and text colours are not here. They are inline styles derived from the
- * swatch, because a pill's colour is data rather than a variant - see
+ * [selectable] and [selected] are the filter form. Both, because they are two facts: a
+ * pill that participates in a selection is dimmed when off, and a pill that is not part
+ * of one is never dimmed at all. A caller with a `Boolean?` maps `null` to neither.
+ *
+ * [neutral] is the pill standing for no particular tag, which takes the theme's ink.
+ * Every other pill's fill and text colour are not here at all - they are inline styles
+ * derived from the swatch, because a pill's colour is data rather than a variant. See
  * `swatchBackground`.
  */
-public fun pillClasses(size: PillSize = PillSize.Default, pressable: Boolean = false): String =
-    joined("pill", "pill--button".takeIf { pressable }, size.className)
+public fun pillClasses(
+    size: PillSize = PillSize.Default,
+    pressable: Boolean = false,
+    neutral: Boolean = false,
+    selectable: Boolean = false,
+    selected: Boolean = false,
+): String = joined(
+    "pill",
+    "pill--neutral".takeIf { neutral },
+    "pill--button".takeIf { pressable },
+    "pill--selectable".takeIf { selectable },
+    "pill--selected".takeIf { selected },
+    size.className,
+)
 
 /** The class on the emoji span inside a pill. */
 public fun pillEmojiClasses(): String = joined("pill__emoji")
+
+/**
+ * The classes on a [io.github.bchmsl.keel.components.Surface].
+ *
+ * [radius] is the only geometry here that a tile-sized surface changes. [elevated] and
+ * `clipped` are on the composable and not published as arguments because a consumer
+ * building its own box has no reason to want keel's shadow without keel's element.
+ */
+public fun surfaceClasses(
+    padding: SurfacePadding = SurfacePadding.Default,
+    radius: SurfaceRadius = SurfaceRadius.Default,
+): String = joined("surface", padding.className, radius.className)
+
+/** The classes on a [io.github.bchmsl.keel.components.Callout]. */
+public fun calloutClasses(tone: CalloutTone = CalloutTone.Neutral): String =
+    joined("callout", tone.className)
+
+/** The class on the text side of a callout, beside a trailing control. */
+public fun calloutBodyClasses(): String = joined("callout__body")
+
+/**
+ * The classes on a [io.github.bchmsl.keel.components.Checkbox].
+ *
+ * The ticked look is keyed off `aria-checked="true"` rather than a class, exactly as
+ * [switchClasses] describes, so a consumer building its own box must set that
+ * attribute. The tick itself is the element's content and gets no class: it is hidden
+ * by colour, so anything drawn in `currentColor` works.
+ */
+public fun checkboxClasses(size: CheckboxSize = CheckboxSize.Default): String =
+    joined("checkbox", size.className)
 
 /**
  * The classes on a [io.github.bchmsl.keel.components.SegmentedControl]'s container.
@@ -142,7 +193,15 @@ public fun segmentedItemClasses(): String = joined("segmented__item")
  */
 public fun segmentedInputClasses(): String = joined("segmented__input")
 
-/** The class on the visible chip. Must be a *following sibling* of the input. */
+/**
+ * The class on the visible chip. Must be a *following sibling* of the input.
+ *
+ * A consumer that cannot use a native radio at all - a ten-foot shell rendering each
+ * choice as one flat `Div role="radio"` - puts this class on that div and sets
+ * `aria-checked`, which the selected-state rules read as a second branch. It gets the
+ * look and the announcement; it does not get the arrow-key navigation, which is the
+ * native input's and is the reason the native form is the default.
+ */
 public fun segmentedLabelClasses(): String = joined("segmented__label")
 
 /** The class on the "finished this one" check beside a chip's label. */

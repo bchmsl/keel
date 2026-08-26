@@ -141,6 +141,22 @@
   text-underline-offset: 4px;
 }
 
+/* A control sitting over picture rather than over the page.
+
+   None of the six variants above can do this job. Every one of them resolves against
+   a palette colour, and a video frame is not one: `--background` is invisible over a
+   dark scene and opaque over a bright one, `--primary` competes with whatever is
+   playing, and `--outline` is a border around nothing. What reads over unknown
+   content is a translucent wash of the palette's own ink, which is what this is.
+
+   The alpha is a token because the right amount depends on the surface. A phone's
+   control bar over a scene wants more presence than a ten-foot one, where the
+   controls sit in a wide dark bar already. */
+.btn--on-media {
+  background-color: hsl(var(--primary-foreground) / var(--on-media-alpha));
+  color: hsl(var(--primary-foreground));
+}
+
 /* The six variants' hover states, collected rather than each sitting under its own
    variant. One `@media` wrapper for the set reads better than six, and the order
    within it cannot matter: a button carries exactly one variant class. */
@@ -169,6 +185,10 @@
 
   .btn--link:hover {
     text-decoration: underline;
+  }
+
+  .btn--on-media:hover {
+    background-color: hsl(var(--primary-foreground) / var(--on-media-alpha-hover));
   }
 }
 
@@ -226,6 +246,14 @@
 
 .surface--elevated {
   box-shadow: var(--shadow-sm);
+}
+
+/* A smaller corner, for a surface that is a *tile* rather than a panel - a stat in a
+   row of stats, a thumbnail box. The shape language scales radius with size, so a
+   12px-padded box at `--radius-xl` reads as a lozenge: the corner is a third of the
+   box. Only the radius changes, because that is the only thing that was wrong. */
+.surface--radius-sm {
+  border-radius: var(--radius-sm);
 }
 
 /* Clips content to the radius, for a surface whose content reaches its border. A
@@ -470,6 +498,95 @@ button.card__title {
     0 0 0 calc(var(--focus-ring-offset) + var(--focus-ring-width)) hsl(var(--ring));
 }
 
+/* ------------------------------------------------------------- checkbox ---- */
+/* One yes-or-no, drawn as a box with a tick in it.
+
+   The same shape as the switch above and for the same reasons: a real `<button>`
+   carrying `role="checkbox"` and `aria-checked`, so the state is one attribute the
+   eye and the screen reader both read, rather than a class beside a hidden input that
+   could disagree with it. A native `<input type="checkbox">` was the alternative and
+   loses here - the appearance is a full repaint anyway, and `appearance: none` on a
+   checkbox is still uneven across engines in a way it is not on a range input.
+
+   The choice between this and a switch is not style. A switch takes effect the
+   moment it moves; a checkbox states a value that something else later commits, or
+   marks an item in a list. A task's "done" box is the second kind.
+
+   Unchecked, the box is *only* its border - no fill - which is why the border is
+   thick. A hairline empty box reads as a rendering failure rather than as an
+   unticked one. */
+
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Never let a flex row squash the box into a rectangle. */
+  flex: none;
+  height: var(--checkbox-size);
+  width: var(--checkbox-size);
+  padding: 0;
+  border: var(--checkbox-border-w) solid hsl(var(--muted-foreground) / 0.3);
+  border-radius: var(--checkbox-radius);
+  background: none;
+  cursor: pointer;
+  /* The tick is always in the DOM and hidden by colour alone, never by `display`.
+     Both hover and the checked state show it, and a box that adds and removes a child
+     instead would resize its own content on hover - the row of tasks would twitch
+     under the pointer. Transparent ink costs nothing and moves nothing. */
+  color: transparent;
+  transition:
+    background-color var(--duration-fast) var(--ease),
+    border-color var(--duration-fast) var(--ease),
+    color var(--duration-fast) var(--ease),
+    transform var(--duration-fast) var(--ease);
+}
+
+.checkbox[aria-checked='true'] {
+  border-color: hsl(var(--primary));
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.checkbox:focus-visible,
+.checkbox[data-keel-focus] {
+  outline: none;
+  box-shadow:
+    0 0 0 var(--focus-ring-offset) hsl(var(--background)),
+    0 0 0 calc(var(--focus-ring-offset) + var(--focus-ring-width)) hsl(var(--ring));
+}
+
+.checkbox:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* A smaller box, for a checkbox on a nested row - a subtask under its task - where
+   the full size would compete with the parent's. Rebinds the two geometry tokens the
+   way `.switch--size-sm` does, rather than restating the rules that read them. */
+.checkbox--small {
+  --checkbox-size: var(--checkbox-size-sm);
+  --checkbox-radius: var(--checkbox-radius-sm);
+}
+
+@media (hover: hover) {
+  /* Hover previews the tick rather than only lighting the border, which is the part
+     worth keeping: the box says what clicking it will do. `:not([aria-checked='true'])`
+     rather than a later override, so an already-ticked box does not animate when the
+     pointer crosses it on the way somewhere else. */
+  .checkbox:hover:not([aria-checked='true']) {
+    border-color: hsl(var(--primary));
+    color: hsl(var(--primary));
+    transform: scale(1.1);
+  }
+
+  /* The nested box keeps the colour change and gives up the growth. At 16px a 10%
+     scale is under two pixels, so it reads as a jitter rather than as a response -
+     and a subtask row is short enough that the box nudges the text beside it. */
+  .checkbox--small:hover:not([aria-checked='true']) {
+    transform: none;
+  }
+}
+
 /* --------------------------------------------------------------- slider ---- */
 /* A native range input, restyled. Native keeps the keyboard stepping and touch
    dragging that a hand-built slider would have to reimplement badly. */
@@ -693,6 +810,19 @@ button.card__title {
   padding: 0.125rem 0.5rem;
 }
 
+/* A pill standing for no particular tag: the "All" at the head of a filter row, an
+   "Any", a "None". It has no swatch, so it is the one pill whose colour comes from the
+   theme rather than from data - which is exactly why it needs a class. The alternative
+   is a consumer passing a literal hex for it, and a hex cannot follow a theme: the
+   pill would stay dark on a dark palette and dark on a light one.
+
+   Same shape as the rest of the row, so it sits in it rather than beside it. The
+   0.1 matches what a swatch fill resolves to, so "All" reads as one of the pills. */
+.pill--neutral {
+  background-color: hsl(var(--foreground) / 0.1);
+  color: hsl(var(--foreground));
+}
+
 .pill--button {
   cursor: pointer;
   transition: opacity var(--duration-fast) var(--ease);
@@ -701,6 +831,38 @@ button.card__title {
 @media (hover: hover) {
   .pill--button:hover {
     opacity: 0.8;
+  }
+}
+
+/* A pill used as a filter, where the whole set shows which are on.
+
+   Off is dimmer, not a different colour. That is the design and not a shortcut: this
+   pill's fill is its *data* - the tag it stands for - so repainting an unselected one
+   in a neutral grey would hide which tag it is, and the row would become unreadable
+   at exactly the moment the user is choosing from it.
+
+   `--pill-dim` is separate from `.pill--button`'s hover, which dims an *opaque* pill
+   slightly on hover. Here hover means the opposite - it previews being on - so it
+   goes to full. The two rules have equal specificity and this one is later, which is
+   the only reason it wins; it must stay below. */
+.pill--selectable {
+  opacity: var(--pill-dim);
+}
+
+/* On: full strength, plus a ring in the pill's own colour. The held-off pair the
+   focus styles use, and for the same reason - a background-coloured gap keeps the
+   stroke legible whatever surface the pill sits on. The outer radius is derived from
+   the gap rather than stated, so widening one cannot eat the other. */
+.pill--selected {
+  opacity: 1;
+  box-shadow:
+    0 0 0 var(--pill-ring-gap) hsl(var(--background)),
+    0 0 0 calc(var(--pill-ring-gap) + var(--pill-ring-width)) currentColor;
+}
+
+@media (hover: hover) {
+  .pill--selectable:hover {
+    opacity: 1;
   }
 }
 
@@ -843,6 +1005,55 @@ button.card__title {
 .empty-state__body {
   font-size: 0.875rem;
   max-width: 32ch;
+}
+
+/* ---------------------------------------------------------------- callout ---- */
+/* A bordered strip that says something about the screen it is on: a playback error, a
+   "you have reached the end of this series". Not a toast, which arrives, is about an
+   action just taken, and leaves on a timer - a callout is part of the page and stays
+   as long as the condition does. Not an `EmptyState` either: that one replaces
+   content, this one sits beside it.
+
+   Smaller than body text, because it is an aside. A row rather than a block, so a
+   callout can end in a button - "watch it again" - without the caller building a flex
+   box around keel's box.
+
+   The tone tints and borders; it never recolours the text. Red type on a red tint is
+   the version this replaces, and measured across all twelve palettes it fails: the
+   `--destructive` ink on its own 9% tint lands at 3.0-3.1:1 on the six light palettes
+   and 4.38-4.47:1 on the six dark ones, and this is 13px text, so 4.5:1 is the bar it
+   has to clear rather than 3:1. `--foreground` on the same box is 12.1-14.0:1 in every
+   one of the twelve. The border and the tint already say which tone it is; the text
+   only has to be readable. */
+
+.callout {
+  display: flex;
+  align-items: center;
+  gap: var(--callout-gap);
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-lg);
+  padding: var(--callout-py) var(--callout-px);
+  font-size: var(--callout-font-size);
+  color: hsl(var(--foreground));
+}
+
+.callout--primary {
+  border-color: hsl(var(--primary) / var(--callout-border-alpha));
+  background-color: hsl(var(--primary) / var(--callout-tint));
+}
+
+.callout--destructive {
+  border-color: hsl(var(--destructive) / var(--callout-border-alpha));
+  background-color: hsl(var(--destructive) / var(--callout-tint));
+}
+
+/* The text side, so that a trailing button keeps its own width and everything else
+   takes the rest. Published as a class rather than left to the caller because the
+   alternative is `flex: 1` in a consumer sheet, which is the same rule written
+   somewhere it cannot be seen from here. */
+.callout__body {
+  flex: 1;
+  min-width: 0;
 }
 
 /* ------------------------------------------------------------- progress ---- */
@@ -1017,7 +1228,21 @@ button.card__title {
    The control is a real radio group. That is not tidiness either: a set of buttons
    with `role="radio"` promises arrow-key navigation and a single tab stop, and
    delivers neither unless someone reimplements roving tabindex. Native radios
-   sharing a name give both away for free, plus grouping, plus Home and End. */
+   sharing a name give both away for free, plus grouping, plus Home and End.
+
+   Every selected-state rule below therefore has a second branch on
+   `.segmented__label[aria-checked='true']`, for a consumer that cannot use a native
+   radio at all. A ten-foot shell is the case: it renders each choice as one flat
+   `Div role="radio" aria-checked` because focus there is a cursor the app owns and a
+   real input brings a UA stylesheet and its own activation to fight with. That
+   consumer has no input to be a sibling of, so `:checked` can never match.
+
+   This is not the class the paragraph above rejects. `aria-checked` *is* the state
+   assistive technology reports for `role="radio"` - the same fact `:checked` reports
+   for a native one - so keying off it keeps the look and the announcement tied
+   together. A `.is-selected` class would not, which is the whole difference. The two
+   branches never both match one element: markup has either the input or the
+   attribute. */
 
 .segmented {
   display: inline-flex;
@@ -1130,7 +1355,8 @@ button.card__title {
    alone. Every palette in `palettes.css` keeps them a clear step apart, and a theme
    written by hand should too - both names can honestly be read as "just off the
    page", which is exactly how they end up equal. */
-.segmented__input:checked ~ .segmented__label {
+.segmented__input:checked ~ .segmented__label,
+.segmented__label[aria-checked='true'] {
   background-color: hsl(var(--card));
   color: hsl(var(--foreground));
   box-shadow: var(--shadow-sm);
@@ -1140,7 +1366,8 @@ button.card__title {
 
 /* On a rail there is no track to lift out of, so the selected chip inverts instead.
    The shadow goes: it would be a shadow against nothing. */
-.segmented--rail .segmented__input:checked ~ .segmented__label {
+.segmented--rail .segmented__input:checked ~ .segmented__label,
+.segmented--rail .segmented__label[aria-checked='true'] {
   background-color: hsl(var(--primary));
   border-color: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
@@ -1148,11 +1375,13 @@ button.card__title {
 }
 
 @media (hover: hover) {
-  .segmented__input:not(:checked) ~ .segmented__label:hover {
+  .segmented__input:not(:checked) ~ .segmented__label:hover,
+  .segmented__label[aria-checked='false']:hover {
     color: hsl(var(--foreground));
   }
 
-  .segmented--rail .segmented__input:not(:checked) ~ .segmented__label:hover {
+  .segmented--rail .segmented__input:not(:checked) ~ .segmented__label:hover,
+  .segmented--rail .segmented__label[aria-checked='false']:hover {
     background-color: hsl(var(--accent) / 0.7);
   }
 }
@@ -1163,9 +1392,17 @@ button.card__title {
    The container class is in the selector purely for specificity. Without it these
    are (0,3,0) and lose to `.segmented--rail .segmented__input:checked ~ ...`, which
    sets `box-shadow: none` - so the selected chip on a rail would take focus and show
-   no ring at all. With it they are (0,4,0) and, coming later, win the tie. */
+   no ring at all. With it they are (0,4,0) and, coming later, win the tie.
+
+   The flat form's two branches sit on the chip itself, since that is the focusable
+   element there. They are (0,3,0), tying with
+   `.segmented--rail .segmented__label[aria-checked='true']` and winning by order for
+   the same reason. On the native form they match nothing: a `<label>` is not
+   focusable and never carries the attribute. */
 .segmented .segmented__input:focus-visible ~ .segmented__label,
-.segmented .segmented__input[data-keel-focus] ~ .segmented__label {
+.segmented .segmented__input[data-keel-focus] ~ .segmented__label,
+.segmented .segmented__label:focus-visible,
+.segmented .segmented__label[data-keel-focus] {
   outline: none;
   box-shadow:
     0 0 0 var(--focus-ring-offset) hsl(var(--background)),
@@ -1184,7 +1421,8 @@ button.card__title {
    colour because the two treatments fill differently - the track's chip is --card
    with --foreground on it, the rail's is --primary with --primary-foreground - and
    naming either one puts a white check on a light card in half the palettes. */
-.segmented__input:checked ~ .segmented__label .segmented__complete {
+.segmented__input:checked ~ .segmented__label .segmented__complete,
+.segmented__label[aria-checked='true'] .segmented__complete {
   color: inherit;
 }
 

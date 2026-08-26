@@ -44,6 +44,7 @@ fun Gallery(theme: ThemeController) {
         PillSection()
         SegmentedSection()
         BadgeSection()
+        CalloutSection()
         ProgressSection()
         WaitingSection()
         OverlaySection()

@@ -458,6 +458,14 @@ class TokenContractTest {
             "--switch-track-w-sm", "--switch-track-h-sm",
             "--switch-knob-size-sm", "--switch-knob-inset-sm",
             "--slider-rail-h", "--slider-thumb-size",
+            "--checkbox-size", "--checkbox-size-sm",
+            "--checkbox-radius", "--checkbox-radius-sm", "--checkbox-border-w",
+            // Alphas and lengths, not colours: each one is applied *to* a palette
+            // colour by the rule that reads it.
+            "--pill-dim", "--pill-ring-gap", "--pill-ring-width",
+            "--callout-py", "--callout-px", "--callout-gap", "--callout-font-size",
+            "--callout-tint", "--callout-border-alpha",
+            "--on-media-alpha", "--on-media-alpha-hover",
             "--loader-size-sm", "--loader-size", "--loader-size-lg",
             "--progress-h-sm", "--progress-h-default", "--progress-h-lg",
             "--scrub-h", "--scrub-rail-h", "--scrub-knob-size",

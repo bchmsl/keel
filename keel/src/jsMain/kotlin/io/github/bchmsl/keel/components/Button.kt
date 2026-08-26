@@ -35,6 +35,18 @@ public enum class ButtonVariant(internal val className: String) {
 
     /** Looks like a link, behaves like a button. For actions inside a sentence. */
     Link("btn--link"),
+
+    /**
+     * A translucent wash, for a control sitting over picture rather than over the page -
+     * a player's transport buttons, a quality selector on a video frame.
+     *
+     * None of the six above can do this job: each one resolves against a palette colour,
+     * and a video frame is not one. See `.btn--on-media`.
+     *
+     * The wash is the palette's own ink at `--on-media-alpha`, so an app that wants its
+     * player chrome heavier or lighter moves one token rather than restating the rule.
+     */
+    OnMedia("btn--on-media"),
 }
 
 /** The heights. [Icon] is the square form, for a button whose content is one glyph. */

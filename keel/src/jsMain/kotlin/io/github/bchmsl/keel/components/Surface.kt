@@ -2,6 +2,7 @@ package io.github.bchmsl.keel.components
 
 import androidx.compose.runtime.Composable
 import io.github.bchmsl.keel.dom.classNames
+import io.github.bchmsl.keel.dom.surfaceClasses
 import org.jetbrains.compose.web.attributes.AttrsScope
 import org.jetbrains.compose.web.dom.ContentBuilder
 import org.jetbrains.compose.web.dom.Div
@@ -19,6 +20,23 @@ public enum class SurfacePadding(internal val className: String?) {
     Small("surface--pad-sm"),
     Default("surface--pad"),
     Large("surface--pad-lg"),
+}
+
+/**
+ * How round a [Surface]'s corners are.
+ *
+ * [Default] is the shape language's largest radius, because a panel is its largest box.
+ * [Small] is for a surface that is a *tile* rather than a panel - a stat in a row of
+ * stats, a thumbnail box - where the panel radius is a third of the box and reads as a
+ * lozenge.
+ *
+ * Two entries and not a free length: the point of a shape language is that boxes agree,
+ * and a radius parameter taking any value is how they stop agreeing. If a third size is
+ * genuinely needed it belongs here, where every app gets it.
+ */
+public enum class SurfaceRadius(internal val className: String?) {
+    Default(null),
+    Small("surface--radius-sm"),
 }
 
 /**
@@ -50,6 +68,7 @@ public enum class SurfacePadding(internal val className: String?) {
 @Composable
 public fun Surface(
     padding: SurfacePadding = SurfacePadding.Default,
+    radius: SurfaceRadius = SurfaceRadius.Default,
     elevated: Boolean = false,
     clipped: Boolean = false,
     attrs: (AttrsScope<HTMLDivElement>.() -> Unit)? = null,
@@ -57,8 +76,7 @@ public fun Surface(
 ) {
     Div({
         classNames(
-            "surface",
-            padding.className,
+            surfaceClasses(padding, radius),
             "surface--elevated".takeIf { elevated },
             "surface--clip".takeIf { clipped },
         )

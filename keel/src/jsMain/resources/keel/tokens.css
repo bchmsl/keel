@@ -112,6 +112,57 @@
   --slider-rail-h: 0.375rem;
   --slider-thumb-size: 1rem;
 
+  /* A checkbox is a box with a tick in it, so its radius is not the shape
+     language's: `--radius-sm` on a 20px box is nearly a circle. Both sizes
+     therefore carry their own, and `.checkbox--small` rebinds these the way
+     `.switch--size-sm` rebinds the switch's.
+
+     The border is thick for a reason worth keeping: an unchecked box is *only*
+     its border, so a hairline one reads as absent rather than as empty. */
+  --checkbox-size: 1.25rem;
+  --checkbox-size-sm: 1rem;
+  --checkbox-radius: 0.375rem;
+  --checkbox-radius-sm: 0.25rem;
+  --checkbox-border-w: 0.125rem;
+
+  /* How far an unselected filter pill fades, and the ring the selected one takes.
+     Dimming rather than recolouring is the whole design: a filter pill's colour is
+     its *data* - the tag it stands for - so swapping it for a "not selected" grey
+     would hide which tag the pill is. Opacity says "off" while leaving the colour
+     legible.
+
+     The ring is the held-off pair the focus styles use, and for the same reason: a
+     background-coloured gap keeps the stroke readable on any surface. Its colour is
+     `currentColor` in the rule, so it is the pill's own. */
+  --pill-dim: 0.6;
+  --pill-ring-gap: 0.0625rem;
+  --pill-ring-width: 0.0625rem;
+
+  /* A callout: a bordered box that says something about the screen it is on. Its
+     type is smaller than body text because it is an aside, and its padding is the
+     tighter of the two hand-written boxes it replaces. */
+  --callout-py: 0.75rem;
+  --callout-px: 1rem;
+  --callout-gap: 0.875rem;
+  --callout-font-size: 0.8125rem;
+
+  /* How strongly a toned callout tints its box. Low, because the border and the type
+     already say which tone it is - the fill is only there so the box does not read as
+     a plain bordered panel. */
+  --callout-tint: 0.09;
+  --callout-border-alpha: 0.4;
+
+  /* The fill a control takes when it sits over picture instead of over the page.
+
+     `--primary-foreground` is the palette's ink for a saturated fill of unknown
+     colour, which is exactly what a video frame is - the same argument
+     `.progress--on-media` already makes in components.css. That bar keeps its own
+     0.22 rather than reading these: a translucent *track* behind a fill and a
+     translucent *control* are not the same job, and tying them together would mean
+     one could not be tuned without moving the other. */
+  --on-media-alpha: 0.16;
+  --on-media-alpha-hover: 0.3;
+
   /* The spinner's three diameters. Not a control - nothing is aimed at it - but
      the same argument applies: at ten feet a 20px ring is a dot, and the three
      size variants only help a consumer whose wanted size is one of the three. */

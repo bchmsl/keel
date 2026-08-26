@@ -16,7 +16,7 @@ without either one having to look like the other.
 |---|---|
 | **Tokens** | Colour, shape, motion, type and shadow, as CSS custom properties. Colours are bare HSL triples, so a rule can add alpha. |
 | **Palettes** | Six, each in light and dark. Optional — an app can ship its own and inherit none of these. |
-| **Primitives** | Button, IconButton, LinkButton, Surface, Card, Dialog, Switch, Slider, TextField, TextAreaField, Pill, PillButton, SegmentedControl, Badge, ProgressBar, Scrub, Skeleton, Spinner, EmptyState, Scrim, Drawer, DropdownMenu, DropdownMenuItem, ToastHost, FormattingField, FormattedText, FormattingToolbar, Icon, and `DismissOnEscape` / `classNames` as the two behaviours worth sharing. |
+| **Primitives** | Button, IconButton, LinkButton, Surface, Card, Dialog, Switch, Checkbox, Slider, TextField, TextAreaField, Pill, PillButton, SegmentedControl, Badge, Callout, ProgressBar, Scrub, Skeleton, Spinner, EmptyState, Scrim, Drawer, DropdownMenu, DropdownMenuItem, ToastHost, FormattingField, FormattedText, FormattingToolbar, Icon, and `DismissOnEscape` / `classNames` as the two behaviours worth sharing. |
 | **Escape hatches** | Every primitive takes an `attrs` slot, and `buttonClasses(...)` and friends expose the class lists for markup keel does not build — a D-pad shell that must render `Div role="button"` can still be styled by keel. |
 | **Icons** | 57 lucide glyphs, generated from a pinned tag. |
 | **Theme model** | A palette is data, not an enum. Themes declare whether they support light, so a dark-only app is a first-class case. |
@@ -160,10 +160,9 @@ instrument Kotlin/JS.
 
 ## Not in it yet
 
-Both consuming apps still hand-roll these, and each is a real candidate:
+One left, and it is the one where the two apps genuinely disagree:
 
-- **Checkbox** — the last form control neither app got from here.
-- **App bar** — two, and they disagree on the one thing that matters: Dakalebi's
-  `.nav` is sticky, Dayboard's `.header` scrolls away with the page.
+- **App bar** — two of them, differing on the thing that decides the component:
+  Dakalebi's `.nav` is sticky, Dayboard's `.header` scrolls away with the page.
 
-See MIGRATION.md for what each one would take.
+See MIGRATION.md for what it would take.
