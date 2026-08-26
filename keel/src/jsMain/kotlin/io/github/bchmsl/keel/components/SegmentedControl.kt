@@ -18,6 +18,7 @@ import org.jetbrains.compose.web.dom.RadioInput
 import org.jetbrains.compose.web.dom.Span
 import org.jetbrains.compose.web.dom.Text
 import org.w3c.dom.HTMLDivElement
+import org.w3c.dom.HTMLLabelElement
 
 /** The two treatments. */
 public enum class SegmentedStyle(internal val className: String?) {
@@ -47,11 +48,19 @@ public enum class SegmentedStyle(internal val className: String?) {
  * the check takes that chip's text colour rather than its own, because the two
  * treatments fill the chosen chip differently and a fixed colour would be invisible
  * against one of them.
+ *
+ * [attrs] goes on this one choice's wrapper, the same escape hatch every component
+ * here gives its root. It exists because per-*item* attributes are a real need this
+ * class otherwise cannot express: a language picker writes each option in its own
+ * language, so each needs its own `lang` - without which a screen reader reads
+ * "English" with the surrounding page's voice. On the wrapper rather than the visible
+ * chip so `lang`, `dir` and `title` all reach the label text by inheritance.
  */
 public class Segment<out T>(
     public val value: T,
     public val label: String,
     public val complete: Boolean = false,
+    public val attrs: (AttrsScope<HTMLLabelElement>.() -> Unit)? = null,
 )
 
 /**
@@ -104,7 +113,10 @@ public fun <T> SegmentedControl(
         attrs?.invoke(this)
     }) {
         segments.forEach { segment ->
-            Label(attrs = { classNames(segmentedItemClasses()) }) {
+            Label(attrs = {
+                classNames(segmentedItemClasses())
+                segment.attrs?.invoke(this)
+            }) {
                 RadioInput(checked = segment.value == selected) {
                     classNames(segmentedInputClasses())
                     name(groupName)

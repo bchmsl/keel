@@ -1103,7 +1103,14 @@ button.card__title {
 
 /* The chosen one lifts out of the track: the page's own surface colour, plus the
    smallest shadow, which is the same treatment a `Surface` gets for sitting above
-   rather than in something. */
+   rather than in something.
+
+   This is the one place in the file where two palette tokens have to *differ* for a
+   component to work: the chip is `--card` and the track it sits in is `--muted`, and
+   a theme that gives both the same value leaves the selection carried by text colour
+   alone. Every palette in `palettes.css` keeps them a clear step apart, and a theme
+   written by hand should too - both names can honestly be read as "just off the
+   page", which is exactly how they end up equal. */
 .segmented__input:checked ~ .segmented__label {
   background-color: hsl(var(--card));
   color: hsl(var(--foreground));
