@@ -28,7 +28,17 @@ import org.w3c.dom.HTMLDivElement
  *
  * When [expanded], the drag handle and the collapse toggle disappear: a panel filling
  * the screen cannot be reordered against anything, and collapsing it would leave an
- * empty screen with one row at the top.
+ * empty screen with one row at the top. It also becomes a column that fills its
+ * container with the header pinned and the body scrolling, which is the only shape a
+ * full-screen panel can have: without it a long body carries the close button off the
+ * top of the screen.
+ *
+ * [dragging] lifts it - a larger shadow and a faint ring - while the pointer is
+ * carrying it. Separate from [draggable], which is whether the handle is drawn at all:
+ * one is a capability and the other is a moment. It is a parameter rather than
+ * something the caller styles itself because the class saying a drag is in progress
+ * belongs to the slot *around* the card, and reaching the card from there means naming
+ * keel's own selector in an app's stylesheet.
  *
  * The box itself is a [Surface], so the border, radius, colour and shadow of a titled
  * panel and an untitled one cannot drift apart. Padding is [SurfacePadding.None]
@@ -41,6 +51,7 @@ public fun Card(
     collapsed: Boolean = false,
     expanded: Boolean = false,
     draggable: Boolean = false,
+    dragging: Boolean = false,
     centerContent: Boolean = false,
     onToggleCollapsed: (() -> Unit)? = null,
     onToggleExpanded: (() -> Unit)? = null,
@@ -50,7 +61,13 @@ public fun Card(
     Surface(
         padding = SurfacePadding.None,
         elevated = true,
-        attrs = { classNames("card", "card--expanded".takeIf { expanded }) },
+        attrs = {
+            classNames(
+                "card",
+                "card--expanded".takeIf { expanded },
+                "card--dragging".takeIf { dragging },
+            )
+        },
     ) {
         Div({ classNames("card__header") }) {
             Div({ classNames("card__title-group") }) {

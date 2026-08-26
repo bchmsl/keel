@@ -470,6 +470,7 @@ class TokenContractTest {
             "--swatch-dot-size", "--swatch-tile-pad", "--swatch-tile-gap",
             "--swatch-tile-font-size", "--swatch-tile-tint",
             "--callout-py", "--callout-px", "--callout-gap", "--callout-font-size",
+            "--card-drag-ring", "--card-drag-ring-alpha",
             "--callout-tint", "--callout-border-alpha",
             "--on-media-alpha", "--on-media-alpha-hover", "--quiet-danger-tint",
             "--loader-size-sm", "--loader-size", "--loader-size-lg",

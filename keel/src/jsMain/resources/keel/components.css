@@ -427,6 +427,39 @@
   width: 100%;
 }
 
+/* A card filling its container rather than sitting in a column of them. The container
+   is the caller's - keel does not know whether that is a scrim-backed overlay, a route
+   or a pane - but everything inside the box is keel's: a column, the header pinned at
+   the top, and the body taking the rest.
+
+   `overflow: hidden` is what keeps the header pinned. Without it a long body pushes
+   the card past its container and scrolls the page instead, carrying the collapse and
+   close buttons away with it - the same failure `DrawerLayout.Framed` exists for.
+
+   This class was emitted by `Card` before it had a rule, so the app that expanded a
+   card wrote these four lines against keel's own selector from its own sheet. */
+.card--expanded {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Lifted, while the pointer carries it. The larger shadow reads as height and the
+   ring says which card is in hand, which matters on a board where the gap it came
+   from also moves.
+
+   `--shadow-lg` rather than the shadow written out: the token drops to a 0.5 alpha in
+   dark mode, and the hand-written copy this replaces was the light value in both.
+
+   Keyed off a parameter and not off the caller's own class, because the caller's class
+   is on the slot around the card - so styling it from there means naming `.card` in a
+   consumer sheet, and only keel should do that. */
+.card--dragging {
+  box-shadow: var(--shadow-lg);
+  outline: var(--card-drag-ring) solid hsl(var(--primary) / var(--card-drag-ring-alpha));
+}
+
 .card__header {
   display: flex;
   align-items: center;

@@ -188,6 +188,12 @@
      picked, and tying them together would mean neither could move alone. */
   --swatch-tile-tint: 0.09;
 
+  /* The ring on a card while the pointer is carrying it. Thinner than the focus ring
+     and much fainter, because the raised shadow under it is doing most of the work -
+     this only has to say which of several cards is the one in hand. */
+  --card-drag-ring: 0.125rem;
+  --card-drag-ring-alpha: 0.2;
+
   /* A callout: a bordered box that says something about the screen it is on. Its
      type is smaller than body text because it is an aside, and its padding is the
      tighter of the two hand-written boxes it replaces. */
