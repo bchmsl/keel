@@ -49,6 +49,9 @@ import io.github.bchmsl.keel.components.SpinnerSize
 import io.github.bchmsl.keel.components.Surface
 import io.github.bchmsl.keel.components.SurfacePadding
 import io.github.bchmsl.keel.components.SurfaceRadius
+import io.github.bchmsl.keel.components.Swatch
+import io.github.bchmsl.keel.components.SwatchSize
+import io.github.bchmsl.keel.components.SwatchTile
 import io.github.bchmsl.keel.components.Switch
 import io.github.bchmsl.keel.components.SwitchSize
 import io.github.bchmsl.keel.components.TextAreaField
@@ -64,6 +67,7 @@ import io.github.bchmsl.keel.dom.segmentedItemClasses
 import io.github.bchmsl.keel.dom.segmentedLabelClasses
 import io.github.bchmsl.keel.icons.Icon
 import io.github.bchmsl.keel.icons.LucideIcon
+import io.github.bchmsl.keel.theme.KeelThemes
 import io.github.bchmsl.keel.theme.KeelTokens
 import org.jetbrains.compose.web.dom.Div
 import org.jetbrains.compose.web.dom.P
@@ -963,6 +967,68 @@ internal fun PillSection() {
                 trailing = { Icon(LucideIcon.X, size = PILL_ICON) },
             )
             Pill(label = "No swatch", color = null)
+        }
+    }
+}
+
+// -------------------------------------------------------------------- swatches
+
+@Composable
+internal fun SwatchSection() {
+    var color by remember { mutableStateOf(Swatches.Default) }
+    var theme by remember { mutableStateOf(KeelThemes.All.first()) }
+
+    Section(
+        title = "Swatches",
+        note = "A colour to pick, drawn as the colour. The one place in this library " +
+            "where a colour is set inline rather than from a token, and it has to be: " +
+            "a picker paints every choice at once while only one palette's variables " +
+            "are live, so these cannot be tokens. Small for a grid, where the set " +
+            "matters more than any one of them; default for a short row of separate " +
+            "decisions. The tile is the same choice with its name beside it, for a " +
+            "picker with room for words - and there the colour becomes a preview " +
+            "rather than the target, which is why its dot is smaller than the " +
+            "smallest bare swatch. Tab to any of them: the focus ring replaces the " +
+            "selection ring rather than stacking outside it, and aria-pressed is what " +
+            "carries the state either way.",
+    ) {
+        Div({ classNames("stack") }) {
+            Div({ classNames("row") }) {
+                Span({ classNames("field-label") }) { Text("Small") }
+                Swatches.All.forEach { entry ->
+                    Swatch(
+                        color = entry,
+                        ariaLabel = "Colour $entry",
+                        selected = entry == color,
+                        onSelect = { color = entry },
+                        size = SwatchSize.Small,
+                    )
+                }
+            }
+
+            Div({ classNames("row") }) {
+                Span({ classNames("field-label") }) { Text("Default") }
+                KeelThemes.All.forEach { entry ->
+                    Swatch(
+                        color = entry.accentHex,
+                        ariaLabel = entry.label,
+                        selected = entry == theme,
+                        onSelect = { theme = entry },
+                        title = entry.label,
+                    )
+                }
+            }
+
+            Div({ classNames("row") }) {
+                KeelThemes.All.forEach { entry ->
+                    SwatchTile(
+                        color = entry.accentHex,
+                        label = entry.label,
+                        selected = entry == theme,
+                        onSelect = { theme = entry },
+                    )
+                }
+            }
         }
     }
 }

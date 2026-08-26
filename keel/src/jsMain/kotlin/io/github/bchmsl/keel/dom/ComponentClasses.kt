@@ -12,6 +12,7 @@ import io.github.bchmsl.keel.components.PillSize
 import io.github.bchmsl.keel.components.SegmentedStyle
 import io.github.bchmsl.keel.components.SurfacePadding
 import io.github.bchmsl.keel.components.SurfaceRadius
+import io.github.bchmsl.keel.components.SwatchSize
 import io.github.bchmsl.keel.components.SwitchSize
 import io.github.bchmsl.keel.components.ToastPlacement
 import io.github.bchmsl.keel.components.ToastTone
@@ -138,6 +139,19 @@ public fun pillClasses(
 
 /** The class on the emoji span inside a pill. */
 public fun pillEmojiClasses(): String = joined("pill__emoji")
+
+/** The classes on a [io.github.bchmsl.keel.components.Swatch]. */
+public fun swatchClasses(
+    size: SwatchSize = SwatchSize.Default,
+    selected: Boolean = false,
+): String = joined("swatch", size.className, "swatch--on".takeIf { selected })
+
+/** The classes on a [io.github.bchmsl.keel.components.SwatchTile]. */
+public fun swatchTileClasses(selected: Boolean = false): String =
+    joined("swatch-tile", "swatch-tile--on".takeIf { selected })
+
+/** The class on the colour dot inside a [io.github.bchmsl.keel.components.SwatchTile]. */
+public fun swatchTileDotClasses(): String = joined("swatch-tile__dot")
 
 /**
  * The classes on a [io.github.bchmsl.keel.components.Surface].

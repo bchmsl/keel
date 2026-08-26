@@ -986,6 +986,128 @@ button.card__title {
   font-size: 0.875em;
 }
 
+/* ---------------------------------------------------------------- swatch ---- */
+/* A colour offered for the user to pick, drawn as the colour itself.
+
+   Three copies of this existed before it was a component, and one of them was in
+   keel's own gallery - which is the clearest evidence there is that the library was
+   missing something. The other two were a tag-colour grid written twice in one app.
+   None of the three agreed: 1.5rem against 1rem, a border against a double ring
+   against a scale, and two different answers to what "selected" looks like.
+
+   The colour arrives inline, from the caller, and that is unavoidable rather than
+   untidy: a picker paints every choice at once while only one palette's variables
+   are live, so the six or ten colours on screen cannot come from tokens. See
+   `Swatches` and `Theme.accentHex`, both of which store a plain hex for this reason.
+
+   A real `<button>` with `aria-pressed`, not a `div` with a click handler. A colour
+   with no label is exactly the control that needs the announcement most. */
+
+.swatch {
+  flex: none;
+  width: var(--swatch-size);
+  height: var(--swatch-size);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition:
+    transform var(--duration-fast) var(--ease),
+    box-shadow var(--duration-fast) var(--ease);
+}
+
+.swatch--small {
+  width: var(--swatch-size-sm);
+  height: var(--swatch-size-sm);
+}
+
+/* The chosen one. `--foreground` rather than the swatch's own colour, which is what
+   both hand-written versions arrived at independently: a ring in the swatch's colour
+   is a ring you cannot see against the swatch. */
+.swatch--on {
+  box-shadow:
+    0 0 0 var(--swatch-ring-gap) hsl(var(--background)),
+    0 0 0 calc(var(--swatch-ring-gap) + var(--swatch-ring-width)) hsl(var(--foreground));
+}
+
+@media (hover: hover) {
+  /* Growing rather than lightening, because a swatch has nothing to lighten - any
+     colour change under the pointer would be a lie about which colour it is. */
+  .swatch:hover {
+    transform: scale(1.15);
+  }
+}
+
+/* While focused, the focus ring replaces the selection ring rather than stacking
+   outside it. Deliberate: the two want the same few pixels, four stacked shadow
+   layers is not readable in either the CSS or the pixels, and of the two facts the
+   transient one is the more urgent. Nothing is lost to a screen reader, which learns
+   the selection from `aria-pressed` and not from a stroke. */
+.swatch:focus-visible,
+.swatch[data-keel-focus] {
+  outline: none;
+  box-shadow:
+    0 0 0 var(--focus-ring-offset) hsl(var(--background)),
+    0 0 0 calc(var(--focus-ring-offset) + var(--focus-ring-width)) hsl(var(--ring));
+}
+
+/* The same choice with its name beside it. A tile and not a wider swatch: once there
+   is text, the colour stops being the target and becomes a preview of one. */
+.swatch-tile {
+  display: flex;
+  align-items: center;
+  gap: var(--swatch-tile-gap);
+  padding: var(--swatch-tile-pad);
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  color: hsl(var(--foreground));
+  font-family: inherit;
+  font-size: var(--swatch-tile-font-size);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease),
+    border-color var(--duration-fast) var(--ease);
+}
+
+/* Border *and* fill, where the bare swatch takes a ring. A tile already has a border
+   at rest, so colouring the one that is there says more than adding a second stroke
+   outside it. */
+.swatch-tile--on {
+  border-color: hsl(var(--primary));
+  background-color: hsl(var(--primary) / var(--swatch-tile-tint));
+}
+
+@media (hover: hover) {
+  .swatch-tile:hover {
+    background-color: hsl(var(--muted));
+  }
+
+  /* The chosen tile keeps its own fill under the pointer. Without this the hover
+     would wash the `--primary` tint out with `--muted` and the selection would
+     disappear exactly while being pointed at. */
+  .swatch-tile--on:hover {
+    background-color: hsl(var(--primary) / var(--swatch-tile-tint));
+  }
+}
+
+.swatch-tile:focus-visible,
+.swatch-tile[data-keel-focus] {
+  outline: none;
+  box-shadow:
+    0 0 0 var(--focus-ring-offset) hsl(var(--background)),
+    0 0 0 calc(var(--focus-ring-offset) + var(--focus-ring-width)) hsl(var(--ring));
+}
+
+/* The preview. Its colour is inline, the same as the bare swatch's. */
+.swatch-tile__dot {
+  flex: none;
+  width: var(--swatch-dot-size);
+  height: var(--swatch-dot-size);
+  border-radius: var(--radius-pill);
+}
+
 /* ------------------------------------------------------ formatting field ---- */
 /* A field with its toolbar under it. The gap is small on purpose: the toolbar acts
    on the field above it, and space between them would read as two controls. */

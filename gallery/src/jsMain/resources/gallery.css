@@ -2,9 +2,9 @@
  * The gallery's own page layout, and nothing else.
  *
  * Deliberately thin, and deliberately built only from keel's tokens. Every rule here
- * is page furniture - a grid, a heading, a swatch - and none of it restyles a
- * primitive. If a button looks wrong on this page, the fault is in keel and not here,
- * which is the only reason the gallery is worth anything as a check.
+ * is page furniture - a grid, a heading, a row - and none of it restyles a primitive.
+ * If a button looks wrong on this page, the fault is in keel and not here, which is
+ * the only reason the gallery is worth anything as a check.
  */
 
 .page {
@@ -60,33 +60,10 @@
   color: hsl(var(--muted-foreground));
 }
 
-/* The theme swatches. Each paints its own accent, which is why that colour is a
-   plain hex on the Kotlin side: five of the six are drawn while a different
-   palette's variables are the live ones. */
-.swatch {
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: var(--radius-pill);
-  border: 2px solid transparent;
-  padding: 0;
-  cursor: pointer;
-  transition: transform var(--duration-fast) var(--ease);
-}
-
-.swatch:hover {
-  transform: scale(1.15);
-}
-
-.swatch--active {
-  border-color: hsl(var(--foreground));
-}
-
-.swatch:focus-visible {
-  outline: none;
-  box-shadow:
-    0 0 0 2px hsl(var(--background)),
-    0 0 0 4px hsl(var(--ring));
-}
+/* The theme swatches used to be written out here. They are keel's `.swatch` now -
+   this page keeping its own copy of a component was the plainest evidence the
+   library was missing one, and a `.swatch` in this sheet would have shadowed
+   keel's by load order rather than merely duplicating it. */
 
 /* --------------------------------------------------------------- section ---- */
 

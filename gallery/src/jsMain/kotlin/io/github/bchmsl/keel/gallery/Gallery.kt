@@ -9,8 +9,8 @@ import io.github.bchmsl.keel.components.Button
 import io.github.bchmsl.keel.components.ButtonSize
 import io.github.bchmsl.keel.components.ButtonVariant
 import io.github.bchmsl.keel.components.Dialog
+import io.github.bchmsl.keel.components.Swatch
 import io.github.bchmsl.keel.dom.classNames
-import io.github.bchmsl.keel.theme.Theme
 import io.github.bchmsl.keel.theme.ThemeController
 import io.github.bchmsl.keel.theme.bootScript
 import org.jetbrains.compose.web.dom.Div
@@ -20,7 +20,6 @@ import org.jetbrains.compose.web.dom.P
 import org.jetbrains.compose.web.dom.Pre
 import org.jetbrains.compose.web.dom.Span
 import org.jetbrains.compose.web.dom.Text
-import org.jetbrains.compose.web.dom.Button as HtmlButton
 
 /**
  * The whole page.
@@ -42,6 +41,7 @@ fun Gallery(theme: ThemeController) {
         SurfaceSection()
         FieldSection()
         PillSection()
+        SwatchSection()
         SegmentedSection()
         BadgeSection()
         CalloutSection()
@@ -114,9 +114,11 @@ private fun Masthead(theme: ThemeController) {
                     Span({ classNames("control-row__label") }) { Text("Theme") }
                     theme.catalog.themes.forEach { entry ->
                         Swatch(
-                            entry = entry,
-                            active = entry == theme.theme,
+                            color = entry.accentHex,
+                            ariaLabel = entry.label,
+                            selected = entry == theme.theme,
                             onSelect = { theme.setTheme(entry) },
+                            title = entry.label,
                         )
                     }
                 }
@@ -145,25 +147,10 @@ private fun Masthead(theme: ThemeController) {
     }
 }
 
-/**
- * One theme swatch.
- *
- * The colour comes from `Theme.accentHex` and is set inline, which is exactly why
- * that field is a plain hex rather than a token: all six are painted at once while
- * only one palette's variables are live.
- */
-@Composable
-private fun Swatch(entry: Theme, active: Boolean, onSelect: () -> Unit) {
-    HtmlButton({
-        classNames("swatch", "swatch--active".takeIf { active })
-        attr("type", "button")
-        attr("aria-label", entry.label)
-        attr("aria-pressed", active.toString())
-        attr("title", entry.label)
-        style { property("background-color", entry.accentHex) }
-        onClick { onSelect() }
-    })
-}
+/* The theme swatches used to be a local composable and a local `.swatch` rule here.
+   They are `Swatch` now: this page having its own copy of a component was the
+   clearest possible sign the library was missing one, and the copy in `gallery.css`
+   would have shadowed keel's own rule by load order anyway. */
 
 /** A titled block with a note under it. Page furniture, not a library primitive. */
 @Composable

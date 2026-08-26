@@ -779,3 +779,58 @@ So no variant. Those five become `Default` at `ExtraSmall`, which is a visible c
 a tinted primary becomes a solid one. That is the change worth making rather than
 avoiding - the primary action reading as primary is the whole point of having the
 variant - but it is visible, so it is listed for QA rather than described as a no-op.
+
+## And one from the settings panel: a colour to pick
+
+`Swatch` and `SwatchTile`.
+
+This one did not need a call-site count to justify, because one of the copies was in
+keel's own gallery. `gallery.css` had a `.swatch` rule and `Gallery.kt` had a private
+`Swatch` composable, drawing the theme picker in the masthead. A design system whose
+own reference page hand-rolls a component is telling you plainly which component is
+missing.
+
+Three copies, agreeing on nothing:
+
+| Where | Size | Selected is | Hover is |
+|---|---|---|---|
+| keel's gallery masthead | 1.5rem | a 2px `--foreground` border | scale 1.15 |
+| Dayboard, tag colours in a dialog | 1rem | scale 1.25 plus a double ring | scale 1.1 |
+| Dayboard, tag colours in the panel | 1rem | the same, written again | the same |
+
+Both sizes are real and the difference is what is being picked, not where it sits. Ten
+tag colours are a *set*, and the job is telling them apart, so they are small and
+close. Six theme accents are six separate decisions, and each gets room. So
+`SwatchSize.Small` and `SwatchSize.Default` rather than one size and a `scale`.
+
+The selected treatment had to be picked rather than merged, and the ring won over the
+scale: a scale nudges the neighbouring swatches, and in a wrapped grid of ten it can
+reflow the row. The ring is the held-off pair `--pill-ring-*` and the focus styles
+already use, in `--foreground` - which is where both hand-written versions had
+independently arrived, because a ring in the swatch's own colour is a ring you cannot
+see against the swatch.
+
+`SwatchTile` is the same choice with its name beside it, and it has exactly one call
+site: Dayboard's theme picker. That is thinner than the bar the extra-small tier had
+to clear, and it is a different question. A variant with one call site is noise,
+because the call site can use an existing variant at no real cost. Here the
+alternative was keeping thirty-five lines of `.theme`, `.theme--on` and `.theme__dot`
+in a consumer sheet, drawing a selectable choice tile - which is the thing the
+standing rule forbids. Adding it was the only route that satisfied the rule.
+
+The tile also settles a question the bare swatch raises and cannot answer: six
+unlabelled dots is what keel's masthead wants, because it is a toolbar, and it is not
+what a settings panel wants, because a settings panel has room for "Coral" and
+"Lavender" and is more usable with them. Once there is text the colour stops being the
+target and becomes a preview of one, which is why the dot is smaller than the smallest
+bare swatch and the whole tile is what gets pressed.
+
+### This one breaks by name
+
+`.swatch` is now keel's. Both consumers had a rule of that name, and a consumer sheet
+loads after keel's, so a copy left behind would not merely duplicate keel's rule - it
+would silently shadow it. Both were deleted in the same change that added this:
+`gallery.css`'s block, and `dialogs.css`'s in Dayboard.
+
+That is the same hazard as Dayboard's local `.checkbox`, which still shadows keel's
+and is the next thing on the list.

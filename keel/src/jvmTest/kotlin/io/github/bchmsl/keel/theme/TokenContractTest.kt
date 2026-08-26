@@ -464,6 +464,10 @@ class TokenContractTest {
             // Alphas and lengths, not colours: each one is applied *to* a palette
             // colour by the rule that reads it.
             "--pill-dim", "--pill-ring-gap", "--pill-ring-width",
+            "--swatch-size", "--swatch-size-sm",
+            "--swatch-ring-gap", "--swatch-ring-width",
+            "--swatch-dot-size", "--swatch-tile-pad", "--swatch-tile-gap",
+            "--swatch-tile-font-size", "--swatch-tile-tint",
             "--callout-py", "--callout-px", "--callout-gap", "--callout-font-size",
             "--callout-tint", "--callout-border-alpha",
             "--on-media-alpha", "--on-media-alpha-hover", "--quiet-danger-tint",
