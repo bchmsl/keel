@@ -416,6 +416,25 @@ button.card__title {
   background-color: hsl(var(--primary));
 }
 
+/* The smaller size, for a switch inside another control.
+
+   It rebinds the four geometry tokens on the element instead of restating the six
+   declarations that read them. That is not brevity: a custom property is resolved
+   per element from its own cascaded value, so the rules above - including the
+   knob's `translateX` derivation, which the knob inherits these from - all follow
+   to the new numbers with nothing else written. A duplicated block would have to
+   restate the `- 2 * inset` travel, which is the one value here that is derived
+   rather than given - see the note on it above for what a stated version costs.
+
+   Only geometry. A small switch is the same control at a different size, so the
+   colours, the transition and the `aria-checked` state all stay one definition. */
+.switch--size-sm {
+  --switch-track-w: var(--switch-track-w-sm);
+  --switch-track-h: var(--switch-track-h-sm);
+  --switch-knob-size: var(--switch-knob-size-sm);
+  --switch-knob-inset: var(--switch-knob-inset-sm);
+}
+
 .switch__knob {
   position: absolute;
   top: var(--switch-knob-inset);

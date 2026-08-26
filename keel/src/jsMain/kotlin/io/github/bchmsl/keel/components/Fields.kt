@@ -23,6 +23,22 @@ import org.jetbrains.compose.web.dom.Span
 import org.jetbrains.compose.web.dom.TextArea
 import org.w3c.dom.HTMLButtonElement
 
+/** The track sizes. */
+public enum class SwitchSize(internal val className: String?) {
+    /** A switch standing on its own, at the end of a settings row. */
+    Default(null),
+
+    /**
+     * A switch sitting inside another control - a labelled pill in a player's
+     * control bar, a toggle in a toolbar - where the default track is taller than
+     * the thing containing it.
+     *
+     * Geometry only. It is the same control at a different size, so the colours and
+     * the `aria-checked` state stay one definition; see `.switch--size-sm`.
+     */
+    Small("switch--size-sm"),
+}
+
 /**
  * An on/off control.
  *
@@ -43,10 +59,11 @@ public fun Switch(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     ariaLabel: String,
+    size: SwitchSize = SwitchSize.Default,
     attrs: (AttrsScope<HTMLButtonElement>.() -> Unit)? = null,
 ) {
     Button({
-        classNames(switchClasses())
+        classNames(switchClasses(size))
         type(ButtonType.Button)
         attr("role", "switch")
         attr("aria-checked", checked.toString())

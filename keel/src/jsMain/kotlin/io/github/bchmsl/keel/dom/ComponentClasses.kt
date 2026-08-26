@@ -8,6 +8,7 @@ import io.github.bchmsl.keel.components.DropdownItemTone
 import io.github.bchmsl.keel.components.DropdownSide
 import io.github.bchmsl.keel.components.PillSize
 import io.github.bchmsl.keel.components.SegmentedStyle
+import io.github.bchmsl.keel.components.SwitchSize
 import io.github.bchmsl.keel.components.ToastPlacement
 import io.github.bchmsl.keel.components.ToastTone
 
@@ -80,14 +81,15 @@ public fun textAreaClasses(): String = joined("textarea")
 public fun sliderClasses(): String = joined("slider")
 
 /**
- * The class on a [io.github.bchmsl.keel.components.Switch]'s track, which is the
+ * The classes on a [io.github.bchmsl.keel.components.Switch]'s track, which is the
  * element itself.
  *
  * The "on" colour is keyed off `aria-checked="true"` rather than a class, so a
  * consumer building its own switch must set that attribute and not look for a
  * modifier class here. See [switchKnobClasses] for the child it needs.
  */
-public fun switchClasses(): String = joined("switch")
+public fun switchClasses(size: SwitchSize = SwitchSize.Default): String =
+    joined("switch", size.className)
 
 /**
  * The class on the knob inside a [io.github.bchmsl.keel.components.Switch].

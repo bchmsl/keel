@@ -44,6 +44,7 @@ import io.github.bchmsl.keel.components.SpinnerSize
 import io.github.bchmsl.keel.components.Surface
 import io.github.bchmsl.keel.components.SurfacePadding
 import io.github.bchmsl.keel.components.Switch
+import io.github.bchmsl.keel.components.SwitchSize
 import io.github.bchmsl.keel.components.TextAreaField
 import io.github.bchmsl.keel.components.TextField
 import io.github.bchmsl.keel.components.Toast
@@ -660,6 +661,17 @@ internal fun FieldSection() {
             Div({ classNames("row") }) {
                 Switch(checked = on, onCheckedChange = { on = it }, ariaLabel = "Example switch")
                 Span({ classNames("field-label") }) { Text(if (on) "On" else "Off") }
+
+                // Both sizes on one row, which is the case the small one exists for:
+                // the two have to look like one control at two scales, and that is
+                // only checkable side by side.
+                Switch(
+                    checked = on,
+                    onCheckedChange = { on = it },
+                    ariaLabel = "Example switch, small",
+                    size = SwitchSize.Small,
+                )
+                Span({ classNames("field-label") }) { Text("Small") }
             }
 
             Div({ classNames("row") }) {

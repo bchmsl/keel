@@ -97,6 +97,18 @@
   --switch-knob-size: 1rem;
   --switch-knob-inset: 0.125rem;
 
+  /* A second size, for a switch that sits *inside* another control rather than
+     alone at the end of a settings row - a labelled pill in a player's control
+     bar, a toggle in a toolbar. It is a second size and not a second component,
+     so `.switch--size-sm` rebinds the four values above to these rather than
+     restating the rules that read them. The knob's derived travel then follows
+     on its own, which a duplicated rule set would have to derive correctly a
+     second time. */
+  --switch-track-w-sm: 1.75rem;
+  --switch-track-h-sm: 1rem;
+  --switch-knob-size-sm: 0.75rem;
+  --switch-knob-inset-sm: 0.125rem;
+
   --slider-rail-h: 0.375rem;
   --slider-thumb-size: 1rem;
 

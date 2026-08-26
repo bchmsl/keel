@@ -443,3 +443,35 @@ One trap worth recording. The rule needs `top: auto`, because `.dropdown` resolv
 them rather than from its content. For a menu hung outside its trigger that band is
 negative, so the failure is a collapse rather than an overflow: measured on a 36px
 trigger, 89px tall with the rule and 14px without it.
+
+## `SwitchSize.Small`
+
+Also added by a consumer, and for a case the web shells never hit: Dakalebi's TV shell
+has *two* switches on one page. One stands at the end of a settings row; the other sits
+inside a labelled pill in the player's control bar, where the default track is taller
+than the pill containing it. keel's switch geometry was four `:root` tokens, so a second
+size on the same page was unreachable without restating the rules from a consumer sheet.
+
+`.switch--size-sm` rebinds those four tokens on the element rather than restating the
+six declarations that read them. That is the whole trick, and it is worth stating why it
+works: a custom property is resolved per element from its own cascaded value, and the
+knob inherits the track's, so `translateX(track - knob - 2 * inset)` re-derives itself
+for the smaller box with nothing written twice. A duplicated rule block would have had
+to restate that derivation, which is the one value here that is computed rather than
+given.
+
+It carries geometry only. A small switch is the same control at a different size, so the
+colours, the transition and the `aria-checked` state stay one definition.
+
+The four `-sm` defaults are proportional to the default set and change nothing that
+exists: no shipped rule referenced them before. Measured against `tv.css`'s hand-written
+pair, keel reproduces all six of its numbers from the eight tokens:
+
+| | keel derives | `tv.css` stated |
+|---|---|---|
+| settings track | 74x42 | 74x42 |
+| settings knob, travel | 34x34, 32px | 34x34, 32px |
+| player track | 60x34 | 60x34 |
+| player knob, travel | 26x26, 26px | 26x26, 26px |
+
+Both sizes keep a symmetric 4px gap at whichever edge the knob is resting against.
