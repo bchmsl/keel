@@ -1313,6 +1313,17 @@ button.card__title {
   background-color: hsl(var(--primary) / var(--callout-tint));
 }
 
+/* Its own tone rather than `--primary`, which is what "it worked" would otherwise
+   have to borrow. `--primary` is the palette's identity colour and two of the six
+   palettes put it within 25 degrees of `--destructive` - coral at 350 and ember at
+   25, against destructive's 0 - so on those a confirmation and a failure are the same
+   red box. Since a callout shows one at a time, there is nothing beside it to tell
+   them apart. `--success` is fixed at hue 158 and clears every palette. */
+.callout--success {
+  border-color: hsl(var(--success) / var(--callout-border-alpha));
+  background-color: hsl(var(--success) / var(--callout-tint));
+}
+
 .callout--destructive {
   border-color: hsl(var(--destructive) / var(--callout-border-alpha));
   background-color: hsl(var(--destructive) / var(--callout-tint));

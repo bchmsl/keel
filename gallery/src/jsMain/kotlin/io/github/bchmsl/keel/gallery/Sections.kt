@@ -879,6 +879,10 @@ internal fun CalloutSection() {
                 Text("Timers keep running when this tab is in the background.")
             }
 
+            Callout(tone = CalloutTone.Success, announce = true) {
+                Text("Check your email for a link to reset your password.")
+            }
+
             Callout(tone = CalloutTone.Destructive, announce = true) {
                 Text("That stream stopped responding. Try a lower quality.")
             }

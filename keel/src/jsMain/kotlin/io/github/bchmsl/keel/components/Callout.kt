@@ -13,7 +13,7 @@ import org.w3c.dom.HTMLDivElement
  * What a callout is about.
  *
  * Named to match [BadgeTone] and [ToastTone] rather than inventing a third vocabulary
- * for the same three ideas.
+ * for the same ideas.
  *
  * A tone tints the box and its border and never recolours the text, which is measured
  * rather than a preference: the `--destructive` ink on its own tint reaches only
@@ -26,6 +26,18 @@ public enum class CalloutTone(internal val className: String?) {
 
     /** Something completed or reached - the end of a series, a finished import. */
     Primary("callout--primary"),
+
+    /**
+     * It worked: a mail was sent, a change was saved, an account was created.
+     *
+     * Distinct from [Primary], which is the palette's identity colour. Two of the six
+     * palettes put `--primary` within 25 degrees of `--destructive`, so on those a
+     * confirmation drawn in it is the same red box as a failure - and a callout shows
+     * one at a time, with nothing beside it to compare against. `--success` is fixed
+     * across every palette for exactly this reason, which is why [BadgeTone] and
+     * [ToastTone] both already had it.
+     */
+    Success("callout--success"),
 
     /** Something went wrong, and it is about the screen rather than about an action
      *  just taken. A failure that *is* about an action wants a [ToastHost] notice. */
