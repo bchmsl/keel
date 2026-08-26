@@ -289,11 +289,18 @@
 }
 
 /* The square form of the tier above. Same box as `.card__icon-button`, reachable
-   for a control that is not in a card header. */
+   for a control that is not in a card header.
+
+   The type size comes along even though there is no text, and that is the point:
+   `.icon` falls back to `1em`, so an `Icon` with no explicit size takes it. Without
+   this line a glyph in a 28px square would arrive at `--control-font-size` - 14px in
+   a box sized for 12px - and only a call site passing an explicit `size` would hide
+   it. `.btn--size-icon` needs no counterpart because 14px is right for its 40px. */
 .btn--size-icon-xs {
   height: var(--control-h-xs);
   width: var(--control-h-xs);
   padding: 0;
+  font-size: var(--control-font-size-xs);
   border-radius: var(--radius-sm);
 }
 
