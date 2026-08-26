@@ -37,6 +37,16 @@
  * until something else is tapped, because there is no pointer to leave. Desktop is
  * unaffected. Both apps using keel had already hand-rolled this workaround in their
  * own stylesheets, which is the sign it belonged here.
+ *
+ * ------------------------------------------------------------------- touch ----
+ *
+ * A field grows to `--input-font-size-touch` under `@media (pointer: coarse)`.
+ *
+ * iOS Safari zooms the viewport whenever a focused field is under 16px and never
+ * zooms back out, so a form filled in on an iPhone ends with the page scrolled
+ * sideways. Only the field, and only on a coarse pointer: a desktop form keeps
+ * `--control-font-size`. A consumer had this rule in its own sheet, restating
+ * `.input` from outside - the same sign as the hover fix.
  */
 
 /* ----------------------------------------------------------------- icon ---- */
@@ -371,6 +381,15 @@ button.card__title {
 
 .textarea {
   resize: vertical;
+}
+
+/* See the "touch" note in the header. Both fields, not only `.input`: iOS zooms for
+   any focused field under the threshold, and a textarea is the easier one to miss. */
+@media (pointer: coarse) {
+  .input,
+  .textarea {
+    font-size: var(--input-font-size-touch);
+  }
 }
 
 /* --------------------------------------------------------------- switch ---- */

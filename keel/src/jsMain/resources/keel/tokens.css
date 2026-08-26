@@ -79,6 +79,15 @@
   --input-px: 0.75rem;
   --input-py: 0.625rem;
 
+  /* The size a field takes on a coarse pointer, and the one length here that has to
+     be `px`. iOS Safari zooms the viewport whenever a focused field is under 16 CSS
+     pixels and never zooms back out, so the user finishes typing on a page scrolled
+     sideways. The threshold is absolute: it is not 1rem, and an app that sets its
+     root from the viewport would miss it in either direction. It stays a token
+     because `pointer: coarse` is not only a phone - a remote-driven shell can match
+     it too, and there a 16px field is smaller than the rest of the interface. */
+  --input-font-size-touch: 16px;
+
   /* The switch is a knob inside a track, so these three are not independent.
      The knob's travel is *derived* from them in `components.css` rather than
      stated as a fourth value - which is what stops a resized track from

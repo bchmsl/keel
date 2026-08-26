@@ -452,7 +452,7 @@ class TokenContractTest {
             "--control-h-xs", "--control-h-sm", "--control-h-default", "--control-h-lg",
             "--control-px-sm", "--control-px-default", "--control-px-lg",
             "--control-py-default", "--control-font-size", "--control-font-weight",
-            "--input-px", "--input-py",
+            "--input-px", "--input-py", "--input-font-size-touch",
             "--switch-track-w", "--switch-track-h",
             "--switch-knob-size", "--switch-knob-inset",
             "--slider-rail-h", "--slider-thumb-size",

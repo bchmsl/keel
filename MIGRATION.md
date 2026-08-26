@@ -298,6 +298,14 @@ Two things it already has and Dayboard does not, both worth pulling up:
   and a scaled `4.625rem` on the TV. Worth a size variant rather than a fork — and now
   reachable by setting `--switch-track-w/h`, `--switch-knob-size` and
   `--switch-knob-inset`, with the knob's travel deriving from them automatically.
+- **The iOS field-zoom guard** — already taken. Dakalebi's login sheet carried
+  `@media (pointer: coarse) { .input { font-size: 16px } }`, which is keel's `.input`
+  restated from outside for a browser bug keel's own default causes. It is now in
+  `components.css` for both `.input` and `.textarea`, through
+  `--input-font-size-touch`. **Dayboard inherits it**: its fields go from 14px to 16px
+  on a touch device, which is the fix. The token exists because `pointer: coarse` is
+  not only a phone — a remote-driven shell can match it, and there an absolute 16px is
+  smaller than the interface around it.
 
 ## Known gaps
 
