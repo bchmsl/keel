@@ -16,7 +16,7 @@ without either one having to look like the other.
 |---|---|
 | **Tokens** | Colour, shape, motion, type and shadow, as CSS custom properties. Colours are bare HSL triples, so a rule can add alpha. |
 | **Palettes** | Six, each in light and dark. Optional — an app can ship its own and inherit none of these. |
-| **Primitives** | Button, IconButton, LinkButton, Surface, Card, Dialog, Switch, Slider, TextField, TextAreaField, Pill, PillButton, Badge, Skeleton, Spinner, EmptyState, FormattingField, FormattedText, FormattingToolbar, Icon, and `DismissOnEscape` / `classNames` as the two behaviours worth sharing. |
+| **Primitives** | Button, IconButton, LinkButton, Surface, Card, Dialog, Switch, Slider, TextField, TextAreaField, Pill, PillButton, Badge, ProgressBar, Scrub, Skeleton, Spinner, EmptyState, FormattingField, FormattedText, FormattingToolbar, Icon, and `DismissOnEscape` / `classNames` as the two behaviours worth sharing. |
 | **Escape hatches** | Every primitive takes an `attrs` slot, and `buttonClasses(...)` and friends expose the class lists for markup keel does not build — a D-pad shell that must render `Div role="button"` can still be styled by keel. |
 | **Icons** | 57 lucide glyphs, generated from a pinned tag. |
 | **Theme model** | A palette is data, not an enum. Themes declare whether they support light, so a dark-only app is a first-class case. |
@@ -168,7 +168,6 @@ is in rough order of how much duplication it would remove:
 - **Side drawer** — two mirrored copies, one `side` parameter apart.
 - **Dropdown menu** and its click-catcher, with a documented z-index band.
 - **Toast host** — one app has it, the other has no in-page transient surface at all.
-- **Checkbox**, **app bar**, **progress bar**, and the scrub bar a player needs, which is a
-  separate component because it writes its fill imperatively every frame.
+- **Checkbox** and **app bar**.
 
 See MIGRATION.md for what each one would take.

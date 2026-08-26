@@ -799,3 +799,158 @@ button.card__title {
   font-size: 0.875rem;
   max-width: 32ch;
 }
+
+/* ------------------------------------------------------------- progress ---- */
+/* A determinate bar. Use a `Spinner` when there is no number to show.
+
+   This replaces four hand-written bars across two apps that agreed on nothing:
+   three thicknesses, three different track alphas, one with a radius and three
+   without, one with a width transition and three without. None of those
+   differences was a decision - they were four people solving the same problem on
+   four days - so the variants below are only the ones that carry meaning.
+
+   The radius is always the pill. On a 2px bar spanning a tile it is invisible,
+   which is why three of the four omitted it; on a short standalone bar it is what
+   was wanted. One value costs the invisible case nothing.
+
+   The fill transitions `width` *linearly*. A countdown is the common case and an
+   eased countdown is wrong: it slows near the end of every tick, so a bar that
+   should drain evenly visibly stutters. */
+
+.progress {
+  position: relative;
+  /* Clips the fill's square end to the pill radius. Nothing here is focusable, so
+     this cannot swallow a focus ring the way it would on a card. */
+  overflow: hidden;
+  width: 100%;
+  height: var(--progress-h-default);
+  border-radius: var(--radius-pill);
+  background-color: hsl(var(--muted));
+}
+
+.progress--sm {
+  height: var(--progress-h-sm);
+}
+
+.progress--lg {
+  height: var(--progress-h-lg);
+}
+
+.progress__fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background-color: hsl(var(--primary));
+  transition: width var(--duration-fast) linear;
+}
+
+/* Laid over a poster, a still, or video, where the page's own colours say nothing
+   about what is behind the bar.
+
+   `--primary-foreground` is the palette's ink for sitting on a saturated fill of
+   the app's own choosing, and it is declared palette-independent for exactly that
+   reason. A picture is a saturated fill whose colour nobody knows in advance, so
+   it is the same job. That is what makes this a token rather than a literal white
+   - the one thing a component may never name. */
+.progress--on-media {
+  background-color: hsl(var(--primary-foreground) / 0.22);
+}
+
+/* Finished. The fill stops being the brand colour, because a bar that is full and
+   a bar that is full *and done* should not look identical - and because a row of
+   finished tiles all shouting in the brand colour is a row of noise. */
+.progress--done .progress__fill {
+  background-color: hsl(var(--muted-foreground));
+}
+
+.progress--on-media.progress--done .progress__fill {
+  background-color: hsl(var(--primary-foreground) / 0.7);
+}
+
+/* ---------------------------------------------------------------- scrub ---- */
+/* A media timeline: draggable, with a buffered layer behind the position.
+
+   Three reasons this is not the `Slider` with extra parameters. It needs a second
+   fill for what has downloaded, which no slider has. Its position is written from
+   a `requestAnimationFrame` loop rather than from state, because recomposing sixty
+   times a second to move one element is the thing real players are careful not to
+   do - so it hands the caller a `ScrubHandle` instead of taking a value. And it
+   lives over picture, so its colours come from the media treatment above rather
+   than from the page.
+
+   It is not the `ProgressBar` either: a progress bar is not draggable, and giving
+   it a knob and a seek callback would make every read-only bar carry both.
+
+   The visible bar is decoration. The control is a real `input[type=range]` on top
+   of it at zero opacity, which is what keyboard stepping, touch dragging and
+   assistive technology actually address - all three for free, and none of them
+   reimplementable correctly by hand. */
+
+.scrub {
+  position: relative;
+  display: flex;
+  align-items: center;
+  /* Several times the rail: a 3px pointer target is not a pointer target. */
+  height: var(--scrub-h);
+  cursor: pointer;
+}
+
+.scrub__track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  height: var(--scrub-rail-h);
+  border-radius: var(--radius-pill);
+  background-color: hsl(var(--primary-foreground) / 0.24);
+}
+
+.scrub__buffered,
+.scrub__position {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+}
+
+/* Behind the position and brighter than the track, so the gap between "played"
+   and "downloaded" is legible without competing with either. */
+.scrub__buffered {
+  background-color: hsl(var(--primary-foreground) / 0.4);
+}
+
+.scrub__position {
+  background-color: hsl(var(--primary));
+}
+
+.scrub__knob {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: var(--scrub-knob-size);
+  height: var(--scrub-knob-size);
+  border-radius: var(--radius-pill);
+  background-color: hsl(var(--primary));
+  /* Centred on its position rather than starting at it, so the knob's middle is
+     the time it reports. */
+  transform: translate(-50%, -50%);
+  /* The invisible input underneath is the control; the knob must not intercept. */
+  pointer-events: none;
+}
+
+.scrub__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* The input is invisible, so its own focus ring is too. The knob has to carry it.
+   A single ring rather than keel's two-layer one: the outer layer of that pair is
+   a gap in `--background`, and there is no page background here - there is a
+   picture. See the focus note in this file's header for the second branch. */
+.scrub__input:focus-visible ~ .scrub__knob,
+.scrub__input[data-keel-focus] ~ .scrub__knob {
+  box-shadow: 0 0 0 var(--focus-ring-width) hsl(var(--ring));
+}

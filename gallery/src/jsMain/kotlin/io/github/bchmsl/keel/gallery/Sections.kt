@@ -21,6 +21,11 @@ import io.github.bchmsl.keel.components.LinkButton
 import io.github.bchmsl.keel.components.Pill
 import io.github.bchmsl.keel.components.PillButton
 import io.github.bchmsl.keel.components.PillSize
+import io.github.bchmsl.keel.components.ProgressBar
+import io.github.bchmsl.keel.components.ProgressBarSize
+import io.github.bchmsl.keel.components.ProgressHandle
+import io.github.bchmsl.keel.components.Scrub
+import io.github.bchmsl.keel.components.ScrubHandle
 import io.github.bchmsl.keel.components.Skeleton
 import io.github.bchmsl.keel.components.SkeletonShape
 import io.github.bchmsl.keel.components.Slider
@@ -217,6 +222,134 @@ internal fun SurfaceSection() {
             }
         }
     }
+}
+
+// -------------------------------------------------------------------- progress
+
+@Composable
+internal fun ProgressSection() {
+    var handle by remember { mutableStateOf<ProgressHandle?>(null) }
+
+    Section(
+        title = "Progress and scrub",
+        note = "One bar replaces four hand-written ones that agreed on nothing: " +
+            "three thicknesses, three track alphas, one radius between them and one " +
+            "width transition. The on-media pair takes its track from " +
+            "--primary-foreground, the palette's ink for sitting on a saturated fill " +
+            "of unknown colour, which is what a poster is. The scrub bar is separate " +
+            "because it needs a buffered layer and is painted from a frame loop " +
+            "rather than from state - drag it, and use the arrow keys once it has " +
+            "focus.",
+    ) {
+        Div({ classNames("stack") }) {
+            ProgressBar(
+                fraction = PROGRESS_SAMPLE,
+                ariaLabel = "Sample progress",
+                size = ProgressBarSize.Small,
+            )
+            ProgressBar(fraction = PROGRESS_SAMPLE, ariaLabel = "Sample progress")
+            ProgressBar(
+                fraction = PROGRESS_SAMPLE,
+                ariaLabel = "Sample progress",
+                size = ProgressBarSize.Large,
+            )
+            ProgressBar(
+                fraction = 1.0,
+                ariaLabel = "Finished",
+                size = ProgressBarSize.Large,
+                done = true,
+            )
+
+            // The on-media pair needs something behind them to be judged against.
+            Div({
+                classNames("media-strip")
+            }) {
+                ProgressBar(
+                    fraction = PROGRESS_SAMPLE,
+                    ariaLabel = "Sample progress over media",
+                    onMedia = true,
+                )
+                ProgressBar(
+                    fraction = 1.0,
+                    ariaLabel = "Finished, over media",
+                    onMedia = true,
+                    done = true,
+                )
+            }
+
+            // Driven the way a player drives it: the handle writes the width and the
+            // ARIA value directly, with no recomposition and no `fraction` change.
+            ProgressBar(
+                fraction = 0.0,
+                ariaLabel = "Driven by its handle",
+                size = ProgressBarSize.Large,
+                onHandleReady = { handle = it },
+            )
+            Div({ classNames("row") }) {
+                Button(
+                    label = "Paint 30%",
+                    onClick = { handle?.setFraction(PROGRESS_LOW) },
+                    variant = ButtonVariant.Outline,
+                    size = ButtonSize.Small,
+                )
+                Button(
+                    label = "Paint 80%",
+                    onClick = { handle?.setFraction(PROGRESS_HIGH) },
+                    variant = ButtonVariant.Outline,
+                    size = ButtonSize.Small,
+                )
+            }
+
+            Div({ classNames("media-strip") }) {
+                ScrubExample()
+            }
+        }
+    }
+}
+
+/**
+ * The scrub bar with a stand-in for a player behind it.
+ *
+ * There is no video here, so the frame loop a real player runs is replaced by the
+ * seek callback painting itself. That is enough to exercise the whole contract: the
+ * drag guard, the buffered layer and the announced time all go through the handle.
+ */
+@Composable
+private fun ScrubExample() {
+    var handle by remember { mutableStateOf<ScrubHandle?>(null) }
+    var position by remember { mutableStateOf(SCRUB_START) }
+
+    Div({ classNames("stack") }) {
+        Scrub(
+            ariaLabel = "Timeline",
+            onSeek = { position = it },
+            onHandleReady = { ready ->
+                handle = ready
+                ready.setBuffered(SCRUB_BUFFERED)
+                ready.setPosition(SCRUB_START, formatSeconds(SCRUB_START))
+            },
+        )
+
+        Div({ classNames("row") }) {
+            Span({ classNames("readout") }) { Text(formatSeconds(position)) }
+            Button(
+                label = "Jump to the middle",
+                onClick = {
+                    position = SCRUB_MIDDLE
+                    handle?.setPosition(SCRUB_MIDDLE, formatSeconds(SCRUB_MIDDLE))
+                },
+                variant = ButtonVariant.Outline,
+                size = ButtonSize.Small,
+            )
+        }
+    }
+}
+
+private fun formatSeconds(fraction: Double): String {
+    val total = (fraction * SAMPLE_DURATION).toInt()
+    val minutes = total / SECONDS_PER_MINUTE
+    val seconds = total % SECONDS_PER_MINUTE
+    return "$minutes:${seconds.toString().padStart(2, '0')}"
 }
 
 // ---------------------------------------------------------------------- badges
@@ -455,6 +588,14 @@ internal fun IconSection() {
 private const val CENTERED_ICON = 32
 private const val ICON_WALL_SIZE = 20
 private const val BADGE_ICON = 10
+private const val PROGRESS_SAMPLE = 0.62
+private const val PROGRESS_LOW = 0.3
+private const val PROGRESS_HIGH = 0.8
+private const val SCRUB_START = 0.18
+private const val SCRUB_MIDDLE = 0.5
+private const val SCRUB_BUFFERED = 0.45
+private const val SAMPLE_DURATION = 2470.0
+private const val SECONDS_PER_MINUTE = 60
 private const val PILL_ICON = 10
 private const val DEFAULT_VOLUME = 70
 private const val MAX_VOLUME = 100

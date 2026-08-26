@@ -98,6 +98,25 @@
   --loader-size: 1.25rem;
   --loader-size-lg: 2.25rem;
 
+  /* A progress bar's three thicknesses: a hairline under a tile, the usual bar,
+     and a bar that is the point of its own row. */
+  --progress-h-sm: 0.125rem;
+  --progress-h-default: 0.1875rem;
+  --progress-h-lg: 0.25rem;
+
+  /* The scrub bar. Deliberately *not* the slider's rail and thumb, which are
+     0.375rem and 1rem: a scrub bar lies over moving picture and a thick rail
+     covers it, so it is thinner than a slider on a page and its knob is
+     smaller. `--scrub-h` is the hit area, which is several times the rail -
+     a 3px pointer target is not one.
+
+     A ten-foot shell needs all three larger *and* keeps needing the hit area to
+     dwarf the rail, which is why the height is its own token rather than
+     padding derived from the rail. */
+  --scrub-h: 1rem;
+  --scrub-rail-h: 0.1875rem;
+  --scrub-knob-size: 0.75rem;
+
   /* ------------------------------------------------------ focus ring ---- */
   /* Two layers: a gap in the page's own background colour, then the ring
      itself. The gap is what keeps the ring readable against any surface,

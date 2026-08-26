@@ -43,6 +43,7 @@ fun Gallery(theme: ThemeController) {
         FieldSection()
         PillSection()
         BadgeSection()
+        ProgressSection()
         WaitingSection()
 
         Section(

@@ -327,3 +327,17 @@ Closed since:
   `Badge` cover them. `Spinner` renders `.loader`, not `.spinner` — `base.css` already
   owns that name as the icon-rotation utility, and both apps have a `.spinner` of their
   own, so the component taking it would have restyled all three.
+- **Five progress bars, and no two alike.** `ProgressBar` replaces four of them —
+  Dakalebi's hero, tile, countdown and thin bars — which between them carried three
+  thicknesses, three track alphas, one radius and one width transition. None of those
+  four differences was a decision. Adopting it changes the three odd alphas to one, gives
+  the three edge-hugging bars a pill radius they are too thin to show, and retimes the
+  countdown from 200ms to `--duration-fast`.
+- **The fifth bar is `Scrub`,** deliberately its own component: it needs a buffered layer,
+  it is painted from a frame loop rather than from state, and it lives over picture. It
+  hands the caller a `ScrubHandle` whose `setPosition` is ignored mid-drag — the guard
+  both players had to learn separately — and which rewrites the range input's value and
+  `aria-valuetext` alongside the visible fill, so the bar and the announcement cannot
+  disagree. `.scrub` collides with Dakalebi's own player rules, and web.css loads later,
+  so Dakalebi keeps rendering its own until those rules are deleted in the same commit
+  that adopts the component.

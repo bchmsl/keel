@@ -421,6 +421,15 @@ extraction. What was taken:
   set disjoint properties, so their order is irrelevant and `Card`'s rendered result is
   unchanged: same border, radius, colour and shadow, measured.
 
+- **`--primary-foreground` is the ink for content laid over a picture.** A bar over a
+  poster cannot take its track colour from the page: `--muted` is a pale grey in the
+  light palettes and would vanish against a bright still. The honest alternative was a
+  literal white at low alpha, which is the one thing a component may not name. This
+  token is already declared palette-independent, as the ink that sits on a saturated
+  fill of the app's own choosing — and a picture is a saturated fill whose colour
+  nobody knows in advance, which is the same job. `.progress--on-media` and every
+  `.scrub__*` layer read it.
+
 What was not taken, and why:
 
 - **`overflow: hidden` on `.surface`.** It looks obviously right: an unpadded surface
