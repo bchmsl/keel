@@ -92,6 +92,12 @@
   cursor: pointer;
   background: none;
   color: inherit;
+  /* For the anchor form. `LinkButton` renders a real `<a href>`, and a bare anchor is
+     underlined by every UA stylesheet - so without this every link button arrived
+     underlined, and `.btn--link:hover`'s underline was a no-op because there was
+     nothing left for it to add. `none` at rest is what makes that hover mean
+     something. Harmless on a `<button>`, which is never underlined to begin with. */
+  text-decoration: none;
   transition:
     background-color var(--duration-fast) var(--ease),
     color var(--duration-fast) var(--ease),
