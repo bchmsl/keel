@@ -55,6 +55,18 @@ public enum class ButtonSize(internal val className: String) {
     Small("btn--size-sm"),
     Large("btn--size-lg"),
     Icon("btn--size-icon"),
+
+    /**
+     * No box: the text's own size, no padding, and the surrounding sentence's baseline.
+     *
+     * The size [ButtonVariant.Link] usually wants. Every other size here sets a control
+     * height, which is right for a control on its own row and wrong for a word inside a
+     * paragraph - a 2.5rem box in a 0.875rem sentence inflates the line it sits in.
+     *
+     * Pairs with [ButtonVariant.Link] or [ButtonVariant.Ghost]; a filled variant at this
+     * size is a fill with no padding, which is not a button anyone wants.
+     */
+    Inline("btn--size-inline"),
 }
 
 /**

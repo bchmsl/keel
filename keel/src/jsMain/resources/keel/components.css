@@ -216,6 +216,28 @@
   padding: 0;
 }
 
+/* No box at all, for a link button sitting inside a sentence.
+
+   `ButtonVariant.Link` is documented as being for actions inside a sentence, and none
+   of the four sizes above can give it one: each sets a control height, so a 2.5rem
+   inline-flex box lands in a 0.875rem paragraph and inflates the line it sits in.
+   Both consumers had noticed - one was writing `padding: 0` inline at three call
+   sites, which removes the padding and leaves the height.
+
+   `vertical-align: baseline` is what puts it back on the sentence's baseline; without
+   it an inline-flex box aligns its bottom edge to the text's, which sits the label a
+   descender low. The box stays `inline-flex` rather than `inline` so a leading icon
+   still gets the gap and the centring.
+
+   Only `font-size` is inherited. The weight stays keel's, because a link inside a
+   sentence reading slightly heavier than the sentence is what marks it as one. */
+.btn--size-inline {
+  height: auto;
+  padding: 0;
+  font-size: inherit;
+  vertical-align: baseline;
+}
+
 /* -------------------------------------------------------------- surface ---- */
 /* The panel box on its own: a border, a radius, the card colour, and nothing
    else. A panel is the largest surface in the shape language, so it takes the

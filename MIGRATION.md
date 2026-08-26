@@ -663,3 +663,35 @@ treatments:
 It gets the look and the announcement. It does not get arrow-key navigation, Home, End
 or the single tab stop, which are the native input's - which is why the native form
 stays the default and this is the escape hatch.
+
+## And one more, from Dayboard's sign-in page
+
+### `ButtonSize.Inline`
+
+`ButtonVariant.Link` is documented as being "for actions inside a sentence", and none
+of the four sizes could give it one. Every size sets a control height, so a link button
+in a paragraph arrived as a 2.5rem `inline-flex` box wedged into a 0.875rem line.
+
+Both apps had already noticed. Dakalebi's `LoginScreen.kt` was writing
+`style { property("padding", "0") }` at three call sites, which removes the padding and
+leaves the height. Dayboard's `.auth__toggle-action` gave up on `.btn` entirely and
+rebuilt a text link from `border: 0; background: none; padding: 0; font: inherit`, which
+is the whole variant restated in a consumer sheet.
+
+Measured on the same sentence in the gallery, with only the size class changed:
+
+| size | button height | paragraph height |
+|---|---|---|
+| `Default` | 40px | 40px |
+| `Small` | 36px | 36px |
+| `Inline` | 17.5px | 17.5px |
+
+17.5px is the paragraph's own line box, so the sentence is exactly as tall as it would
+be with no button in it.
+
+`vertical-align: baseline` is the half that is easy to miss: an `inline-flex` box
+otherwise aligns its bottom edge to the text baseline, which sits the label a descender
+too low. The box stays `inline-flex` rather than becoming `inline` so a leading icon
+still gets the gap and the centring. Only `font-size` is inherited - the weight stays
+keel's, because a link inside a sentence reading slightly heavier than the sentence is
+what marks it as one.

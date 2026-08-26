@@ -66,6 +66,7 @@ import io.github.bchmsl.keel.icons.Icon
 import io.github.bchmsl.keel.icons.LucideIcon
 import io.github.bchmsl.keel.theme.KeelTokens
 import org.jetbrains.compose.web.dom.Div
+import org.jetbrains.compose.web.dom.P
 import org.jetbrains.compose.web.dom.Span
 import org.jetbrains.compose.web.dom.Text
 
@@ -99,12 +100,14 @@ internal fun PaletteSection() {
 internal fun ButtonSection() {
     Section(
         title = "Buttons",
-        note = "Seven variants and four sizes. The focus ring is held off the control " +
+        note = "Seven variants and five sizes. The focus ring is held off the control " +
             "by a background-coloured gap, so it stays visible on any surface - press " +
             "Tab to see it. OnMedia has its own row because it is the one variant that " +
             "resolves against no palette colour: it is a translucent wash for a control " +
             "sitting over picture, and on the page background there is nothing for it " +
-            "to be translucent over. The last row is LinkButton, which is a real " +
+            "to be translucent over. Inline is missing from the size row because it " +
+            "has no box; it is in the sentence at the foot of this section, which is " +
+            "the only place it belongs. The last row is LinkButton, which is a real " +
             "anchor: middle-click one.",
     ) {
         Div({ classNames("row") }) {
@@ -136,8 +139,8 @@ internal fun ButtonSection() {
 
         Div({ classNames("row") }) {
             ButtonSize.entries.forEach { size ->
-                if (size == ButtonSize.Icon) {
-                    IconButton(
+                when (size) {
+                    ButtonSize.Icon -> IconButton(
                         ariaLabel = "Settings",
                         onClick = {},
                         variant = ButtonVariant.Outline,
@@ -145,8 +148,11 @@ internal fun ButtonSection() {
                     ) {
                         Icon(LucideIcon.Settings)
                     }
-                } else {
-                    Button(
+                    // Not in this row: it has no box, so an outlined one is a border
+                    // drawn tight around a word. It is shown in a sentence below,
+                    // which is the only place it belongs.
+                    ButtonSize.Inline -> Unit
+                    else -> Button(
                         label = size.name,
                         onClick = {},
                         variant = ButtonVariant.Outline,
@@ -184,6 +190,29 @@ internal fun ButtonSection() {
                 variant = ButtonVariant.Link,
                 size = ButtonSize.Small,
             )
+        }
+
+        Div({ classNames("section__note") })
+
+        // `ButtonSize.Inline` in the one place it is for. The point of the row is that
+        // the line height does not change: at any other size this button would be a
+        // 2.5rem box wedged into a 0.875rem sentence and push the two lines apart.
+        P({ classNames("section__note") }) {
+            Text("A link button at ")
+            LinkButton(
+                href = "#buttons",
+                label = "this size",
+                variant = ButtonVariant.Link,
+                size = ButtonSize.Inline,
+            )
+            Text(" sits in a sentence without disturbing it, and so does a ")
+            Button(
+                label = "real button",
+                onClick = {},
+                variant = ButtonVariant.Link,
+                size = ButtonSize.Inline,
+            )
+            Text(" beside it.")
         }
     }
 }
