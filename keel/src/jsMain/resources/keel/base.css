@@ -130,6 +130,18 @@ body {
   }
 }
 
+/* A highlight travelling left to right across a placeholder. Moves the background
+   position rather than the element, so it costs no layout and a row of skeletons
+   sweeps in step. The element it belongs to sets the gradient; this only slides it. */
+@keyframes keel-skeleton-sweep {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   /* Honour the setting without disabling the interface: transitions collapse to
      effectively instant rather than being removed, so a state change still lands

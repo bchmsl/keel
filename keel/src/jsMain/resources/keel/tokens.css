@@ -91,6 +91,13 @@
   --slider-rail-h: 0.375rem;
   --slider-thumb-size: 1rem;
 
+  /* The spinner's three diameters. Not a control - nothing is aimed at it - but
+     the same argument applies: at ten feet a 20px ring is a dot, and the three
+     size variants only help a consumer whose wanted size is one of the three. */
+  --loader-size-sm: 0.875rem;
+  --loader-size: 1.25rem;
+  --loader-size-lg: 2.25rem;
+
   /* ------------------------------------------------------ focus ring ---- */
   /* Two layers: a gap in the page's own background colour, then the ring
      itself. The gap is what keeps the ring readable against any surface,

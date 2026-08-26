@@ -320,3 +320,10 @@ Closed since:
   real anchor: it can be middle-clicked, copied and opened in a new tab, none of which a
   button with a navigating `onClick` can do. It has no `enabled` parameter, because HTML
   gives an anchor no disabled state — a control that can be off is a `Button`.
+- **A panel without a title had no component, so every app drew its own box.** `Surface`
+  is that box, and `Card` is now built on it, so the two cannot drift apart. Four
+  hand-written panels across the two apps agreed on none of their four values.
+- **Empty, waiting and status had nothing.** `EmptyState`, `Skeleton`, `Spinner` and
+  `Badge` cover them. `Spinner` renders `.loader`, not `.spinner` — `base.css` already
+  owns that name as the icon-rotation utility, and both apps have a `.spinner` of their
+  own, so the component taking it would have restyled all three.

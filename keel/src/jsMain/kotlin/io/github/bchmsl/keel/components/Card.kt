@@ -29,6 +29,11 @@ import org.w3c.dom.HTMLDivElement
  * When [expanded], the drag handle and the collapse toggle disappear: a panel filling
  * the screen cannot be reordered against anything, and collapsing it would leave an
  * empty screen with one row at the top.
+ *
+ * The box itself is a [Surface], so the border, radius, colour and shadow of a titled
+ * panel and an untitled one cannot drift apart. Padding is [SurfacePadding.None]
+ * because the header and the body pad themselves - a card's two regions are inset by
+ * different amounts, which one padding on the outer box cannot express.
  */
 @Composable
 public fun Card(
@@ -42,7 +47,11 @@ public fun Card(
     onDragStart: (() -> Unit)? = null,
     content: ContentBuilder<HTMLDivElement>,
 ) {
-    Div({ classNames("card", "card--expanded".takeIf { expanded }) }) {
+    Surface(
+        padding = SurfacePadding.None,
+        elevated = true,
+        attrs = { classNames("card", "card--expanded".takeIf { expanded }) },
+    ) {
         Div({ classNames("card__header") }) {
             Div({ classNames("card__title-group") }) {
                 if (draggable && !expanded) {

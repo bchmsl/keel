@@ -39,8 +39,11 @@ fun Gallery(theme: ThemeController) {
         PaletteSection()
         ButtonSection()
         CardSection()
+        SurfaceSection()
         FieldSection()
         PillSection()
+        BadgeSection()
+        WaitingSection()
 
         Section(
             title = "Dialog",

@@ -456,6 +456,7 @@ class TokenContractTest {
             "--switch-track-w", "--switch-track-h",
             "--switch-knob-size", "--switch-knob-inset",
             "--slider-rail-h", "--slider-thumb-size",
+            "--loader-size-sm", "--loader-size", "--loader-size-lg",
             "--focus-ring-offset", "--focus-ring-width", "--focus-glow-alpha",
             "--z-scrim", "--z-drawer", "--z-dropdown-catch", "--z-dropdown",
             "--z-dialog", "--z-toast",

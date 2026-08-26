@@ -413,7 +413,24 @@ extraction. What was taken:
   Seventeen lines that read as load-bearing and never ran — inherited from the source,
   where they still do not run.
 
+- **`Card` is built on `Surface`, not beside it.** The untitled panel is the *more*
+  common shape — a login panel, a stat tile, a next-up card — and each app had
+  hand-written its own box for it, four of them across two apps agreeing on none of
+  their four values. `.surface` is now the box and `.card` carries only what a board
+  panel adds, which is filling its column. Both classes are specificity `(0,1,0)` and
+  set disjoint properties, so their order is irrelevant and `Card`'s rendered result is
+  unchanged: same border, radius, colour and shadow, measured.
+
 What was not taken, and why:
+
+- **`overflow: hidden` on `.surface`.** It looks obviously right: an unpadded surface
+  holding a poster has square corners inside a rounded box, so the radius is
+  decorative. But clipping also removes what is *meant* to leave the box, and keel's
+  focus ring is a `box-shadow` drawn outside its control — so a clipped card would lose
+  the ring on the button in its header entirely, and lose it invisibly. Which kind a
+  surface is depends on what is inside it, so it is `clipped = false` by default and
+  the caller says. This is the same clipping hazard as the open focus-ring gap below,
+  arriving from the other direction.
 
 - **Generating the CSS from Kotlin.** It would remove the two-source-of-truth risk,
   which `TokenContractTest` already removes for the cost of a test rather than a code

@@ -7,10 +7,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import io.github.bchmsl.keel.color.SwatchShade
 import io.github.bchmsl.keel.color.Swatches
+import io.github.bchmsl.keel.components.Badge
+import io.github.bchmsl.keel.components.BadgeTone
 import io.github.bchmsl.keel.components.Button
 import io.github.bchmsl.keel.components.ButtonSize
 import io.github.bchmsl.keel.components.ButtonVariant
 import io.github.bchmsl.keel.components.Card
+import io.github.bchmsl.keel.components.EmptyState
 import io.github.bchmsl.keel.components.FormattedText
 import io.github.bchmsl.keel.components.FormattingField
 import io.github.bchmsl.keel.components.IconButton
@@ -18,7 +21,13 @@ import io.github.bchmsl.keel.components.LinkButton
 import io.github.bchmsl.keel.components.Pill
 import io.github.bchmsl.keel.components.PillButton
 import io.github.bchmsl.keel.components.PillSize
+import io.github.bchmsl.keel.components.Skeleton
+import io.github.bchmsl.keel.components.SkeletonShape
 import io.github.bchmsl.keel.components.Slider
+import io.github.bchmsl.keel.components.Spinner
+import io.github.bchmsl.keel.components.SpinnerSize
+import io.github.bchmsl.keel.components.Surface
+import io.github.bchmsl.keel.components.SurfacePadding
 import io.github.bchmsl.keel.components.Switch
 import io.github.bchmsl.keel.components.TextAreaField
 import io.github.bchmsl.keel.components.TextField
@@ -168,6 +177,116 @@ internal fun CardSection() {
                 Icon(LucideIcon.Timer, size = CENTERED_ICON)
                 Span({ classNames("readout") }) { Text("centerContent = true") }
             }
+        }
+    }
+}
+
+// -------------------------------------------------------------------- surfaces
+
+@Composable
+internal fun SurfaceSection() {
+    Section(
+        title = "Surface",
+        note = "The panel box with no header, which is what a card is built on. The " +
+            "padding is a variant rather than one value because it is the part that " +
+            "actually differs between a login panel, a stat tile and a poster that " +
+            "reaches its own border. Elevation is off by default: a shadow inside " +
+            "another shadowed panel reads as a mistake. The last one is unpadded and " +
+            "clipped, which is what a poster needs and what a card must not have - " +
+            "clipping would cut the focus ring off the button in a card's header.",
+    ) {
+        Div({ classNames("grid") }) {
+            Surface(padding = SurfacePadding.Small) {
+                Span({ classNames("readout") }) { Text("padding = Small") }
+            }
+
+            Surface {
+                Span({ classNames("readout") }) { Text("padding = Default") }
+            }
+
+            Surface(padding = SurfacePadding.Large) {
+                Span({ classNames("readout") }) { Text("padding = Large") }
+            }
+
+            Surface(elevated = true) {
+                Span({ classNames("readout") }) { Text("elevated = true") }
+            }
+
+            Surface(padding = SurfacePadding.None, clipped = true) {
+                Skeleton(attrs = { style { property("aspect-ratio", "16 / 9") } })
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------- badges
+
+@Composable
+internal fun BadgeSection() {
+    Section(
+        title = "Badge",
+        note = "A status word attached to something else, named by meaning rather than " +
+            "by colour - so the same state reads the same everywhere and a palette can " +
+            "move a colour without every call site becoming a lie. The stylesheet " +
+            "uppercases the text, so what you pass stays what a screen reader reads.",
+    ) {
+        Div({ classNames("row") }) {
+            Badge(label = "1080p")
+            Badge(label = "New", tone = BadgeTone.Primary)
+            Badge(label = "Watched", tone = BadgeTone.Success) {
+                Icon(LucideIcon.Check, size = BADGE_ICON)
+            }
+            Badge(label = "Expired", tone = BadgeTone.Destructive)
+        }
+    }
+}
+
+// ---------------------------------------------------------------------- waiting
+
+@Composable
+internal fun WaitingSection() {
+    Section(
+        title = "Waiting and empty",
+        note = "A skeleton for content on its way, a spinner for a wait with no " +
+            "number, and an empty state for a region that is legitimately empty. " +
+            "Skeletons carry no size of their own: one is only honest when it is the " +
+            "size of the thing it replaces, and only the caller knows that. The " +
+            "rendered class is loader, not spinner - base.css already owns that name " +
+            "as the utility that rotates an icon.",
+    ) {
+        Div({ classNames("stack") }) {
+            Div({ classNames("row") }) {
+                Spinner(size = SpinnerSize.Small)
+                Spinner()
+                Spinner(size = SpinnerSize.Large)
+            }
+
+            Div({ classNames("row") }) {
+                Skeleton(
+                    shape = SkeletonShape.Circle,
+                    attrs = {
+                        style {
+                            property("width", "2.5rem")
+                            property("height", "2.5rem")
+                        }
+                    },
+                )
+                Div({ classNames("stack") }) {
+                    Skeleton(shape = SkeletonShape.Line, attrs = {
+                        style { property("width", "12rem") }
+                    })
+                    Skeleton(shape = SkeletonShape.Line, attrs = {
+                        style { property("width", "7rem") }
+                    })
+                }
+            }
+
+            EmptyState(
+                title = "Nothing saved yet",
+                body = "Anything you keep shows up here, newest first.",
+                leading = { Icon(LucideIcon.LayoutGrid, size = CENTERED_ICON) },
+                action = { Button(label = "Add the first one", onClick = {}) },
+            )
         }
     }
 }
@@ -335,6 +454,7 @@ internal fun IconSection() {
 
 private const val CENTERED_ICON = 32
 private const val ICON_WALL_SIZE = 20
+private const val BADGE_ICON = 10
 private const val PILL_ICON = 10
 private const val DEFAULT_VOLUME = 70
 private const val MAX_VOLUME = 100
