@@ -121,20 +121,23 @@ class ClassNameContractTest {
          * Classes keel emits for a consumer to style, and therefore defines no rule
          * for itself.
          *
-         * `card--expanded` is the only one, and it is here because keel cannot
-         * honestly define it. An expanded card fills whatever the app's board is, and
-         * keel owns components rather than layout, so that size is not its to pick.
-         * `Card` knows the state and hands it over as a class; what expanded looks
-         * like belongs to the app. Dayboard, the only consumer of `Card`, styles
-         * `.clock--expanded` and `.timer--expanded` on the contents instead, so the
-         * hook is currently unused - unused is not the same as wrong.
+         * **Empty, and worth keeping empty.** It held `card--expanded` on the argument
+         * that keel owns components rather than layout, so the size of an expanded card
+         * was the app's to pick. That was half right and the wrong half mattered. Where
+         * the card *sits* is the app's; that it becomes a column filling that space with
+         * its header pinned and its body scrolling is the component's, and it is the only
+         * shape a full-screen card can have - without it a long body carries the close
+         * button off the top of the screen. So the class has a rule now, and the one
+         * consumer of `Card` stopped writing those four lines against keel's own
+         * selector from its own sheet.
          *
          * Adding to this list should feel expensive. Every entry is a class name with
          * no definition anywhere in this repository, which is exactly the shape of the
          * bug these tests exist to catch. An entry has to be a hook a consumer is
-         * *meant* to reach, not a class that simply has no rule yet.
+         * *meant* to reach, not a class that simply has no rule yet - and the one entry
+         * that ever qualified turned out not to.
          */
-        val CONSUMER_STYLED_HOOKS = setOf("card--expanded")
+        val CONSUMER_STYLED_HOOKS = emptySet<String>()
 
         /**
          * A class in a selector position. The leading `(?<![\w.-])` is what keeps
