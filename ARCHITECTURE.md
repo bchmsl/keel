@@ -15,9 +15,80 @@ colour keywords, anywhere in `base.css` or `components.css`, fails the build. On
 allowance, black at low alpha, for the modal scrim — a scrim dims whatever is behind
 it, which is not a palette's business.
 
-Radius, duration, font and shadow are held to the same rule by review rather than by a
-test. `components.css` has no literal of any of them today; `base.css` carries a few
+A second test enforces the size half: a `height` or `width` given a fixed length —
+`px`, `rem` or a print unit — anywhere in `base.css` or `components.css` fails the
+build. Two allowances, both idioms with an exact required value rather than a design
+choice: `.sr-only`'s 1px clip box, and the `::-webkit-scrollbar` gutter. Relative
+units are not flagged, because `%`, `em` and the viewport units already answer to
+something the consumer controls.
+
+That test exists for a failure that is easy to miss. A literal `height: 2.5rem` is
+not wrong on its own — it already scales with the root font size. It goes wrong for a
+consumer whose root size is spoken for by something else: a ten-foot interface sets
+its root from the viewport to make its layout work, and then needs a *larger* control
+at that same root. With the height written out, the only way to get one is to re-state
+the rule by selector from outside, and a stylesheet that re-states another has forked
+it — silently, and only for the app that did it.
+
+Radius, duration and font are held to the same rule by review rather than by a test.
+`components.css` has no literal of any of them today; `base.css` carries a few
 animation durations, which are the animation's own timing rather than the interface's.
+
+## When a consumer cannot call the composable
+
+Two cases, both legitimate, and each has its own hatch. Before they existed a consumer
+in either position wrote keel's class names out as string literals: four dozen
+spellings of the button classes in one app alone, checked by nothing.
+
+**The element is keel's, but the wiring is not.** Every primitive takes an `attrs`
+slot, which runs last so the caller wins on conflict. It is where a `ref`, a `data-*`
+attribute, a conditional inline `style` or a form's `name`/`autocomplete` go. Classes
+accumulate rather than replace, which is deliberate: adding a marker class is the
+common case and losing `btn` is never the intent.
+
+**The element is not the one keel builds.** `dom/ComponentClasses.kt` exposes the class
+lists as functions — `buttonClasses(variant, size)`, `switchClasses()`, and the rest. A
+ten-foot interface renders its controls as `Div role="button"` on purpose, because a
+real `<button>` brings a UA stylesheet, its own focus ring and its own activation
+behaviour, all three of which fight a surface where the focus ring *is* the cursor. It
+can consume keel's classes; it can never call `Button()`.
+
+This is what lets `ButtonVariant.className` stay `internal`. The mapping is public and
+the field is not, so a variant can be renamed in one place. The functions return a
+space-separated list, so the result goes through `classNames(...)` — `classes(...)`
+would throw on the space, which is the first trap listed below.
+
+`ClassNameContractTest` holds the two halves together: a class name keel's Kotlin emits
+with no rule in `base.css` or `components.css` fails the build. That is the alarm that
+was missing when a shared sign-in screen was changed to emit keel's classes and one of
+the two shells rendering it did not link keel's stylesheet. Nothing failed. A class name
+is a string, an undefined class selects nothing, and an element with no rules is a
+perfectly valid element, so it compiled, logged nothing, and shipped as unstyled browser
+boxes. One allowance, `card--expanded`: an expanded card fills whatever the app's board
+is, and keel owns components rather than layout, so `Card` hands the state over as a
+class and lets the app decide what it means.
+
+The reverse direction is deliberately not checked. A class keel defines but never emits
+is not necessarily dead — some exist precisely so a consumer that cannot call the
+composable can still build the markup.
+
+## Focus and hover
+
+Two rules, both enforced by `TokenContractTest` rather than by review, and both
+stated in the header of `components.css` where the next component gets written.
+
+**Every focus rule is a two-branch selector list** — `.thing:focus-visible,
+.thing[data-keel-focus]`. The second branch is for a consumer that moves focus itself
+instead of letting the browser do it. A D-pad interface is the case that forced it:
+focus there is a cursor the app owns, it lands on a `div` no browser would call
+focusable, and `:focus-visible` heuristics do not fire in a WebView the way they do on
+a desktop. Both branches are specificity (0,2,0), so adding one reorders nothing. The
+attribute is namespaced so a consumer's own unrelated `data-focus` cannot be restyled
+by accident.
+
+**Every `:hover` rule is wrapped in `@media (hover: hover)`.** Without it a tap leaves
+the hover state stuck on the control, because the pointer that would have left never
+existed. Desktop is unaffected.
 
 ## The four stylesheets
 
@@ -342,7 +413,122 @@ extraction. What was taken:
   Seventeen lines that read as load-bearing and never ran — inherited from the source,
   where they still do not run.
 
+- **`Card` is built on `Surface`, not beside it.** The untitled panel is the *more*
+  common shape — a login panel, a stat tile, a next-up card — and each app had
+  hand-written its own box for it, four of them across two apps agreeing on none of
+  their four values. `.surface` is now the box and `.card` carries only what a board
+  panel adds, which is filling its column. Both classes are specificity `(0,1,0)` and
+  set disjoint properties, so their order is irrelevant and `Card`'s rendered result is
+  unchanged: same border, radius, colour and shadow, measured.
+
+- **`--primary-foreground` is the ink for content laid over a picture.** A bar over a
+  poster cannot take its track colour from the page: `--muted` is a pale grey in the
+  light palettes and would vanish against a bright still. The honest alternative was a
+  literal white at low alpha, which is the one thing a component may not name. This
+  token is already declared palette-independent, as the ink that sits on a saturated
+  fill of the app's own choosing — and a picture is a saturated fill whose colour
+  nobody knows in advance, which is the same job. `.progress--on-media` and every
+  `.scrub__*` layer read it.
+
+- **A pick-one control is a radio group, not a row of buttons with `aria-pressed`.**
+  All five hand-written versions across the two apps were buttons: appearance from a
+  class, selection announced as "pressed". A toggle button says pressed; it cannot say
+  "two of five", and none of the five had arrow-key navigation, a single tab stop, or
+  Home and End, because getting those from buttons means reimplementing roving
+  tabindex. `SegmentedControl` is `label > input[type=radio] + span`, so the browser
+  supplies all of it, and the selected colour is keyed off `:checked` rather than a
+  class keel adds — the same argument as the switch's `aria-checked`. A class can
+  disagree with what is announced, and it fails in the direction that matters: looking
+  right while announcing wrong.
+
+- **The segmented focus rule carries its own container class, purely for specificity.**
+  `.segmented--rail .segmented__input:checked ~ .segmented__label` is `(0,4,0)` and
+  sets `box-shadow: none`, because the rail's selected chip is a flat primary fill with
+  no lift. Written the obvious way, the focus rule would be `(0,3,0)` and lose — so a
+  focused *selected* rail chip would have shown no ring at all, the one state a keyboard
+  user most needs to see. Both focus branches are written as
+  `.segmented .segmented__input:focus-visible ~ .segmented__label`, which reaches
+  `(0,4,0)` and then wins on source order. The redundant-looking ancestor is the whole
+  point of the rule.
+
+- **The hidden radio gets its own visually-hidden rule rather than `.sr-only`.**
+  `.sr-only` is `position: absolute`, which resolves against the nearest positioned
+  ancestor. On the rail that ancestor would be the scroller, so focusing a chip would
+  scroll a 1px box somewhere else into view instead of the chip. `.segmented__item` is
+  `position: relative` and `.segmented__input` is hidden against it, measured: the
+  input's `offsetParent` is its own item.
+
+- **The "finished this one" check takes `color: inherit` on the chosen chip.** It is
+  `--success` normally, and the first version named `--primary-foreground` for the
+  selected state, which is right for the rail's primary fill and wrong for the track's,
+  where the chip is `--card` — a white check on a light card in half the palettes.
+  `inherit` lands on whatever that chip's text colour already is, correct in both
+  treatments without naming either.
+
+- **One dim for the scrim and the dialog's overlay, but still two classes.** The
+  values are shared through `--scrim-alpha` and `--scrim-blur`, because nothing argues
+  for dimming a drawer's page differently from a dialog's - both mean "nothing behind
+  this is available", and the five hand-written versions disagreed by accident rather
+  than on purpose. The *classes* stay separate, and the tokens file already said why
+  before either existed: a dialog's overlay has to be inseparable from its dialog, so
+  it sits in the `--z-dialog` layer with it rather than in the standalone scrim's,
+  where a stray layer could come between them.
+
+- **The dropdown's click-catcher is not a scrim, and that is the whole point.** This
+  is the clearest case in either app of a component being borrowed instead of shared.
+  Dakalebi's season menu needed a catcher, took `.scrim`, and cancelled it with an
+  inline `background: transparent` - which cleared the dim but not `backdrop-filter`,
+  so opening the menu blurred the whole page, and at the scrim's z-index it covered
+  the very menu it was opened for. A catcher wants the opposite of a scrim on both
+  counts: change nothing visually, and sit *below* the thing it dismisses.
+  `.dropdown__catch` is its own class at `--z-dropdown-catch`, one below
+  `--z-dropdown`, because that pairing is fixed - a catcher is only ever directly
+  beneath what it dismisses.
+
 What was not taken, and why:
+
+- **`overflow: hidden` on `.surface`.** It looks obviously right: an unpadded surface
+  holding a poster has square corners inside a rounded box, so the radius is
+  decorative. But clipping also removes what is *meant* to leave the box, and keel's
+  focus ring is a `box-shadow` drawn outside its control — so a clipped card would lose
+  the ring on the button in its header entirely, and lose it invisibly. Which kind a
+  surface is depends on what is inside it, so it is `clipped = false` by default and
+  the caller says. This is the same clipping hazard as the open focus-ring gap below,
+  arriving from the other direction.
+
+- **A separate `FilterChip` beside `SegmentedControl`.** The plan called for two
+  components, on the reasoning that unifying them means one grows a slot it never uses.
+  Reading all five hand-written versions first showed that is not what separates them:
+  they differ only in the container — a shared track versus a horizontal scroller — and
+  the "finished this one" check is one optional field on a segment, not a slot. A second
+  component would have duplicated the whole radio-group mechanism to change a `display`
+  and a `background-color`. `SegmentedStyle` is that difference.
+
+- **`role="menu"` on the dropdown.** It is the role the markup looks like it wants,
+  and it promises arrow-key navigation, a single tab stop and typeahead. Claiming it
+  without building roving tabindex is the same failure as the `aria-pressed`
+  segmented controls above, in the same direction: correct-looking markup announcing a
+  behaviour it does not have. What the component renders is what it is - a small group
+  of buttons, `role="group"` with a label, where Tab reaches each item and Enter and
+  Space activate it, all of it the browser's. A real menu can be layered on later; a
+  claimed one cannot be un-promised.
+
+- **Rendering the dropdown at the document root.** It would survive an ancestor with
+  `overflow: hidden`, which is the one real limitation of positioning against the
+  trigger. The cost is tracking the trigger's position on every scroll, resize and
+  layout change for the life of the menu, which is a different component with a
+  different failure mode - a menu that drifts away from its button. The KDoc names the
+  clipping case and the way out of it, which is to put the trigger outside the clipped
+  box.
+
+- **A `Bottom` drawer, and a header slot on `Drawer`.** The plan called for `Bottom`
+  on the strength of Dakalebi's "menu sheet", which turned out to be a left-anchored
+  drawer rather than a bottom sheet - so the variant would have shipped as dead API,
+  the same argument that keeps `--border-strong` out. The header is left out for the
+  opposite reason: both apps have one and they are different shapes, a sticky header
+  over a scrolling body in one and a padded scrolling stack in the other. Owning the
+  wrong one is worse than owning neither, and the drawer is still the part that was
+  written twice.
 
 - **Generating the CSS from Kotlin.** It would remove the two-source-of-truth risk,
   which `TokenContractTest` already removes for the cost of a test rather than a code
@@ -361,9 +547,10 @@ What was not taken, and why:
   exists only while both stylesheets are linked at once.
 - **Splitting hover into its own sheet**, for a shell with no pointer. Hover rules
   simply never match without a pointer, so the split buys little. The real issue it
-  gestures at — hover sticking after a touch — is better answered by authoring hover
-  inside `@media (hover: hover)`. Worth doing, and deliberately not done here: it
-  would change how both apps look on a phone, which an extraction should not.
+  gestures at — hover sticking after a touch — was answered instead by authoring every
+  hover inside `@media (hover: hover)`, which is now the rule and is tested. That was
+  held back from the extraction itself, on the grounds that a move should not change
+  how either app looks on a phone; it landed as a deliberate change afterwards.
 - **`--border-strong` and `--foreground-dim`.** Real needs in one app, and no
   component here reads either, so both would ship as dead API. `hsl(var(--foreground)
   / 0.15)` covers the first and `hsl(var(--foreground) / 0.72)` the second. They go in

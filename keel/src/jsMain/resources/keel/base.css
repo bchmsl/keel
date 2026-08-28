@@ -122,11 +122,49 @@ body {
   }
 }
 
+@keyframes keel-slide-in-from-left {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+/* A transient notice rises into place. Both apps wrote this animation; one called
+   it `rise` and moved 8px, the other did not animate its toasts at all. */
+@keyframes keel-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+}
+
 /* An expansion grows downward out of the row that opened it. */
 @keyframes keel-slide-in-from-top {
   from {
     opacity: 0;
     transform: translateY(-0.25rem);
+  }
+}
+
+/* And upward, when the row that opened it is near the foot of the screen. The
+   mirror of the rule above rather than a reuse of `keel-toast-in`, which travels
+   twice as far because a notice arrives from off-screen while this one grows out of
+   a control the user is already looking at. */
+@keyframes keel-slide-in-from-bottom {
+  from {
+    opacity: 0;
+    transform: translateY(0.25rem);
+  }
+}
+
+/* A highlight travelling left to right across a placeholder. Moves the background
+   position rather than the element, so it costs no layout and a row of skeletons
+   sweeps in step. The element it belongs to sets the gradient; this only slides it. */
+@keyframes keel-skeleton-sweep {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
   }
 }
 
@@ -177,7 +215,14 @@ body {
     border-radius: var(--radius-pill);
   }
 
-  *::-webkit-scrollbar-thumb:hover {
-    background-color: hsl(var(--muted-foreground) / 0.4);
+  /* Wrapped like every other hover in the design system, for consistency rather
+     than because a stuck scrollbar hover would be a visible problem: this block
+     only exists on Safari before 18.2, where the scrollbar is an overlay with no
+     tap target to leave a hover behind on. An invariant with one quiet exception
+     is harder to keep than one with none. */
+  @media (hover: hover) {
+    *::-webkit-scrollbar-thumb:hover {
+      background-color: hsl(var(--muted-foreground) / 0.4);
+    }
   }
 }

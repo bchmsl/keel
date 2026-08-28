@@ -16,7 +16,8 @@ without either one having to look like the other.
 |---|---|
 | **Tokens** | Colour, shape, motion, type and shadow, as CSS custom properties. Colours are bare HSL triples, so a rule can add alpha. |
 | **Palettes** | Six, each in light and dark. Optional — an app can ship its own and inherit none of these. |
-| **Primitives** | Button, IconButton, Card, Dialog, Switch, Slider, TextField, TextAreaField, Pill, PillButton, FormattingField, FormattedText, FormattingToolbar, Icon, and `DismissOnEscape` / `classNames` as the two behaviours worth sharing. |
+| **Primitives** | Button, IconButton, LinkButton, Surface, Card, Dialog, Switch, Checkbox, Slider, TextField, TextAreaField, Pill, PillButton, SegmentedControl, Badge, Callout, ProgressBar, Scrub, Skeleton, Spinner, EmptyState, Scrim, Drawer, DropdownMenu, DropdownMenuItem, ToastHost, FormattingField, FormattedText, FormattingToolbar, Icon, and `DismissOnEscape` / `classNames` as the two behaviours worth sharing. |
+| **Escape hatches** | Every primitive takes an `attrs` slot, and `buttonClasses(...)` and friends expose the class lists for markup keel does not build — a D-pad shell that must render `Div role="button"` can still be styled by keel. |
 | **Icons** | 57 lucide glyphs, generated from a pinned tag. |
 | **Theme model** | A palette is data, not an enum. Themes declare whether they support light, so a dark-only app is a first-class case. |
 | **Text** | An inline-marker parser (`**bold**`, `*italic*`, `__underline__`, `` `code` ``, bare URLs) and its renderer. |
@@ -159,14 +160,9 @@ instrument Kotlin/JS.
 
 ## Not in it yet
 
-Both consuming apps already hand-roll these, and each is a real candidate. The list
-is in rough order of how much duplication it would remove:
+One left, and it is the one where the two apps genuinely disagree:
 
-- **Segmented control** — written three times today (`.seg`, `.tv-seg`, `.panel__modes`).
-- **Scrim** — five rules across the two apps carrying four different values, with no shared token. One blurs its backdrop and one deliberately does not, which a variant can express.
-- **Side drawer** — two mirrored copies, one `side` parameter apart.
-- **Dropdown menu** and its click-catcher, with a documented z-index band.
-- **Toast host** — one app has it, the other has no in-page transient surface at all.
-- **Checkbox**, **empty state**, **skeleton loader**, **app bar**, **progress bar**.
+- **App bar** — two of them, differing on the thing that decides the component:
+  Dakalebi's `.nav` is sticky, Dayboard's `.header` scrolls away with the page.
 
-See MIGRATION.md for what each one would take.
+See MIGRATION.md for what it would take.

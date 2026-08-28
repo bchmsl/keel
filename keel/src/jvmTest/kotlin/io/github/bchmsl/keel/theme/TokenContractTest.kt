@@ -119,6 +119,58 @@ class TokenContractTest {
         assertTrue(offenders.isEmpty(), "literal colours outside tokens.css: $offenders")
     }
 
+    @Test
+    fun everyHoverRuleIsGuardedByAHoverCapableMediaQuery() {
+        // An unguarded `:hover` leaves the state stuck on a touch screen: the pointer
+        // that would have left never existed. It looks correct on every desktop, which
+        // is where it gets written and reviewed.
+        //
+        // This is also the check that keeps the header comment in components.css
+        // honest. It claimed "every :hover rule is wrapped" while one in base.css was
+        // not - a scrollbar thumb, harmless in itself, but the exception was invisible
+        // and the claim was already false.
+        val offenders = listOf("base.css" to base, "components.css" to components)
+            .flatMap { (name, css) ->
+                HOVER_SELECTOR.findAll(withoutHoverGuardedBlocks(css))
+                    .map { name to it.value.trim() }
+            }
+
+        assertTrue(
+            offenders.isEmpty(),
+            "`:hover` rules outside a `@media (hover: hover)` block: $offenders",
+        )
+    }
+
+    @Test
+    fun noComponentRuleHardcodesAControlSize() {
+        // The colour test's counterpart, and it exists for a failure that is harder to
+        // see. A literal `height: 2.5rem` is not wrong on its own - it already scales
+        // with the root font size. It goes wrong for a consumer whose root size is
+        // spoken for by something else: a ten-foot interface sets its root from the
+        // viewport to make its layout work, and then needs a *larger* control at that
+        // same root. With the height written out, the only way to get one is to
+        // re-state this rule by selector from outside, and a stylesheet that re-states
+        // another one has forked it - silently, and only for the app that did it.
+        //
+        // Scoped to `height`/`width` because that is where a control states its size.
+        // Deliberately not `max-*`: `max-width: 48rem` on the dialog is a layout
+        // constraint on a surface, not the size of a control, and tokenising it would
+        // be naming something no consumer needs to move.
+        //
+        // Not checked here: whether a given `calc()` is an honest derivation of its
+        // tokens or arithmetic hiding a literal. That stays a review question.
+        val offenders = listOf("base.css" to base, "components.css" to components)
+            .flatMap { (name, css) -> fixedSizeLines(name, css) }
+            .filterNot { (_, line) -> ALLOWED_LITERAL_DIMENSIONS.any { it in line } }
+
+        assertTrue(
+            offenders.isEmpty(),
+            "control sizes written as literals instead of tokens: $offenders. " +
+                "Add a token in tokens.css, or add the line to " +
+                "ALLOWED_LITERAL_DIMENSIONS if it is not a control's size.",
+        )
+    }
+
     // ------------------------------------------ the list against the CSS
 
     @Test
@@ -277,12 +329,68 @@ class TokenContractTest {
             .map { file to it.trim() }
             .toList()
 
+    /**
+     * The stylesheet with every `@media (hover: hover)` block removed, braces and all.
+     *
+     * A brace counter rather than a regex, because these blocks nest: the scrollbar
+     * one sits inside an `@supports`, and a regex for `{...}` cannot match the right
+     * closing brace. Whatever `:hover` is left in the result is genuinely unguarded.
+     */
+    private fun withoutHoverGuardedBlocks(css: String): String {
+        val out = StringBuilder()
+        var i = 0
+
+        while (i < css.length) {
+            val start = HOVER_GUARD.find(css, i)
+            if (start == null) {
+                out.append(css, i, css.length)
+                break
+            }
+
+            out.append(css, i, start.range.first)
+
+            // Walk from the block's opening brace to its matching close.
+            var depth = 0
+            var j = css.indexOf('{', start.range.first)
+            while (j < css.length) {
+                if (css[j] == '{') depth++
+                if (css[j] == '}') {
+                    depth--
+                    if (depth == 0) break
+                }
+                j++
+            }
+            i = if (j < css.length) j + 1 else css.length
+        }
+
+        return out.toString()
+    }
+
+    /**
+     * `height`/`width` declarations carrying a fixed length rather than a token.
+     *
+     * A line mentioning `calc(` is skipped: the derived values are the point of the
+     * tokens, and a `calc` of them is the correct way to write one.
+     */
+    private fun fixedSizeLines(file: String, css: String): List<Pair<String, String>> =
+        css.lineSequence()
+            .filterNot { "calc(" in it }
+            .filter { FIXED_SIZE.containsMatchIn(it) }
+            .map { file to it.trim() }
+            .toList()
+
     private companion object {
         val THEME_SELECTOR = Regex("\\[data-theme='([a-z-]+)']")
         val DEFINITION = Regex("(--[a-z-]+)\\s*:")
         val USAGE = Regex("var\\((--[a-z-]+)")
         val BLOCK = Regex("([^{}]+)\\{([^{}]*)}")
         val COMMENT = Regex("/\\*.*?\\*/", RegexOption.DOT_MATCHES_ALL)
+
+        /** Whitespace-tolerant, so reformatting the sheet cannot switch the check off. */
+        val HOVER_GUARD = Regex("@media\\s*\\(\\s*hover\\s*:\\s*hover\\s*\\)\\s*\\{")
+
+        /** A selector containing `:hover`, up to the brace that opens its body. */
+        val HOVER_SELECTOR = Regex("[^{}]*:hover[^{}]*(?=\\{)")
 
         /**
          * How far a swatch may sit from its palette's `--primary`.
@@ -339,6 +447,45 @@ class TokenContractTest {
             "--ease", "--duration-fast", "--duration-slow",
             "--font-sans", "--font-mono",
             "--shadow-sm", "--shadow-lg",
+            // Control geometry. See the note in tokens.css for why `rem` alone was
+            // not enough to make these scale.
+            "--control-h-xs", "--control-h-sm", "--control-h-default", "--control-h-lg",
+            "--control-h-transport", "--control-h-transport-lg",
+            "--control-px-xs", "--control-px-sm", "--control-px-default", "--control-px-lg",
+            "--control-py-default", "--control-font-size", "--control-font-size-xs",
+            "--control-font-weight",
+            "--input-px", "--input-py", "--input-font-size-touch",
+            "--switch-track-w", "--switch-track-h",
+            "--switch-knob-size", "--switch-knob-inset",
+            "--switch-track-w-sm", "--switch-track-h-sm",
+            "--switch-knob-size-sm", "--switch-knob-inset-sm",
+            "--slider-rail-h", "--slider-thumb-size",
+            "--checkbox-size", "--checkbox-size-sm",
+            "--checkbox-radius", "--checkbox-radius-sm", "--checkbox-border-w",
+            // Alphas and lengths, not colours: each one is applied *to* a palette
+            // colour by the rule that reads it.
+            "--pill-dim", "--pill-ring-gap", "--pill-ring-width",
+            "--swatch-size", "--swatch-size-sm",
+            "--swatch-ring-gap", "--swatch-ring-width",
+            "--swatch-dot-size", "--swatch-tile-pad", "--swatch-tile-gap",
+            "--swatch-tile-font-size", "--swatch-tile-tint",
+            "--callout-py", "--callout-px", "--callout-gap", "--callout-font-size",
+            "--card-drag-ring", "--card-drag-ring-alpha",
+            "--callout-tint", "--callout-border-alpha",
+            "--on-media-alpha", "--on-media-alpha-hover", "--quiet-danger-tint",
+            "--loader-size-sm", "--loader-size", "--loader-size-lg",
+            "--progress-h-sm", "--progress-h-default", "--progress-h-lg",
+            "--scrub-h", "--scrub-rail-h", "--scrub-knob-size",
+            "--segmented-py", "--segmented-font-size",
+            "--segmented-rail-py", "--segmented-rail-font-size",
+            "--scrim-alpha", "--scrim-blur",
+            "--drawer-w", "--drawer-pad", "--drawer-gap",
+            "--dropdown-min-w", "--dropdown-offset", "--dropdown-item-py",
+            "--toast-w", "--toast-inset", "--toast-py",
+            "--toast-accent-w", "--toast-font-size",
+            "--focus-ring-offset", "--focus-ring-width", "--focus-glow-alpha",
+            "--z-scrim", "--z-drawer", "--z-dropdown-catch", "--z-dropdown",
+            "--z-dialog", "--z-toast",
         )
 
         /**
@@ -353,6 +500,46 @@ class TokenContractTest {
          * part of the per-palette contract rather than an exception to it.
          */
         val OPTIONAL_PER_PALETTE = setOf("--secondary-foreground")
+
+        /**
+         * A `height` or `width` given a fixed length instead of a token.
+         *
+         * The units listed are the ones that do not respond to the element's own
+         * context: `px` and the print units are absolute, and `rem` answers only to
+         * the root. Deliberately absent are `%`, `em` and the viewport units, which
+         * are all already relative to something the consumer controls - `.icon`'s
+         * `1em` fallback is *meant* to track the text beside it, and flagging it
+         * would be asking for a token that made it worse.
+         *
+         * `rem` is matched without also matching `em`: the unit alternation is tried
+         * against the text following the number, so `1em` never reaches the `rem`
+         * branch.
+         *
+         * The lookbehind is what keeps `max-width` and `scrollbar-width` out. Both
+         * end in a word this would otherwise match, and neither is a control's size.
+         */
+        val FIXED_SIZE = Regex(
+            "(?<![-\\w])(?:min-)?(?:height|width)\\s*:[^;]*?" +
+                "\\d(?:\\.\\d+)?(?:px|rem|pt|pc|cm|mm|in|ch|ex|Q)\\b",
+        )
+
+        /**
+         * Fixed sizes that are not a control's size, so a token would not help.
+         *
+         * Both are idioms with an exact required value rather than a design choice.
+         * `.sr-only` is the visually-hidden pattern: a 1px clip box, where the point
+         * is that the element still occupies the accessibility tree and effectively
+         * no space - scaling it with the interface would defeat it. The
+         * `::-webkit-scrollbar` pair sizes a piece of browser chrome, not a control,
+         * and it only exists at all inside the `@supports not (scrollbar-width)`
+         * fallback.
+         */
+        val ALLOWED_LITERAL_DIMENSIONS = listOf(
+            "width: 1px;",
+            "height: 1px;",
+            "width: 6px;",
+            "height: 6px;",
+        )
 
         /**
          * The only literal colour allowed outside tokens.css.
