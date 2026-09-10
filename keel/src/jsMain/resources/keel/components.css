@@ -1225,6 +1225,27 @@ button.card__title {
   transition: box-shadow var(--duration-fast) var(--ease);
 }
 
+/* A line of this field is a paragraph in the editor's schema, so a field with two
+   lines in it holds two `<p>`s. The browser's own margin between them would read as
+   a gap the typist did not put there. Nothing else in the field is a block, so this
+   is the whole of the reset the editor needs - there is no fifth stylesheet. */
+.formatting-editor p {
+  margin: 0;
+}
+
+/* The editor parks an empty `<img>` at the caret while a mark is pending but not yet
+   typed into - press Bold with nothing selected and one appears. It carries no image
+   and is meant to be invisible, so this is here to survive a consumer's own generic
+   `img` rule, which would otherwise give it a border or a size. Taken from
+   `prosemirror-view`'s stylesheet, which keel does not ship: this and the paragraph
+   reset above are the only two rules from it that a field with four inline marks and
+   one block can be affected by. */
+img.ProseMirror-separator {
+  display: inline !important;
+  border: none !important;
+  margin: 0 !important;
+}
+
 /* `min-height` comes from the call site as an inline style, because it is derived
    from `textRows`. This only says the field may grow past it. */
 .formatting-editor--multiline {
