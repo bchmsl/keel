@@ -2,6 +2,7 @@ package io.github.bchmsl.keel.components
 
 import io.github.bchmsl.keel.text.FormattedNode
 import kotlinx.browser.document
+import org.w3c.dom.DocumentFragment
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 import org.w3c.dom.asList
@@ -26,7 +27,8 @@ import org.w3c.dom.asList
  * Replaces everything inside this element with [nodes], drawn as real elements.
  *
  * Same classes as [FormattedText] emits, so an editor and a finished note read
- * identically - which is the whole point of editing in place.
+ * identically - which is the whole point of editing in place. Underline is the one
+ * exception, and it is not cosmetic: see [UNDERLINE_CLASS].
  *
  * A link is drawn as its own text rather than as an `<a>`. That is deliberate and it
  * matches what a chat composer does: an anchor inside an editable region swallows
@@ -38,7 +40,18 @@ internal fun Element.renderFormatted(nodes: List<FormattedNode>) {
     appendFormatted(nodes)
 }
 
-private fun Element.appendFormatted(nodes: List<FormattedNode>) {
+/**
+ * [nodes] as a detached fragment, for dropping into a tree the browser already owns.
+ *
+ * The same builders [renderFormatted] uses, so a run the input rule makes while the
+ * user types is the same markup as one drawn when the record was opened. Two places
+ * building bold two ways is exactly how an editor starts reading back its own output
+ * as something else.
+ */
+internal fun formattedFragment(nodes: List<FormattedNode>): DocumentFragment =
+    document.createDocumentFragment().also { it.appendFormatted(nodes) }
+
+private fun Node.appendFormatted(nodes: List<FormattedNode>) {
     nodes.forEach { node ->
         when (node) {
             is FormattedNode.Plain -> appendText(node.text)
@@ -47,9 +60,9 @@ private fun Element.appendFormatted(nodes: List<FormattedNode>) {
             is FormattedNode.Bold -> appendChild(element("strong", node.children))
             is FormattedNode.Italic -> appendChild(element("em", node.children))
 
-            is FormattedNode.Underline -> appendChild(
-                element("span", node.children, UNDERLINE_CLASS),
-            )
+            // A bare `<u>`, not [UNDERLINE_CLASS], and that matters - the class is
+            // what the *display* component uses. The reasoning is on the constant.
+            is FormattedNode.Underline -> appendChild(element("u", node.children))
 
             is FormattedNode.Code -> appendChild(
                 document.createElement("code").also {
@@ -69,18 +82,15 @@ private fun Element.appendFormatted(nodes: List<FormattedNode>) {
  * what a browser itself inserts on Enter in an inline editable, which keeps what this
  * builds and what the user then types the same shape.
  */
-private fun Element.appendText(text: String) {
+private fun Node.appendText(text: String) {
     text.split("\n").forEachIndexed { index, line ->
         if (index > 0) appendChild(document.createElement("br"))
         if (line.isNotEmpty()) appendChild(document.createTextNode(line))
     }
 }
 
-private fun element(tag: String, children: List<FormattedNode>, className: String? = null) =
-    document.createElement(tag).also { created ->
-        className?.let { created.setAttribute("class", it) }
-        created.appendFormatted(children)
-    }
+private fun element(tag: String, children: List<FormattedNode>) =
+    document.createElement(tag).also { it.appendFormatted(children) }
 
 /**
  * Reads a `contenteditable`'s children back into a tree.
@@ -189,6 +199,24 @@ private val ITALIC_TAGS = setOf("em", "i")
 /** The elements a browser reaches for when Enter starts a new line. */
 private val BLOCK_TAGS = setOf("div", "p")
 
+/**
+ * How underline is drawn where the text is only being **shown**.
+ *
+ * Read here, never written: [appendFormatted] builds a bare `<u>` instead, and the two
+ * are not interchangeable. A browser's underline command removes a `<u>` and has no
+ * idea what a class is - asked to un-underline a classed `<span>` it unwraps the
+ * element and puts the class straight back onto the replacement, so the text stays
+ * underlined, the toolbar keeps reporting it as on, and the button reads as broken.
+ * Text typed after it inherits the mark for the same reason.
+ *
+ * `<u>` is also what the command *builds*, so the editor holds one shape rather than
+ * one for stored text and another for text just marked up. The stylesheet gives both
+ * this class's appearance, so nothing about that is visible.
+ *
+ * Still read, because a paste or a browser that ignores `styleWithCSS` can put a
+ * classed span in the editor, and the reader is an allow-list that recognises every
+ * shape the mark can arrive in.
+ */
 internal const val UNDERLINE_CLASS: String = "formatted__underline"
 internal const val CODE_CLASS: String = "formatted__code"
 

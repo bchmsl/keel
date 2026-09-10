@@ -908,7 +908,13 @@ button.card__title {
   }
 }
 
-.formatted__underline {
+/* The second selector is the same underline inside the editor, where it is drawn as
+   a bare `<u>` instead - because that is the only shape the browser's own underline
+   command can remove again, and it is what that command builds. Both have to look
+   like the finished note, so the three of them are one rule. `FormattedDom` carries
+   the reasoning. */
+.formatted__underline,
+.formatting-editor u {
   text-decoration: underline;
   text-decoration-color: hsl(var(--foreground) / 0.5);
   text-underline-offset: 2px;
