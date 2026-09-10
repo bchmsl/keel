@@ -1136,6 +1136,10 @@ internal fun TextSection() {
     var record by remember { mutableStateOf(SAMPLE_RECORDS.first()) }
     var committed by remember { mutableStateOf(record.body) }
 
+    // Counts the clicks the row below receives, which is how the non-copyable case
+    // shows that the row still gets them.
+    var rowClicks by remember { mutableStateOf(0) }
+
     Section(
         title = "Text",
         note = "The field shows the formatting, not the markers: select a few words " +
@@ -1203,7 +1207,21 @@ internal fun TextSection() {
                 Text(committed.replace("\n", "\\n").ifEmpty { "(empty)" })
             }
 
+            // As a reader sees it. A code span here copies itself when clicked.
             Div { FormattedText(committed) }
+
+            // And the same text where a click already means something else. This is
+            // the case `copyableCode = false` exists for: the row below opens a
+            // record, so a code span in it stays a code span and the click goes to
+            // the row. Both apps draw their list rows this way.
+            Div({
+                classNames("row")
+                onClick { rowClicks++ }
+            }) {
+                FormattedText(committed, copyableCode = false)
+            }
+
+            Span({ classNames("field-label") }) { Text("Row clicks: $rowClicks") }
         }
     }
 }
