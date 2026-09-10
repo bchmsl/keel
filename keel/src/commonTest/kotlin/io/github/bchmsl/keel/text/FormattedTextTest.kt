@@ -50,6 +50,32 @@ class FormattedTextTest {
     }
 
     @Test
+    fun aRunOpeningWithThreeAsterisksIsBoldAndItalicAtOnce() {
+        // The only way this format can say "both marks on the same words", and the
+        // pair an editor produces as soon as Bold and Italic are pressed over one
+        // selection. Read as bold outside italic, which is the nesting
+        // `serializeFormattedNodes` writes back.
+        assertEquals(
+            listOf(Bold(listOf(Italic(listOf(Plain("both")))))),
+            parseFormattedText("***both***"),
+        )
+    }
+
+    @Test
+    fun threeAsterisksAreStillOrdinaryTextWhenNothingClosesThem() {
+        // Same rule as every other marker: half-typed markup shows what was typed.
+        assertEquals(listOf(Plain("***not closed")), parseFormattedText("***not closed"))
+    }
+
+    @Test
+    fun aBoldAndItalicRunSitsAmongOrdinaryText() {
+        assertEquals(
+            listOf(Plain("a "), Bold(listOf(Italic(listOf(Plain("b"))))), Plain(" c")),
+            parseFormattedText("a ***b*** c"),
+        )
+    }
+
+    @Test
     fun threeAsterisksInARowCloseTheBoldAndLeaveOneOver() {
         // `**a *b***` is genuinely ambiguous, and this is how the original resolves
         // it: the bold run closes at the first `**` it can, which is the first two
