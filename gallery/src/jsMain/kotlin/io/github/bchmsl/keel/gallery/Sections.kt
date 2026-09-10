@@ -1133,27 +1133,71 @@ internal fun SwatchSection() {
 
 @Composable
 internal fun TextSection() {
-    var committed by remember { mutableStateOf(SAMPLE_TEXT) }
+    var record by remember { mutableStateOf(SAMPLE_RECORDS.first()) }
+    var committed by remember { mutableStateOf(record.body) }
 
     Section(
         title = "Text",
-        note = "Inline markers, read by a hand-written scanner rather than a regular " +
-            "expression: the expression this replaces needs lookbehind to tell * from " +
-            "**, which older Safari throws while compiling. Nothing here builds markup " +
-            "from the text, so a note titled <script> is a title, drawn as eight " +
-            "characters. Type, then click away or press a formatting button.",
+        note = "The field shows the formatting, not the markers: select a few words " +
+            "and press Bold, or use Ctrl/Cmd+B, I, U and E. The markers are the " +
+            "storage format and stay in storage - the box below is what a field " +
+            "would hand an app to save, so the two together are the round trip. " +
+            "Both fields write to it, so it shows whichever committed last. The " +
+            "single-line one commits on Enter; the multi-line one takes the Enter " +
+            "as a line and commits when it loses focus. " +
+            "Switching records is here because the field is uncontrolled: the " +
+            "browser owns what is in it, and the reset key is the only thing that " +
+            "makes the second record open showing its own words rather than the " +
+            "first one's. " +
+            "Reading them back is a hand-written scanner rather than a regular " +
+            "expression, because the expression it replaces needs lookbehind to tell " +
+            "* from **, which older Safari throws while compiling. Nothing here " +
+            "builds markup from the text, so a note titled <script> is a title, " +
+            "drawn as eight characters.",
     ) {
         Div({ classNames("stack") }) {
+            // Keyed by the record, which is what an app would do. The two fields hold
+            // different halves of the same one, so they need different keys.
             FormattingField(
-                // Constant, because there is only one record on this page. In an app
-                // this is whatever identifies the thing being edited.
-                resetKey = "gallery",
-                initial = SAMPLE_TEXT,
+                resetKey = "${record.id}-title",
+                initial = record.title,
+                onCommit = { committed = it },
+                ariaLabel = "Single-line formatting example",
+                placeholder = "One line, and Enter commits it",
+            )
+
+            FormattingField(
+                resetKey = "${record.id}-body",
+                initial = record.body,
                 onCommit = { committed = it },
                 multiline = true,
                 textRows = SAMPLE_ROWS,
                 ariaLabel = "Formatting example",
+                placeholder = "Clear the field and this prompt takes over",
             )
+
+            Div({ classNames("row") }) {
+                Button(
+                    label = "Open the other record",
+                    onClick = {
+                        val next = SAMPLE_RECORDS.first { it.id != record.id }
+                        record = next
+                        committed = next.body
+                    },
+                    variant = ButtonVariant.Secondary,
+                )
+
+                Span({ classNames("field-label") }) { Text("Showing: ${record.id}") }
+            }
+
+            // What the field committed, as characters. This is the half that used to
+            // be visible in the field itself, and the half a bug in either the reader
+            // or the writer shows up in first. Built directly rather than by wrapping
+            // the text in backticks and parsing it, which would break on the first
+            // note that contained one.
+            Div({ classNames("formatted__code") }) {
+                Text(committed.replace("\n", "\\n").ifEmpty { "(empty)" })
+            }
 
             Div { FormattedText(committed) }
         }
@@ -1210,6 +1254,21 @@ private const val DEFAULT_VOLUME = 70
 private const val MAX_VOLUME = 100
 private const val SAMPLE_ROWS = 4
 
+private const val SAMPLE_TITLE = "A **title**, with one *emphasis* in it"
+
 private const val SAMPLE_TEXT =
     "**Bold**, *italic*, __underlined__ and `code`. Addresses become links: " +
         "https://github.com/bchmsl/keel - and an unclosed **marker stays as typed."
+
+/** One editable thing, as little of one as the reset key needs to be demonstrated. */
+private class SampleRecord(val id: String, val title: String, val body: String)
+
+private val SAMPLE_RECORDS = listOf(
+    SampleRecord(id = "first", title = SAMPLE_TITLE, body = SAMPLE_TEXT),
+    SampleRecord(
+        id = "second",
+        title = "The ***second*** record",
+        body = "Different words, so the field cannot appear to switch by keeping the " +
+            "__first__ record's. Try `***both marks***` over the same run.",
+    ),
+)

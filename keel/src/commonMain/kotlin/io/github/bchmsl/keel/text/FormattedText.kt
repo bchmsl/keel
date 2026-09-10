@@ -91,6 +91,18 @@ private class Scanned(val node: FormattedNode, val end: Int)
  * two-character markers, then the single ones.
  */
 private fun String.readNodeAt(index: Int): Scanned? = readLinkAt(index)
+    // Ahead of `**`, and it has to be: `**` matches the first two characters of
+    // `***`, so trying it first reads `***x***` as a bold run holding a stray
+    // asterisk. That pair is what an editor produces the moment somebody presses
+    // Bold and Italic over the same words, so it is a common shape rather than an
+    // exotic one, and it is the only way this format can say "both at once".
+    //
+    // Note this cannot disturb `**a *b***`, which stays pinned to the original's
+    // reading: there the three asterisks are at the *end* of the run, and this only
+    // matches a run that opens with them.
+    ?: readWrappedAt(index, BOLD_ITALIC_MARKER) {
+        FormattedNode.Bold(listOf(FormattedNode.Italic(parseFormattedText(it))))
+    }
     ?: readWrappedAt(index, BOLD_MARKER) { FormattedNode.Bold(parseFormattedText(it)) }
     ?: readWrappedAt(index, UNDERLINE_MARKER) {
         FormattedNode.Underline(parseFormattedText(it))
@@ -181,9 +193,12 @@ private fun String.isLoneAsteriskAt(index: Int): Boolean = this[index] == ASTERI
 private fun Char.endsALink(): Boolean = isWhitespace() || this in LINK_TERMINATORS
 
 private const val ASTERISK = '*'
-private const val BOLD_MARKER = "**"
-private const val UNDERLINE_MARKER = "__"
-private const val CODE_MARKER = "`"
+
+internal const val BOLD_ITALIC_MARKER: String = "***"
+internal const val BOLD_MARKER: String = "**"
+internal const val ITALIC_MARKER: String = "*"
+internal const val UNDERLINE_MARKER: String = "__"
+internal const val CODE_MARKER: String = "`"
 
 private val LINK_SCHEMES = listOf("https://", "http://")
 

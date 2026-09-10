@@ -88,6 +88,32 @@ public fun textAreaClasses(): String = joined("textarea")
 /** The class on a [io.github.bchmsl.keel.components.Slider]. */
 public fun sliderClasses(): String = joined("slider")
 
+/** The class on the wrapper holding a [io.github.bchmsl.keel.components.FormattingField]. */
+public fun formattingFieldClasses(): String = joined("formatting-field")
+
+/**
+ * The classes on the editable element inside a
+ * [io.github.bchmsl.keel.components.FormattingField].
+ *
+ * A consumer rebuilding this markup owns rather more than a class list: the element
+ * needs `contenteditable`, `role="textbox"`, and `data-empty` kept up to date for the
+ * placeholder rule to work. There is no version of this that is only styling.
+ */
+public fun formattingEditorClasses(multiline: Boolean = false): String =
+    joined("formatting-editor", "formatting-editor--multiline".takeIf { multiline })
+
+/** The class on a [io.github.bchmsl.keel.components.FormattingToolbar]. */
+public fun toolbarClasses(): String = joined("toolbar")
+
+/**
+ * The class on one button in the formatting toolbar.
+ *
+ * The pressed look is keyed off `aria-pressed="true"` rather than a modifier class,
+ * exactly as [switchClasses] describes, so a consumer building its own must set that
+ * attribute and not look for a class here.
+ */
+public fun toolbarButtonClasses(): String = joined("toolbar__button")
+
 /**
  * The classes on a [io.github.bchmsl.keel.components.Switch]'s track, which is the
  * element itself.

@@ -2,19 +2,18 @@ package io.github.bchmsl.keel.components
 
 import androidx.compose.runtime.Composable
 import io.github.bchmsl.keel.dom.classNames
+import io.github.bchmsl.keel.dom.toolbarButtonClasses
+import io.github.bchmsl.keel.dom.toolbarClasses
 import io.github.bchmsl.keel.icons.Icon
 import io.github.bchmsl.keel.icons.LucideIcon
 import io.github.bchmsl.keel.text.FormattingMarker
-import io.github.bchmsl.keel.text.TextSelection
-import io.github.bchmsl.keel.text.applyFormatting
-import kotlinx.browser.window
 import org.jetbrains.compose.web.attributes.ButtonType
 import org.jetbrains.compose.web.attributes.type
 import org.jetbrains.compose.web.dom.Button
 import org.jetbrains.compose.web.dom.Div
 
 /**
- * A text field the toolbar can format.
+ * A text field the toolbar can format by rewriting its text.
  *
  * `input` and `textarea` carry the same four members this needs - a value, a
  * selection, focus, and a way to put the selection back - and share no Kotlin type
@@ -46,31 +45,42 @@ public class FormattingTarget(private val element: dynamic) {
 /**
  * The four formatting buttons that sit under a text field.
  *
- * [target] hands back the field itself rather than its text, because the work needs
- * the selection too and the selection only exists on the element.
+ * [commands] hands back the field's command surface rather than its text, because
+ * every one of these needs the selection and the selection lives on the element.
+ * It is a lambda because the element does not exist yet when this is composed.
  *
- * The field is written directly rather than through composed state. A controlled
- * field would need the caller's state, the DOM value and the caret to agree within
- * one frame, and the caret is what loses that race: it jumps to the end of the text.
- * Writing the element and putting the selection back keeps the cursor where the user
- * left it.
+ * [active] is read during *this* composable's composition rather than passed as a
+ * value, so a moving caret invalidates the toolbar and nothing else. Passing the set
+ * in would invalidate the caller, which owns the editable element - and re-running
+ * that scope on every arrow key is exactly the pressure the whole design avoids.
  */
 @Composable
-public fun FormattingToolbar(target: () -> FormattingTarget?, onTextChange: (String) -> Unit) {
+public fun FormattingToolbar(
+    commands: () -> FormattingCommands?,
+    active: () -> Set<FormattingMarker> = { emptySet() },
+) {
+    val pressed = active()
+
     Div({
-        classNames("toolbar")
+        classNames(toolbarClasses())
         // Without this the field blurs the moment a button is pressed. A field that
         // saves on blur would then save the text as it was *before* the button did
         // anything, and be overwritten by it.
         onMouseDown { event -> event.preventDefault() }
     }) {
         FormattingMarker.entries.forEach { marker ->
+            val on = marker in pressed
+
             Button({
-                classNames("toolbar__button")
+                classNames(toolbarButtonClasses())
                 type(ButtonType.Button)
                 attr("title", marker.label)
                 attr("aria-label", marker.label)
-                onClick { target()?.let { format(it, marker, onTextChange) } }
+                // The pressed look is keyed off this rather than a modifier class, for
+                // the reason `switchClasses` gives: the attribute is what a screen
+                // reader announces, so the two cannot drift apart.
+                attr("aria-pressed", on.toString())
+                onClick { commands()?.toggle(marker) }
             }) {
                 Icon(marker.icon, size = TOOLBAR_ICON_SIZE)
             }
@@ -78,26 +88,19 @@ public fun FormattingToolbar(target: () -> FormattingTarget?, onTextChange: (Str
     }
 }
 
-private fun format(
-    field: FormattingTarget,
-    marker: FormattingMarker,
-    onTextChange: (String) -> Unit,
-) {
-    val start = field.selectionStart ?: field.value.length
-    val end = field.selectionEnd ?: start
-
-    val result = applyFormatting(field.value, TextSelection(start, end), marker)
-
-    field.value = result.text
-    onTextChange(result.text)
-
-    // Next frame rather than now: a browser puts the caret at the end of a field
-    // whose value has just been set, and it does so after the current task finishes.
-    // Restoring the selection before that would simply be undone.
-    window.requestAnimationFrame {
-        field.focus()
-        field.select(result.selection.start, result.selection.end)
-    }
+/**
+ * The toolbar over a field whose text holds the markers.
+ *
+ * Kept for a caller pairing the toolbar with an ordinary `textarea`. [FormattingField]
+ * no longer takes this route - it shows the formatting instead of the markers - but
+ * the behaviour is still correct for a field that does not, and `applyFormatting` is
+ * still the tested description of it.
+ */
+@Composable
+public fun FormattingToolbar(target: () -> FormattingTarget?, onTextChange: (String) -> Unit) {
+    FormattingToolbar(
+        commands = { target()?.let { MarkerSplicingCommands(it, onTextChange) } },
+    )
 }
 
 /** The picture for each button, in the order the toolbar shows them. */

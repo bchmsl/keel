@@ -20,13 +20,17 @@ without either one having to look like the other.
 | **Escape hatches** | Every primitive takes an `attrs` slot, and `buttonClasses(...)` and friends expose the class lists for markup keel does not build — a D-pad shell that must render `Div role="button"` can still be styled by keel. |
 | **Icons** | 57 lucide glyphs, generated from a pinned tag. |
 | **Theme model** | A palette is data, not an enum. Themes declare whether they support light, so a dark-only app is a first-class case. |
-| **Text** | An inline-marker parser (`**bold**`, `*italic*`, `__underline__`, `` `code` ``, bare URLs) and its renderer. |
+| **Text** | An inline-marker parser (`**bold**`, `*italic*`, `__underline__`, `` `code` ``, bare URLs), its renderer, and the writer that turns a tree back into markers so a WYSIWYG field can store what it built. |
 
 Everything that decides anything is pure Kotlin in `commonMain` and tested,
-including the boot script. Four files reach for the browser and each says why:
-`ThemeController` (storage, media queries, the document element), `DismissOnEscape`
-(a window listener), `FormattingToolbar` (one animation frame, to put a caret back)
-and `Icon` (`innerHTML`, because Compose HTML cannot build an SVG element).
+including the boot script and the marker writer. The files that reach past Compose
+into the browser each say why: `ThemeController` (storage, media queries, the
+document element), `DismissOnEscape` (a window listener), `Icon` (`innerHTML`,
+because Compose HTML cannot build an SVG element), and the three behind the
+formatting editor — `FormattingField` (its listeners), `FormattingCommands`
+(`execCommand` and the selection) and `FormattedDom` (it builds the editable's tree
+by hand, because inside a `contenteditable` the browser owns that tree and Compose
+cannot be the second owner).
 
 ## Using it
 
