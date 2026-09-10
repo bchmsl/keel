@@ -1139,7 +1139,11 @@ internal fun TextSection() {
     Section(
         title = "Text",
         note = "The field shows the formatting, not the markers: select a few words " +
-            "and press Bold, or use Ctrl/Cmd+B, I, U and E. The markers are the " +
+            "and press Bold, or use Ctrl/Cmd+B, I, U and E. Typing the markers works " +
+            "too - finish `**bold**`, `*it*`, `__u__`, a `code` span or " +
+            "`***both***` and the characters become the thing they describe. " +
+            "Arithmetic and snake_case are left alone. " +
+            "The markers are the " +
             "storage format and stay in storage - the box below is what a field " +
             "would hand an app to save, so the two together are the round trip. " +
             "Both fields write to it, so it shows whichever committed last. The " +

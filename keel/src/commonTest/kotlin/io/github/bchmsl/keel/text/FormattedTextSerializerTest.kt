@@ -110,6 +110,21 @@ class FormattedTextSerializerTest {
         )
     }
 
+    @Test
+    fun severalMarksClosingAtOnceAreClosedInsideOut() {
+        // Two markers have to come off in the reverse of the order they went on, or the
+        // pairs interleave as `__**x__**` and the parser sees neither closed.
+        assertEquals(
+            "__**x**__ y",
+            serializeFormattedNodes(
+                listOf(
+                    Underline(listOf(Bold(listOf(Plain("x"))))),
+                    Plain(" y"),
+                ),
+            ),
+        )
+    }
+
     // ------------------------------------------------------------------- empties
 
     @Test

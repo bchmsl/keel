@@ -1,8 +1,10 @@
 package io.github.bchmsl.keel.components
 
 import io.github.bchmsl.keel.text.FormattingMarker
+import io.github.bchmsl.keel.text.MarkerAtCaret
 import io.github.bchmsl.keel.text.TextSelection
 import io.github.bchmsl.keel.text.applyFormatting
+import io.github.bchmsl.keel.text.findMarkerAtCaret
 import kotlinx.browser.document
 import kotlinx.browser.window
 import org.w3c.dom.Element
@@ -80,6 +82,105 @@ internal class EditableCommands(
             if (queryState("italic")) add(FormattingMarker.Italic)
             if (queryState("underline")) add(FormattingMarker.Underline)
             if (enclosingCode() != null) add(FormattingMarker.Code)
+        }
+    }
+
+    /**
+     * Turns a marker pair the typist has just finished into the formatting it names.
+     *
+     * Without this the buttons are the only way to format, because a field that draws
+     * formatting never draws a marker: `**x**` typed by hand stays four asterisks
+     * round an x until the record is closed and reopened, and only then turns bold.
+     * [findMarkerAtCaret] decides whether a pair has just been finished; this puts
+     * the answer into the document.
+     *
+     * Written as DOM surgery rather than through `execCommand`, which is the opposite
+     * of the choice [toggle] makes, for one reason: there is no command that swaps a
+     * stretch of text for an element, and the two-step versions that get close all
+     * have a failure in the middle where the markers are gone and the mark has not
+     * landed. This cannot lose what was typed. The price is the native undo entry -
+     * Ctrl+Z after a pair fires steps through the typing rather than putting the
+     * asterisks back - and the mark is still on the toolbar to be pressed off.
+     */
+    fun formatFinishedMarker() {
+        val selection = window.asDynamic().getSelection() ?: return
+        if (selection.rangeCount == 0 || selection.isCollapsed != true) return
+
+        val node = selection.focusNode as? Node ?: return
+        if (node.nodeType != Node.TEXT_NODE || !element.contains(node)) return
+
+        // Everything inside a code span is content, markers included. That is what a
+        // code span is for, so a rule that formatted them would defeat it.
+        if (enclosingCode() != null) return
+
+        val text = node.textContent ?: return
+        val match = findMarkerAtCaret(text, selection.focusOffset as Int) ?: return
+
+        replaceWithFormatted(node, match, selection)
+    }
+
+    /**
+     * Swaps `[start, end)` of [node] for the formatted run, leaving the caret after it.
+     *
+     * The caret lands at the start of the text that followed rather than inside what
+     * was just built, so the next keystroke carries on the sentence instead of joining
+     * the mark. A typist who finishes `**bold**` and keeps going does not expect the
+     * rest of the line to be bold too.
+     *
+     * Which takes an invisible character when the pair was finished at the end of the
+     * line, because then there is no text to land in. An **empty** text node is not a
+     * caret position a browser keeps: asked to insert there it walks back into the
+     * element in front, and the closing `__` of `` __u `c`__ `` ends up inside the code
+     * span instead of finishing the underline. A [ZERO_WIDTH_SPACE] gives the caret a
+     * real character to sit on and the insertion stays outside. Every read strips it,
+     * so it reaches neither storage nor the emptiness test behind the placeholder.
+     *
+     * The cost is one dead keystroke: a Backspace pressed *immediately* after a pair
+     * fires deletes the anchor and appears to do nothing, and the second press starts
+     * on the text. It is the same bargain the empty code span already makes.
+     */
+    private fun replaceWithFormatted(node: Node, match: MarkerAtCaret, selection: dynamic) {
+        val text = node.textContent ?: return
+        val parent = node.parentNode ?: return
+
+        val head = text.substring(0, match.start)
+        val rest = text.substring(match.end)
+        val tail = document.createTextNode(rest.ifEmpty { ZERO_WIDTH_SPACE })
+
+        node.textContent = head
+
+        // Both go in front of whatever followed this node, in order, so the line reads
+        // head, mark, tail. A null anchor appends, which is what is wanted at the end.
+        val anchor = node.nextSibling
+        parent.insertBefore(formattedFragment(listOf(match.formatted)), anchor)
+        parent.insertBefore(tail, anchor)
+
+        // A text node holding nothing is not a place a caret can be put in every
+        // browser, and it would be the field's first child if the line began with the
+        // marker. Dropping it is safe: it carried no text to begin with.
+        if (head.isEmpty()) parent.removeChild(node)
+
+        val range = document.asDynamic().createRange()
+        // After the anchor when that is all the tail holds, so the caret is past it
+        // rather than between it and the element it is keeping the caret out of.
+        range.setStart(tail, if (rest.isEmpty()) 1 else 0)
+        range.collapse(true)
+        selection.removeAllRanges()
+        selection.addRange(range)
+
+        // The caret is now outside the new element, but a browser can still hold the
+        // mark as pending from having just passed through one - and then the next
+        // character comes out bold. Asking for the state and toggling what is on is
+        // the only way to clear that.
+        clearPendingMarks()
+    }
+
+    /** Turns off any mark still in force at a caret that is outside every mark. */
+    private fun clearPendingMarks() {
+        preferTagsOverInlineStyles()
+
+        listOf("bold", "italic", "underline").forEach { command ->
+            if (queryState(command)) execute(command)
         }
     }
 

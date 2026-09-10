@@ -51,6 +51,14 @@ import org.w3c.dom.events.KeyboardEvent
  * handler already does correctly, including its undo entry. Ctrl/Cmd+E adds code,
  * which has no native command.
  *
+ * -------------------------------------------------------------- typed markers ----
+ *
+ * Typing the markers works as well as pressing the buttons: finishing `**bold**`,
+ * `*it*`, `__u__`, `` `code` `` or `***both***` replaces the characters with the
+ * thing they describe, there and then. Without that the buttons would be the only way
+ * to format anything, because a field that draws formatting never draws a marker to
+ * be read back. `findMarkerAtCaret` holds the rules and the reasoning.
+ *
  * ----------------------------------------------------------------- what is not ----
  *
  * A pasted selection is forced through plain text, so no foreign markup enters the
@@ -59,18 +67,17 @@ import org.w3c.dom.events.KeyboardEvent
  * commit, and swallowing the drop entirely would be a worse field than one that
  * accepts it and tidies up.
  *
- * **Markers typed or pasted as characters stay characters until the record is
- * reopened.** `**x**` here is four asterisks around an x, because this field draws
- * formatting rather than reading it; committing writes those characters out
- * unchanged, and the next open parses them as bold. So it settles rather than
- * drifting, but the first open after typing markers by hand shows something the
- * editor did not.
+ * **Markers that arrive by paste stay characters until the record is reopened.** The
+ * input rule fires on a keystroke, and a paste is not one, so a pasted `**x**` sits
+ * there as four asterisks round an x; committing writes those characters out
+ * unchanged and the next open parses them as bold. It settles rather than drifting,
+ * but that first reopen shows something the editor did not.
  *
- * That is the same limit the serializer documents from the other side - the format
- * has no escape, so a literal marker and a marker that means something are the same
- * characters. Adding an escape is the one fix, and it would change a stored format
- * that both apps and every existing record already share. The buttons and the
- * shortcuts are the way to format here, and they never produce this.
+ * It is the same hole the serializer documents from the other side - the format has
+ * no escape, so a literal marker and a marker that means something are the same
+ * characters, and no amount of care at this end separates them. Running a paste
+ * through the parser instead would close it, at the cost of the undo entry the plain
+ * insert buys; worth doing if pasted markup turns out to be common.
  */
 @Composable
 public fun FormattingField(
@@ -183,7 +190,11 @@ private class FormattingEditor {
                 onActiveChange(emptySet())
             },
 
-            element.on("input") {
+            element.on("input") { event ->
+                // Before the two below, because it moves the caret and changes the
+                // text: they should report where things ended up.
+                if (event.isOneTypedCharacter()) editable.formatFinishedMarker()
+
                 element.markEmptiness()
                 refreshActive()
             },
@@ -250,6 +261,22 @@ private fun HTMLElement.pasteAsPlainText(event: Event) {
 
     val text = event.asDynamic().clipboardData?.getData("text/plain") as? String ?: return
     document.asDynamic().execCommand("insertText", false, text)
+}
+
+/**
+ * Whether this `input` event was one character being typed.
+ *
+ * The gate on the marker input rule, which fires on the keystroke that finishes a
+ * pair and so has to be a keystroke. A deletion that happens to leave a finished pair
+ * behind is not one, and neither is an autocorrection replacing a whole word.
+ *
+ * The length is what excludes a paste, which arrives as `insertText` too because that
+ * is what [pasteAsPlainText] uses to keep the undo stack. A one-character paste gets
+ * treated as typing, and nothing is harmed by that.
+ */
+private fun Event.isOneTypedCharacter(): Boolean {
+    val event = asDynamic()
+    return event.inputType == "insertText" && (event.data as? String)?.length == 1
 }
 
 /** The field's contents as the marker text everything above this layer speaks. */
