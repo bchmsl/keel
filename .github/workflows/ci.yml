@@ -2,8 +2,11 @@ name: CI
 
 on:
   pull_request:
+  # Both branches that publish. The deploy workflow runs the tests but not ktlint,
+  # the boot-script check or the stylesheet check, so without preview listed here
+  # an endpoint could go out unlinted.
   push:
-    branches: [main]
+    branches: [main, preview]
 
 concurrency:
   group: ci-${{ github.ref }}
