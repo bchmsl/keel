@@ -100,7 +100,9 @@ class MarkerCutTest {
         // The mark has to cover exactly what was between the runs. One character out
         // in either direction is a mark that stops short of a letter or eats the one
         // after it.
-        mapOf("**bold**" to 4, "*i*" to 1, "__under__" to 5, "`code`" to 4).forEach { (text, length) ->
+        val lengths = mapOf("**bold**" to 4, "*i*" to 1, "__under__" to 5, "`code`" to 4)
+
+        lengths.forEach { (text, length) ->
             val cut = cut(text)
             assertEquals(length, (cut?.markTo ?: 0) - (cut?.markFrom ?: 0), text)
         }

@@ -29,8 +29,7 @@ class FormattedPmBridgeTest {
         serializeFormattedNodes(pmJsonToFormatted(formattedToPmJson(parseFormattedText(source))))
 
     /** What keel does today with no bridge in the way. */
-    private fun direct(source: String): String =
-        serializeFormattedNodes(parseFormattedText(source))
+    private fun direct(source: String): String = serializeFormattedNodes(parseFormattedText(source))
 
     @Test
     fun theBridgeChangesNothingTheParserAndSerializerAgreeOn() {
@@ -112,6 +111,8 @@ class FormattedPmBridgeTest {
 
     @Test
     fun codeKeepsItsContentAsCharacters() {
-        assertEquals(listOf(Code("**x**")), pmJsonToFormatted(formattedToPmJson(listOf(Code("**x**")))))
+        val code = listOf(Code("**x**"))
+
+        assertEquals(code, pmJsonToFormatted(formattedToPmJson(code)))
     }
 }
