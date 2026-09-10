@@ -3,6 +3,8 @@
 // It exists to be a real consumer. It depends on `:keel` and on nothing else - no
 // Firebase, no network, no storage - so anything it cannot build is a fault in the
 // library's public API or in how the library delivers its CSS, not in the gallery.
+import org.jetbrains.kotlin.gradle.dsl.JsModuleKind
+
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.compose)
@@ -11,6 +13,13 @@ plugins {
 
 kotlin {
     js(IR) {
+        // What both real consumers set, and what `:keel` needs: a module-only npm
+        // external cannot be linked into a UMD build. See the note in `:keel`'s
+        // script.
+        compilerOptions {
+            moduleKind.set(JsModuleKind.MODULE_COMMONJS)
+        }
+
         browser {
             commonWebpackConfig {
                 outputFileName = "gallery.js"

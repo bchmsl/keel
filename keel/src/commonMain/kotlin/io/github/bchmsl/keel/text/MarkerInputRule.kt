@@ -8,6 +8,16 @@ internal data class MarkerAtCaret(
     val end: Int,
     /** What the text between the two runs becomes. */
     val formatted: FormattedNode,
+    /**
+     * One run of markers, as typed: `**`, `*`, `__`, `` ` `` or `***`.
+     *
+     * Both runs are this, which is what [MarkerAtCaret] means by a finished pair, so
+     * one string describes both and its length is how far in the wrapped text starts.
+     * Reported rather than re-derived, because the caller that needs it is editing a
+     * document by position and getting the length wrong there deletes content instead
+     * of markers.
+     */
+    val marker: String,
 )
 
 /**
@@ -19,8 +29,9 @@ internal data class MarkerAtCaret(
  * finished the characters are replaced by the thing they describe, the way a chat
  * composer behaves and the way the buttons already do.
  *
- * Text in, decision out, so all of the deciding is tested without a browser. Acting
- * on the answer is `EditableCommands`' business, because only it can move a caret.
+ * Text in, decision out, so all of the deciding is tested without a browser. Acting on
+ * the answer belongs to the editor, which is the only part that can edit a document -
+ * `MarkerRule.kt` on the JS side, and `markerCut` for the positions.
  *
  * -------------------------------------------------------------------- the rules ----
  *
@@ -37,26 +48,21 @@ internal data class MarkerAtCaret(
  *   This is the rule that leaves arithmetic alone: `2 * 3 *` has a run on each side
  *   of ` 3 ` and is not emphasis.
  *
+ * ------------------------------------------------------------------ the caller ----
+ *
+ * Whatever [text] holds is what gets searched, so how far a pair can reach is the
+ * caller's decision rather than this function's. The editor hands it the line's text
+ * up to the caret, formatting and all, which is what lets a pair typed *around* one
+ * that has already fired still fire: `__**q**__` ends up bold and underlined, because
+ * the bold `q` in the middle is still `q` when read as text.
+ *
  * ----------------------------------------------------------------- what it wont ----
  *
- * The search stays inside the one stretch of characters the caret is in, because the
- * replacement has to be a single stretch of text. So an opener separated from its
- * closer by formatting that is already on the line is left alone - `**a *b***` typed
- * straight through ends up with the bold opener in a different stretch from its
- * closer, and only the italic fires. Anything typed after an existing element starts
- * a fresh stretch, which is the ordinary case: `**a** and **b**` fires both times.
- *
- * A pair typed *around* one that has already fired is the same thing seen from the
- * outside: `` __u `c`__ `` gets its code span and keeps its underscores, because by the
- * time the closing `__` is typed the opening one is on the far side of a `<code>`. The
- * markers are still written out as they were typed, so the underline is there the next
- * time the record is opened. It settles rather than being lost.
- *
- * Pairs also fire innermost first, because that is the order they get finished in.
- * Typing `` `**x**` `` bolds the x on its fifth keystroke and so never sees a code
- * span, where the parser reading that same finished line would give code all of it.
- * Nothing can be done about that from inside a rule that fires as you type, and the
- * result is still exactly what was typed, so it is written down rather than fought.
+ * Pairs fire innermost first, because that is the order they get finished in. Typing
+ * `` `**x**` `` bolds the x on its fifth keystroke and so never sees a code span,
+ * where the parser reading that same finished line would give code all of it. Nothing
+ * can be done about that from inside a rule that fires as you type, and the result is
+ * still exactly what was typed, so it is written down rather than fought.
  */
 internal fun findMarkerAtCaret(text: String, caret: Int): MarkerAtCaret? {
     if (caret < 1 || caret > text.length) return null
@@ -65,7 +71,8 @@ internal fun findMarkerAtCaret(text: String, caret: Int): MarkerAtCaret? {
     val closing = text.runLengthEndingAt(caret, char)
     if (closing > LONGEST_MARKER) return null
 
-    val build = RULES[char.toString().repeat(closing)] ?: return null
+    val run = char.toString().repeat(closing)
+    val build = RULES[run] ?: return null
 
     val closeStart = caret - closing
     val openEnd = text.endOfNearestRun(before = closeStart, char = char, length = closing)
@@ -76,7 +83,12 @@ internal fun findMarkerAtCaret(text: String, caret: Int): MarkerAtCaret? {
     val inner = text.substring(openEnd, closeStart)
     if (inner.first().isWhitespace() || inner.last().isWhitespace()) return null
 
-    return MarkerAtCaret(start = openEnd - closing, end = caret, formatted = build(inner))
+    return MarkerAtCaret(
+        start = openEnd - closing,
+        end = caret,
+        formatted = build(inner),
+        marker = run,
+    )
 }
 
 /**

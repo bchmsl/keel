@@ -1,9 +1,9 @@
+import org.jetbrains.kotlin.gradle.dsl.JsModuleKind
+
 // The library. This is the only module a consumer depends on.
 //
-// Deliberately not an application: no `binaries.executable()`, no webpack, no
-// `moduleKind`. It produces klibs and lets the consuming app decide the output
-// shape - which matters, because the two consumers disagree about it (one needs
-// CommonJS for the Firebase SDK's `@JsModule` externals, the other does not).
+// Deliberately not an application: no `binaries.executable()` and no webpack. It
+// produces klibs, and the consuming app builds the bundle.
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.compose)
@@ -16,6 +16,20 @@ kotlin {
     explicitApi()
 
     js(IR) {
+        // Required, not a preference. Under the UMD default the compiler refuses a
+        // `@JsModule` external unless it also declares a `@JsNonModule` global to
+        // fall back to, and ProseMirror publishes no global build, so that fallback
+        // cannot honestly be written. The formatting field's editor is behind seven
+        // such externals.
+        //
+        // It constrains this compilation rather than a consumer's bundle, which is
+        // still built from the klibs - and in any case both consumers already set
+        // CommonJS for the Firebase SDK's own `@JsModule` externals, so the builds
+        // this changes are this one and the gallery's.
+        compilerOptions {
+            moduleKind.set(JsModuleKind.MODULE_COMMONJS)
+        }
+
         // The browser sub-target exists so a consumer's webpack build can link this
         // klib. Nothing here needs a browser: the tokens, the theme model and the
         // text parser are pure, and the components are verified by the gallery.
@@ -48,6 +62,29 @@ kotlin {
             // (`AttrsScope`, `ContentBuilder`, `HTMLDivElement`), so a consumer that
             // only had this transitively could not name the arguments it passes.
             api(libs.compose.html.core)
+
+            // keel's only npm dependencies, and they belong to exactly one
+            // component: the editing engine behind `FormattingField`. Declared here
+            // rather than asked of each consumer, which was measured to work through
+            // `includeBuild` as well as through a published artifact - Kotlin writes
+            // them into the imported package's own `package.json`.
+            //
+            // `implementation`, so they stay out of keel's API: nothing public names
+            // a ProseMirror type, which is what lets Kotlin's dead-code pass drop all
+            // seven from a consumer that never opens one of these fields. Measured at
+            // zero bytes and zero `prosemirror` strings in Dayboard's bundle.
+            //
+            // One cost for a consumer, and it is not optional: a new npm dependency
+            // changes the resolved yarn lock, and a Kotlin/JS build *fails* at
+            // `kotlinStoreYarnLock` until the repo's own `kotlin-js-store` is
+            // regenerated with `./gradlew kotlinUpgradeYarnLock` and committed.
+            implementation(npm("prosemirror-model", "1.25.11"))
+            implementation(npm("prosemirror-state", "1.4.4"))
+            implementation(npm("prosemirror-view", "1.42.3"))
+            implementation(npm("prosemirror-inputrules", "1.5.1"))
+            implementation(npm("prosemirror-history", "1.5.0"))
+            implementation(npm("prosemirror-keymap", "1.2.3"))
+            implementation(npm("prosemirror-commands", "1.7.2"))
         }
     }
 }
