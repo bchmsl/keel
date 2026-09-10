@@ -58,6 +58,19 @@ import org.w3c.dom.events.KeyboardEvent
  * anything dropped is already reduced to its text and the four marks on the next
  * commit, and swallowing the drop entirely would be a worse field than one that
  * accepts it and tidies up.
+ *
+ * **Markers typed or pasted as characters stay characters until the record is
+ * reopened.** `**x**` here is four asterisks around an x, because this field draws
+ * formatting rather than reading it; committing writes those characters out
+ * unchanged, and the next open parses them as bold. So it settles rather than
+ * drifting, but the first open after typing markers by hand shows something the
+ * editor did not.
+ *
+ * That is the same limit the serializer documents from the other side - the format
+ * has no escape, so a literal marker and a marker that means something are the same
+ * characters. Adding an escape is the one fix, and it would change a stored format
+ * that both apps and every existing record already share. The buttons and the
+ * shortcuts are the way to format here, and they never produce this.
  */
 @Composable
 public fun FormattingField(
