@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>keel</title>
+    <meta
+      name="description"
+      content="A Compose HTML design system: themeable tokens, primitives and lucide icons."
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+    />
+
+    <!--
+      Order matters: tokens declares the variables everything below reads, and a
+      palette sheet supplies the colours. `palettes.css` is the six shipped palettes;
+      an app with its own would link its own sheet here instead and inherit none of
+      these.
+    -->
+    <link rel="stylesheet" href="keel/tokens.css" />
+    <link rel="stylesheet" href="keel/palettes.css" />
+    <link rel="stylesheet" href="keel/base.css" />
+    <link rel="stylesheet" href="keel/components.css" />
+    <!-- The gallery's own page layout. Reads keel's tokens, defines none. -->
+    <link rel="stylesheet" href="gallery.css" />
+
+    <!--
+      Paint the stored palette before the bundle loads.
+
+      Without this, every reload shows one frame of the default light palette before
+      Kotlin runs and applies the real one - a white flash for anyone in dark mode.
+      `bootScript(catalog)` generates this exact text, and the gallery prints it for
+      whatever catalogue is in use - copy it from there rather than editing here. The
+      `forced` map is empty because all six palettes have both a light and a dark
+      form; a single-mode palette appears in it, so the first frame agrees with what
+      Kotlin decides a moment later instead of being corrected on every reload.
+    -->
+    <script>
+      (function () {
+        try {
+          var root = document.documentElement;
+          var forced = {};
+          var id = localStorage.getItem('themeId') || 'coral';
+          var mode = localStorage.getItem('colorMode') || 'system';
+          root.setAttribute('data-theme', id);
+          root.classList.toggle(
+            'dark',
+            Object.prototype.hasOwnProperty.call(forced, id)
+              ? forced[id]
+              : mode === 'dark' ||
+                  (mode === 'system' &&
+                    window.matchMedia('(prefers-color-scheme: dark)').matches)
+          );
+        } catch (error) {
+          /* Private browsing can make localStorage throw; the defaults are fine. */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script src="gallery.js"></script>
+  </body>
+</html>
